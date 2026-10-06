@@ -1,0 +1,687 @@
+<title>Contract Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+/* Layout: a working ledger. Header + figures strip, then one wide register (table) with tabs; a side sheet opens for a single contract. */
+:root {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --sunken: #e8ecea;
+  --fg: #17211d;
+  --muted: #5b6862;
+  --line: #d3dbd7;
+  --accent: #1d6a50;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcece5;
+  --ok: #1f7a4d;
+  --ok-soft: #dff1e6;
+  --warn: #9a5b00;
+  --warn-soft: #fbedd5;
+  --bad: #b3261e;
+  --bad-soft: #f9e0de;
+  --info: #285ea8;
+  --info-soft: #e0eaf8;
+  --shadow: 0 10px 40px rgba(16, 33, 26, .18);
+  --f-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101614; --surface: #17201d; --sunken: #1e2925; --fg: #e4ebe8; --muted: #95a39d; --line: #2c3a35;
+    --accent: #5cc39b; --accent-ink: #0c1512; --accent-soft: #1d3a30;
+    --ok: #6fd39c; --ok-soft: #173426; --warn: #f0b45a; --warn-soft: #3a2b12; --bad: #f2867d; --bad-soft: #3d1c19;
+    --info: #8db7f0; --info-soft: #1a2a40; --shadow: 0 10px 40px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101614; --surface: #17201d; --sunken: #1e2925; --fg: #e4ebe8; --muted: #95a39d; --line: #2c3a35;
+  --accent: #5cc39b; --accent-ink: #0c1512; --accent-soft: #1d3a30;
+  --ok: #6fd39c; --ok-soft: #173426; --warn: #f0b45a; --warn-soft: #3a2b12; --bad: #f2867d; --bad-soft: #3d1c19;
+  --info: #8db7f0; --info-soft: #1a2a40; --shadow: 0 10px 40px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 20px 60px; display: grid; gap: 18px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--fg); padding-bottom: 12px; }
+.brand h1 { font-size: 30px; line-height: 1.1; }
+.brand p { margin: 2px 0 0; color: var(--muted); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: var(--r); font-weight: 600; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--bad); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.banner { padding: 10px 14px; border-radius: var(--r); background: var(--warn-soft); color: var(--fg); border: 1px solid var(--line); }
+
+/* figures */
+.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); }
+.fig { padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
+.fig + .fig { border-left: 1px solid var(--line); }
+.fig .v { font-family: var(--f-mono); font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.fig .s { color: var(--muted); font-size: 12px; }
+@media (max-width: 760px) { .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fig:nth-child(3) { border-left: 0; } .fig:nth-child(n+3) { border-top: 1px solid var(--line); } }
+
+/* intake */
+.intake { border: 1.5px dashed var(--line); border-radius: var(--r); background: var(--surface); padding: 18px; display: grid; gap: 12px; }
+.intake.drag { border-color: var(--accent); background: var(--accent-soft); }
+.intake-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.intake-head h2 { font-size: 20px; }
+.intake-head p { margin: 2px 0 0; color: var(--muted); max-width: 62ch; }
+.queue { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.queue li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; background: var(--sunken); border-radius: var(--r); }
+.queue .fn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue .err { grid-column: 1 / -1; color: var(--bad); font-size: 12px; }
+
+/* tabs */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tab .count { font-family: var(--f-mono); font-size: 11px; background: var(--sunken); padding: 1px 6px; border-radius: 10px; margin-left: 4px; }
+
+/* filters */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters input, .filters select { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 7px 10px; min-width: 0; }
+.filters input { flex: 1 1 220px; }
+
+/* register */
+.register { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 900px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; background: var(--sunken); position: sticky; top: 0; }
+th button { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
+th.r, td.r { text-align: right; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--accent-soft); }
+tbody tr:last-child td { border-bottom: 0; }
+td .org { font-weight: 600; }
+td .sub { color: var(--muted); font-size: 12px; }
+td.clip { max-width: 280px; }
+td.clip .sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+tfoot td { font-weight: 700; background: var(--sunken); border-top: 2px solid var(--line); border-bottom: 0; cursor: default; }
+
+.pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; letter-spacing: .03em; white-space: nowrap; }
+.pill.active { background: var(--ok-soft); color: var(--ok); }
+.pill.expiring { background: var(--warn-soft); color: var(--warn); }
+.pill.expired { background: var(--bad-soft); color: var(--bad); }
+.pill.upcoming, .pill.renewing { background: var(--info-soft); color: var(--info); }
+.pill.unknown { background: var(--sunken); color: var(--muted); }
+.pill.example { background: var(--sunken); color: var(--muted); border: 1px dashed var(--line); }
+
+.empty { padding: 36px 20px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
+.empty h3 { color: var(--fg); font-size: 20px; }
+
+/* deadlines */
+.deadlines { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.dl { display: grid; grid-template-columns: 110px 90px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); align-items: baseline; cursor: pointer; }
+.dl:last-child { border-bottom: 0; }
+.dl:hover { background: var(--accent-soft); }
+.dl.past { opacity: .55; }
+.dl .when { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.dl .what b { font-weight: 600; }
+.dl .what span { color: var(--muted); }
+.dl .in { font-size: 12px; font-weight: 700; }
+.dl .in.soon { color: var(--bad); } .dl .in.mid { color: var(--warn); } .dl .in.far { color: var(--muted); }
+@media (max-width: 560px) { .dl { grid-template-columns: 1fr; gap: 2px; } }
+
+/* ask */
+.ask { display: grid; gap: 12px; }
+.ask textarea { width: 100%; min-height: 80px; border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; background: var(--surface); resize: vertical; }
+.ask .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 4px 10px; font-size: 12px; }
+.chip:hover { border-color: var(--accent); }
+.answer { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; white-space: pre-wrap; max-width: 80ch; min-height: 48px; }
+.answer.dim { color: var(--muted); }
+
+/* sheet */
+.scrim { position: fixed; inset: 0; background: rgba(10, 20, 16, .35); z-index: 10; }
+.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--surface); box-shadow: var(--shadow); z-index: 11; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.sheet header { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.sheet header h2 { font-size: 22px; }
+.sheet .body { overflow-y: auto; padding: 16px 20px; display: grid; gap: 14px; align-content: start; }
+.sheet footer { padding: 12px 20px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field input, .field textarea, .field select { border: 1px solid var(--line); background: var(--bg); border-radius: var(--r); padding: 7px 10px; width: 100%; }
+.field textarea { min-height: 70px; resize: vertical; }
+.kd { display: grid; gap: 6px; }
+.kd-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 6px; }
+.kd-row input { border: 1px solid var(--line); background: var(--bg); border-radius: var(--r); padding: 6px 8px; min-width: 0; }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--bad-soft); padding: 6px 10px; border-radius: var(--r); }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: var(--r); z-index: 20; font-weight: 600; max-width: calc(100% - 32px); }
+.foot { color: var(--muted); font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) { .sheet { animation: slide .18s ease-out; } @keyframes slide { from { transform: translateX(24px); opacity: .6; } } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Contract Ledger</h1>
+      <p>Upload contracts. AI reads them and keeps the key terms, money and deadlines in one place.</p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="exportBtn" hidden>Export CSV</button>
+      <button class="btn primary" id="addBtn">Add contracts</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="figures" aria-label="Summary">
+    <div class="fig"><span class="label">Contracts</span><span class="v" id="kCount">0</span><span class="s" id="kCountS">none yet</span></div>
+    <div class="fig"><span class="label">Year-1 earnings</span><span class="v" id="kValue">$0</span><span class="s">committed fees, first 12 months</span></div>
+    <div class="fig"><span class="label">Bonuses at stake</span><span class="v" id="kBonus">$0</span><span class="s" id="kBonusS">maximum possible</span></div>
+    <div class="fig"><span class="label">Deadlines, next 90 days</span><span class="v" id="kDue">0</span><span class="s" id="kDueS">nothing due</span></div>
+  </section>
+
+  <section class="intake" id="intake" aria-label="Add contracts">
+    <div class="intake-head">
+      <div>
+        <h2>Add contracts</h2>
+        <p>Drop PDF, Word (.docx) or text files here, or choose them. Claude reads each one and fills in the organization, industry, earnings, bonuses and key dates. You can correct anything afterwards.</p>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="chooseBtn">Choose files</button>
+        <button class="btn" id="sampleBtn">Load example contracts</button>
+      </div>
+      <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+    </div>
+    <ul class="queue" id="queue"></ul>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-contracts" aria-selected="true" data-view="contracts">Contracts <span class="count" id="cTab">0</span></button>
+    <button class="tab" role="tab" id="tab-deadlines" aria-selected="false" data-view="deadlines">Deadlines <span class="count" id="dTab">0</span></button>
+    <button class="tab" role="tab" id="tab-ask" aria-selected="false" data-view="ask">Ask about your contracts</button>
+  </nav>
+
+  <section id="view-contracts" class="ask">
+    <div class="filters">
+      <input type="search" id="q" placeholder="Search organization, industry, terms…" aria-label="Search contracts">
+      <select id="fIndustry" aria-label="Industry"><option value="">All industries</option></select>
+      <select id="fStatus" aria-label="Status">
+        <option value="">All statuses</option><option>Active</option><option>Expiring</option><option>Renewing</option><option>Upcoming</option><option>Expired</option>
+      </select>
+    </div>
+    <div class="register" id="register"></div>
+  </section>
+
+  <section id="view-deadlines" hidden>
+    <div class="deadlines" id="deadlines"></div>
+  </section>
+
+  <section id="view-ask" class="ask" hidden>
+    <div class="chips" id="chips"></div>
+    <textarea id="question" placeholder="e.g. Which contracts renew automatically in the next 6 months, and when must I send notice?"></textarea>
+    <div class="row">
+      <button class="btn primary" id="askBtn">Ask</button>
+      <button class="btn" id="stopBtn" hidden>Stop</button>
+      <span class="foot">Claude answers from the details saved for your contracts.</span>
+    </div>
+    <div class="answer dim" id="answer">Answers appear here.</div>
+  </section>
+
+  <p class="foot" id="privacy">Your contracts are saved privately to your account. Other people who open this page see only their own contracts.</p>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" hidden aria-label="Contract details"></aside>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const DAY = 86400000;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const todayISO = iso(today);
+
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function parseD(s) { if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null; const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
+  function fmtD(s) { const d = parseD(s); return d ? d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—"; }
+  function money(n, cur) {
+    if (n === null || n === undefined || n === "" || isNaN(Number(n))) return "—";
+    try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD", maximumFractionDigits: 0 }).format(Number(n)); }
+    catch { return "$" + Math.round(Number(n)).toLocaleString(); }
+  }
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2600); }
+
+  // ---------- state ----------
+  let contracts = [];          // [{id, ...fields}]
+  let store = null;            // collection ref, or null => in-memory only
+  let sample = null, downloads = null;
+  let view = "contracts", sortKey = "org", sortDir = 1;
+  let localSeq = 0;
+
+  // ---------- derived ----------
+  function status(c) {
+    const s = parseD(c.startDate), e = parseD(c.endDate);
+    if (s && s > today) return "Upcoming";
+    if (e && e < today) return c.autoRenew ? "Renewing" : "Expired";
+    if (e && (e - today) / DAY <= 90) return c.autoRenew ? "Renewing" : "Expiring";
+    if (s || e) return "Active";
+    return "Unknown";
+  }
+  function deadlinesOf(c) {
+    const out = [];
+    const e = parseD(c.endDate);
+    if (e) {
+      const nd = Number(c.renewalNoticeDays);
+      if (nd > 0) out.push({ date: iso(new Date(e.getTime() - nd * DAY)), label: c.autoRenew ? `Last day to send non-renewal notice (${nd} days)` : `Last day to give ${nd} days' notice before term ends` , kind: "notice" });
+      out.push({ date: c.endDate, label: c.autoRenew ? "Current term ends (renews automatically)" : "Term ends", kind: "end" });
+    }
+    for (const k of c.keyDates || []) if (parseD(k.date)) out.push({ date: k.date, label: k.label || "Key date", kind: "key" });
+    return out.map((d) => ({ ...d, c }));
+  }
+  function allDeadlines() { return contracts.flatMap(deadlinesOf).sort((a, b) => a.date.localeCompare(b.date)); }
+  function nextDeadline(c) { return deadlinesOf(c).filter((d) => d.date >= todayISO).sort((a, b) => a.date.localeCompare(b.date))[0]; }
+  function daysTo(s) { return Math.round((parseD(s) - today) / DAY); }
+
+  // ---------- render ----------
+  function render() {
+    const n = contracts.length;
+    $("kCount").textContent = n;
+    const ex = contracts.filter((c) => c.example).length;
+    $("kCountS").textContent = n ? (ex ? `${ex} example${ex > 1 ? "s" : ""} included` : "in your ledger") : "none yet";
+    $("kValue").textContent = money(contracts.reduce((s, c) => s + (Number(c.annualValue) || 0), 0));
+    const bonus = contracts.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0);
+    $("kBonus").textContent = money(bonus);
+    $("kBonusS").textContent = contracts.filter((c) => Number(c.maxBonus) > 0).length + " contract(s) with a bonus";
+    const due = allDeadlines().filter((d) => { const x = daysTo(d.date); return x >= 0 && x <= 90; });
+    $("kDue").textContent = due.length;
+    $("kDueS").textContent = due.length ? "next: " + fmtD(due[0].date) : "nothing due";
+    $("cTab").textContent = n;
+    $("dTab").textContent = allDeadlines().filter((d) => d.date >= todayISO).length;
+    $("exportBtn").hidden = !(downloads && n);
+    $("sampleBtn").textContent = ex ? "Remove examples" : "Load example contracts";
+
+    const inds = [...new Set(contracts.map((c) => c.industry).filter(Boolean))].sort();
+    const sel = $("fIndustry"), cur = sel.value;
+    sel.innerHTML = '<option value="">All industries</option>' + inds.map((i) => `<option${i === cur ? " selected" : ""}>${esc(i)}</option>`).join("");
+
+    renderRegister(); renderDeadlines(); renderChips();
+  }
+
+  function renderRegister() {
+    const reg = $("register");
+    if (!contracts.length) {
+      reg.innerHTML = `<div class="empty"><h3>No contracts yet</h3><p>Add your first contract above, or load the example contracts to see how the ledger works.</p></div>`;
+      return;
+    }
+    const q = $("q").value.trim().toLowerCase(), fi = $("fIndustry").value, fs = $("fStatus").value;
+    let rows = contracts.filter((c) => {
+      if (fi && c.industry !== fi) return false;
+      if (fs && status(c) !== fs) return false;
+      if (q && ![c.org, c.counterparty, c.industry, c.contractType, c.earnings, c.bonuses, c.summary, c.fileName].join(" ").toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const key = { org: (c) => (c.org || "").toLowerCase(), industry: (c) => (c.industry || "").toLowerCase(), status: status,
+      end: (c) => c.endDate || "9999", value: (c) => Number(c.annualValue) || 0, bonus: (c) => Number(c.maxBonus) || 0,
+      next: (c) => nextDeadline(c)?.date || "9999" }[sortKey];
+    rows.sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * sortDir);
+    const th = (k, label, cls = "") => `<th class="${cls}" aria-sort="${sortKey === k ? (sortDir > 0 ? "ascending" : "descending") : "none"}"><button data-sort="${k}">${label}${sortKey === k ? (sortDir > 0 ? " ↑" : " ↓") : ""}</button></th>`;
+    const body = rows.map((c) => {
+      const st = status(c), nd = nextDeadline(c);
+      return `<tr data-id="${esc(c.id)}" tabindex="0">
+        <td><div class="org">${esc(c.org || "Untitled")}</div><div class="sub">${esc(c.contractType || "")}${c.example ? ' <span class="pill example">Example</span>' : ""}</div></td>
+        <td>${esc(c.industry || "—")}</td>
+        <td><span class="pill ${st.toLowerCase()}">${st}</span></td>
+        <td class="num">${fmtD(c.startDate)}<div class="sub">to ${fmtD(c.endDate)}</div></td>
+        <td class="clip"><div class="sub">${esc(c.earnings || "—")}</div></td>
+        <td class="r num">${money(c.annualValue, c.currency)}</td>
+        <td class="clip"><div class="sub">${esc(c.bonuses || "—")}</div></td>
+        <td class="r num">${money(c.maxBonus, c.currency)}</td>
+        <td>${nd ? `<span class="num">${fmtD(nd.date)}</span><div class="sub">${esc(nd.label)}</div>` : '<span class="sub">—</span>'}</td>
+      </tr>`;
+    }).join("");
+    const tv = rows.reduce((s, c) => s + (Number(c.annualValue) || 0), 0), tb = rows.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0);
+    reg.innerHTML = rows.length ? `<table>
+      <thead><tr>${th("org", "Org name")}${th("industry", "Industry")}${th("status", "Status")}${th("end", "Term")}<th>Earnings</th>${th("value", "Year-1 earnings", "r")}<th>Bonuses</th>${th("bonus", "Max bonus", "r")}${th("next", "Next deadline")}</tr></thead>
+      <tbody>${body}</tbody>
+      <tfoot><tr><td colspan="5">Total, ${rows.length} contract${rows.length > 1 ? "s" : ""}</td><td class="r num">${money(tv)}</td><td></td><td class="r num">${money(tb)}</td><td></td></tr></tfoot>
+    </table>` : `<div class="empty"><h3>No matches</h3><p>No contract matches these filters.</p></div>`;
+  }
+
+  function renderDeadlines() {
+    const list = allDeadlines().filter((d) => daysTo(d.date) >= -30);
+    const el = $("deadlines");
+    if (!list.length) { el.innerHTML = `<div class="empty"><h3>No deadlines</h3><p>Notice dates, term ends and other key dates from your contracts appear here.</p></div>`; return; }
+    el.innerHTML = list.map((d) => {
+      const x = daysTo(d.date), past = x < 0;
+      const cls = x <= 30 ? "soon" : x <= 90 ? "mid" : "far";
+      const when = past ? `${-x} days ago` : x === 0 ? "today" : `in ${x} days`;
+      return `<div class="dl${past ? " past" : ""}" data-id="${esc(d.c.id)}" tabindex="0">
+        <span class="when">${fmtD(d.date)}</span><span class="in ${past ? "far" : cls}">${when}</span>
+        <span class="what"><b>${esc(d.c.org || "Untitled")}</b> <span>· ${esc(d.label)}</span></span></div>`;
+    }).join("");
+  }
+
+  const CHIPS = ["What deadlines do I have in the next 90 days?", "Which contracts renew automatically, and when must I give notice?", "Which contracts have bonuses, and what do I need to do to earn them?", "Summarize total earnings by industry.", "Which contracts carry early termination fees?"];
+  function renderChips() { $("chips").innerHTML = CHIPS.map((c) => `<button class="chip">${esc(c)}</button>`).join(""); }
+
+  // ---------- detail sheet ----------
+  const FIELDS = [
+    ["org", "Org name"], ["counterparty", "Other party"], ["industry", "Industry"], ["contractType", "Contract type"],
+    ["startDate", "Start date", "date"], ["endDate", "End of current term", "date"], ["autoRenew", "Renews automatically", "bool"], ["renewalNoticeDays", "Notice period (days)", "number"],
+    ["annualValue", "Year-1 earnings", "number"], ["totalValue", "Initial-term earnings", "number"], ["maxBonus", "Max bonus", "number"], ["currency", "Currency"],
+  ];
+  let editing = null, kdDraft = [];
+  function openSheet(id) {
+    const c = contracts.find((x) => x.id === id); if (!c) return;
+    editing = c; kdDraft = (c.keyDates || []).map((k) => ({ ...k }));
+    const fld = ([k, label, type]) => {
+      const v = c[k];
+      if (type === "bool") return `<label class="field"><span class="label">${label}</span><select id="f_${k}"><option value="true"${v ? " selected" : ""}>Yes</option><option value="false"${v ? "" : " selected"}>No</option></select></label>`;
+      return `<label class="field"><span class="label">${label}</span><input id="f_${k}" type="${type || "text"}" value="${esc(v ?? "")}"></label>`;
+    };
+    const ta = (k, label) => `<label class="field"><span class="label">${label}</span><textarea id="f_${k}">${esc(c[k] || "")}</textarea></label>`;
+    $("sheet").innerHTML = `
+      <header><div><span class="label">${esc(c.fileName || "Contract")}${c.example ? " · Example" : ""}</span><h2>${esc(c.org || "Untitled")}</h2><span class="pill ${status(c).toLowerCase()}">${status(c)}</span></div>
+        <button class="btn ghost" id="closeSheet" aria-label="Close">Close</button></header>
+      <div class="body">
+        ${c.summary ? `<p style="margin:0">${esc(c.summary)}</p>` : ""}
+        <div class="grid2">${FIELDS.map(fld).join("")}</div>
+        ${ta("earnings", "Earnings (fee terms)")}
+        ${ta("bonuses", "Bonuses")}
+        ${ta("risks", "Terms to watch")}
+        <div class="field"><span class="label">Key dates</span><div class="kd" id="kd"></div><button class="btn" id="kdAdd" style="justify-self:start">Add date</button></div>
+      </div>
+      <footer><div id="delZone"><button class="btn danger" id="delBtn">Delete</button></div><div class="actions"><button class="btn" id="cancelSheet">Cancel</button><button class="btn primary" id="saveSheet">Save changes</button></div></footer>`;
+    renderKd();
+    $("sheet").hidden = false; $("scrim").hidden = false;
+    $("closeSheet").focus();
+  }
+  function renderKd() {
+    $("kd").innerHTML = kdDraft.map((k, i) => `<div class="kd-row"><input type="date" data-i="${i}" data-k="date" value="${esc(k.date || "")}" aria-label="Date"><input data-i="${i}" data-k="label" value="${esc(k.label || "")}" aria-label="What happens"><button class="btn ghost" data-rm="${i}" aria-label="Remove date">Remove</button></div>`).join("") || '<span class="foot">No key dates.</span>';
+  }
+  function closeSheet() { $("sheet").hidden = true; $("scrim").hidden = true; editing = null; }
+  async function saveSheet() {
+    if (!editing) return;
+    const patch = {};
+    for (const [k, , type] of FIELDS) {
+      const raw = $("f_" + k).value.trim();
+      patch[k] = type === "number" ? (raw === "" ? null : Number(raw)) : type === "bool" ? raw === "true" : raw || null;
+    }
+    for (const k of ["earnings", "bonuses", "risks"]) patch[k] = $("f_" + k).value.trim();
+    patch.keyDates = kdDraft.filter((k) => parseD(k.date)).map((k) => ({ date: k.date, label: (k.label || "").trim() || "Key date" }));
+    patch.updatedAt = new Date().toISOString();
+    try { await saveContract(editing.id, { ...stripId(editing), ...patch }); toast("Saved"); closeSheet(); }
+    catch (e) { toast("Couldn't save: " + (e?.message || e?.code || "try again")); }
+  }
+
+  // ---------- persistence ----------
+  function stripId(c) { const { id, ...rest } = c; return rest; }
+  async function saveContract(id, data) {
+    if (store) { await store.doc(id).set(data); }
+    else { const i = contracts.findIndex((c) => c.id === id); const row = { id, ...data }; if (i >= 0) contracts[i] = row; else contracts.push(row); render(); }
+  }
+  async function addContract(data) {
+    if (store) { const ref = await store.add(data); return ref.id; }
+    const id = "local" + ++localSeq; contracts.push({ id, ...data }); render(); return id;
+  }
+  async function removeContract(id) {
+    if (store) await store.doc(id).delete();
+    else { contracts = contracts.filter((c) => c.id !== id); render(); }
+  }
+
+  // ---------- reading files ----------
+  async function readText(file) {
+    const name = file.name.toLowerCase();
+    if (name.endsWith(".txt") || file.type === "text/plain") return await file.text();
+    if (name.endsWith(".pdf") || file.type === "application/pdf") {
+      if (!window.pdfjsLib) throw new Error("The PDF reader didn't load. Reload the page and try again.");
+      const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      const parts = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const tc = await (await pdf.getPage(p)).getTextContent();
+        parts.push(tc.items.map((it) => it.str + (it.hasEOL ? "\n" : " ")).join(""));
+      }
+      return parts.join("\n\n");
+    }
+    if (name.endsWith(".docx")) {
+      if (!window.mammoth) throw new Error("The Word reader didn't load. Reload the page and try again.");
+      return (await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
+    }
+    throw new Error("Unsupported file type. Use PDF, Word (.docx) or .txt.");
+  }
+
+  function extractionPrompt(fileName, text) {
+    return `You extract structured data from a business contract so it can be tracked in a contract register. Today is ${todayISO}.
+Return ONLY one JSON object with exactly these keys:
+- "org": the client or customer organization in the contract (the party receiving the service, product or employment). If unclear, the main counterparty that is not the drafting company.
+- "counterparty": the other party (e.g. supplier, provider, employer).
+- "industry": the org's industry, short (e.g. "Healthcare - Urgent care", "Retail", "Construction").
+- "contractType": short type (e.g. "SaaS subscription", "Services agreement", "Employment", "Lease").
+- "startDate": "YYYY-MM-DD" or null.
+- "endDate": end of the initial (or current) term, "YYYY-MM-DD" or null.
+- "termMonths": number or null.
+- "autoRenew": true or false.
+- "renewalNoticeDays": days of written notice needed to stop renewal or end the contract at term end, number or null.
+- "currency": ISO code, e.g. "USD".
+- "earnings": 1-3 plain sentences summarizing all fees, pay or compensation, with amounts and timing.
+- "annualValue": number or null. Committed money in the first 12 months (one-time + recurring fees). Exclude usage-based extras and bonuses.
+- "totalValue": number or null. Committed money over the whole initial term, same rules.
+- "bonuses": plain summary of any bonus, incentive or performance payments with amounts and conditions, or "None".
+- "maxBonus": number, the highest total bonus possible, 0 if none.
+- "keyDates": array of up to 8 {"date": "YYYY-MM-DD", "label": "short description"} for milestones and deadlines (payment milestones, price increases, measurement dates, termination windows). Do not include the term end or the non-renewal notice date; those are computed.
+- "risks": 1-2 sentences on terms that need attention (early termination fees, auto-renewal, penalties, minimums), or "".
+- "summary": one sentence describing the contract.
+If the file includes amendments, apply them. Use null when something is not stated. Never invent amounts.
+
+<contract file="${fileName.replace(/"/g, "")}">
+${text}
+</contract>`;
+  }
+
+  const SAMPLE_ERRORS = {
+    not_granted: "Claude access wasn't allowed. Allow it from this page's permissions to read contracts.",
+    rate_limited: "Too many requests right now. Wait a minute, then add the file again.",
+    prompt_too_large: "This contract is too long to read in one go.",
+    refused: "Claude declined to read this file.",
+    invalid_json: "Claude's answer couldn't be read. Add the file again.",
+    session_expired: "Your session expired. Reload the page and sign in.",
+    sampling_disabled: "AI reading is turned off for your account.",
+  };
+  const errCopy = (e) => SAMPLE_ERRORS[e?.code] || e?.message || "Something went wrong. Add the file again.";
+
+  async function processFiles(files) {
+    if (!files.length) return;
+    if (!sample) { toast("AI reading isn't available here. Open this page signed in to claude.ai."); return; }
+    const limits = await sample.limits().catch(() => null);
+    const maxBytes = (limits?.maxPromptBytes || 262144) - 6000;
+    for (const file of files) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="fn"></span><span class="pill unknown">Reading…</span>`;
+      li.querySelector(".fn").textContent = file.name;
+      $("queue").prepend(li);
+      const set = (t, cls) => { const p = li.querySelector(".pill"); p.textContent = t; p.className = "pill " + cls; };
+      try {
+        let text = (await readText(file)).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+        if (text.length < 40) throw new Error("No readable text found. Scanned PDFs (images of pages) can't be read yet.");
+        let truncated = false;
+        while (new TextEncoder().encode(text).length > maxBytes) { text = text.slice(0, Math.floor(text.length * 0.9)); truncated = true; }
+        set("Claude is reading…", "upcoming");
+        const out = await sample.json(extractionPrompt(file.name, text), { modelTier: "default" });
+        if (!out || typeof out !== "object" || Array.isArray(out)) throw new Error("Claude's answer couldn't be read. Add the file again.");
+        const num = (v) => (v === null || v === undefined || v === "" || isNaN(Number(v)) ? null : Number(v));
+        const rec = {
+          org: String(out.org || "").slice(0, 200) || file.name, counterparty: String(out.counterparty || "").slice(0, 200),
+          industry: String(out.industry || "").slice(0, 120), contractType: String(out.contractType || "").slice(0, 120),
+          startDate: parseD(out.startDate) ? out.startDate : null, endDate: parseD(out.endDate) ? out.endDate : null,
+          termMonths: num(out.termMonths), autoRenew: !!out.autoRenew, renewalNoticeDays: num(out.renewalNoticeDays),
+          currency: /^[A-Z]{3}$/.test(out.currency || "") ? out.currency : "USD",
+          earnings: String(out.earnings || "").slice(0, 2000), annualValue: num(out.annualValue), totalValue: num(out.totalValue),
+          bonuses: String(out.bonuses || "").slice(0, 2000), maxBonus: num(out.maxBonus) || 0,
+          keyDates: (Array.isArray(out.keyDates) ? out.keyDates : []).filter((k) => k && parseD(k.date)).slice(0, 12).map((k) => ({ date: k.date, label: String(k.label || "Key date").slice(0, 200) })),
+          risks: String(out.risks || "").slice(0, 1000), summary: String(out.summary || "").slice(0, 500),
+          fileName: file.name, addedAt: new Date().toISOString(), example: false,
+        };
+        await addContract(rec);
+        set(truncated ? "Added (long file, partly read)" : "Added", truncated ? "expiring" : "active");
+      } catch (e) {
+        set("Not added", "expired");
+        const er = document.createElement("span"); er.className = "err"; er.textContent = errCopy(e); li.append(er);
+      }
+    }
+  }
+
+  // ---------- examples ----------
+  const EXAMPLES = [
+    { org: "Lakeshore Private Hospital", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Hospital", contractType: "SaaS subscription", startDate: "2025-01-01", endDate: "2027-12-31", termMonths: 36, autoRenew: true, renewalNoticeDays: 120, currency: "USD",
+      earnings: "Implementation fee $240,000 (30/40/30). Subscription $480,000/yr billed quarterly, rising 5% each year. $90/bed/month above 250 beds; optional Telehealth $6,000/month.", annualValue: 720000, totalValue: 1753200,
+      bonuses: "None", maxBonus: 0, keyDates: [{ date: "2026-12-31", label: "Client may terminate for convenience after this date (180 days' notice, fee up to $250,000)" }],
+      risks: "Early termination fee up to $250,000; 120-day non-renewal notice.", summary: "36-month patient management platform subscription for a 220-bed hospital.", fileName: "Contract_1_-_Lakeshore_Private_Hospital.pdf" },
+    { org: "Brightsight Eye Clinic, P.A.", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Ophthalmology", contractType: "SaaS subscription", startDate: "2026-03-01", endDate: "2027-02-28", termMonths: 12, autoRenew: true, renewalNoticeDays: 60, currency: "USD",
+      earnings: "Onboarding $9,500. $495 per provider/month (6 providers = $2,970/month). Imaging add-on $1,200/month from Sep 1, 2026 at the latest. SMS over 3,000/month at $0.04.", annualValue: 52340, totalValue: 52340,
+      bonuses: "None. On renewal the client gets one month's subscription as a loyalty credit.", maxBonus: 0, keyDates: [{ date: "2026-09-01", label: "Imaging add-on fee starts (latest date)" }, { date: "2026-11-30", label: "Last day for provider to give notice of a renewal price increase" }],
+      risks: "Early termination in the first term costs three months of fees.", summary: "12-month scheduling and imaging platform subscription for an eye clinic.", fileName: "Contract_2_-_Brightsight_Eye_Clinic.pdf" },
+    { org: "Maple Street Family Medicine, LLC", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Primary care", contractType: "SaaS subscription", startDate: "2026-06-01", endDate: "2028-05-31", termMonths: 24, autoRenew: true, renewalNoticeDays: 90, currency: "USD",
+      earnings: "Implementation $6,000 (50/50). $425 per provider/month for 4 providers, +3% each June from 2027. Amendment 1 adds a 5th provider at $375/month from Dec 1, 2026.", annualValue: 28650, totalValue: 54297,
+      bonuses: "Adoption Incentive Fee: $8,000 if 60% to under 75% of patients activate the portal; $12,000 if 75% or more. Measured Mar 15, 2027.", maxBonus: 12000,
+      keyDates: [{ date: "2027-03-15", label: "Portal adoption measured (bonus date)" }, { date: "2027-03-30", label: "Bonus invoiced by this date" }, { date: "2027-06-01", label: "3% price increase; client may terminate for convenience from now" }],
+      risks: "No termination for convenience in the first 12 months.", summary: "24-month patient portal subscription with an adoption bonus, amended Nov 2026.", fileName: "Contract_3_-_Maple_Street_Family_Medicine_with_Amendment.pdf" },
+    { org: "NorthPoint Urgent Care Center, LLC", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Urgent care", contractType: "Services agreement", startDate: "2026-10-01", endDate: "2027-09-30", termMonths: 12, autoRenew: false, renewalNoticeDays: 30, currency: "USD",
+      earnings: "Implementation $4,500 (50/50). Platform $3,500/month from Dec 1, 2026 (Oct-Nov waived). Visits over 1,500/month at $1.80, over 3,000 at $1.20. Minimum $4,200/month.", annualValue: 46500, totalValue: 46500,
+      bonuses: "None", maxBonus: 0, keyDates: [{ date: "2026-11-01", label: "Target go-live; second implementation payment due" }, { date: "2026-12-01", label: "Platform fee and $4,200 monthly minimum begin" }],
+      risks: "Continues month to month after the first year; rates can change on 60 days' notice.", summary: "12-month online check-in and queue platform for an urgent care center.", fileName: "Contract_4_-_NorthPoint_Urgent_Care_Center.pdf" },
+  ];
+  async function toggleExamples() {
+    const ex = contracts.filter((c) => c.example);
+    $("sampleBtn").disabled = true;
+    try {
+      if (ex.length) { for (const c of ex) await removeContract(c.id); toast("Examples removed"); }
+      else { for (const e of EXAMPLES) await addContract({ ...e, example: true, addedAt: new Date().toISOString() }); toast("Example contracts added"); }
+    } catch (e) { toast("Couldn't update examples: " + (e?.message || e?.code || "try again")); }
+    $("sampleBtn").disabled = false;
+  }
+
+  // ---------- ask ----------
+  let askCtl = null;
+  async function ask() {
+    const q = $("question").value.trim(); if (!q) { $("question").focus(); return; }
+    const out = $("answer");
+    if (!sample) { out.textContent = "Asking Claude isn't available here. Open this page signed in to claude.ai."; return; }
+    if (!contracts.length) { out.textContent = "Add some contracts first."; return; }
+    const data = contracts.map((c) => ({ ...stripId(c), status: status(c), deadlines: deadlinesOf(c).map(({ date, label }) => ({ date, label })) }));
+    const prompt = `You help a business owner understand their contracts. Today is ${todayISO}. Answer the question using only the contract records below. Be concise and specific: name the organizations, dates and amounts. Use short paragraphs or a short list. If the records don't contain the answer, say what is missing. Records marked example:true are sample data.
+
+<contracts>
+${JSON.stringify(data)}
+</contracts>
+
+Question: ${q}`;
+    askCtl = new AbortController();
+    $("askBtn").disabled = true; $("stopBtn").hidden = false;
+    out.classList.add("dim"); out.textContent = "Thinking…";
+    try {
+      const { text } = await sample(prompt, { signal: askCtl.signal, cache: false, onText: ({ text }) => { out.classList.remove("dim"); out.textContent = text; } });
+      out.classList.remove("dim"); out.textContent = text;
+    } catch (e) {
+      if (e?.code === "cancelled") { if (!out.textContent || out.textContent === "Thinking…") out.textContent = "Stopped."; }
+      else { out.textContent = (e?.text ? e.text + "\n\n" : "") + errCopy(e); }
+    }
+    $("askBtn").disabled = false; $("stopBtn").hidden = true; askCtl = null;
+  }
+
+  // ---------- export ----------
+  async function exportCsv() {
+    const cols = [["org", "Org Name"], ["industry", "Industry"], ["counterparty", "Other Party"], ["contractType", "Type"], ["status", "Status"], ["startDate", "Start"], ["endDate", "Term End"], ["autoRenew", "Auto-renew"], ["renewalNoticeDays", "Notice Days"], ["earnings", "Earnings"], ["annualValue", "Year-1 Earnings"], ["totalValue", "Initial-Term Earnings"], ["bonuses", "Bonuses"], ["maxBonus", "Max Bonus"], ["next", "Next Deadline"], ["fileName", "File"]];
+    const cell = (v) => { const s = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const lines = [cols.map((c) => c[1]).join(",")].concat(contracts.map((c) => cols.map(([k]) => {
+      if (k === "status") return cell(status(c));
+      if (k === "next") { const n = nextDeadline(c); return cell(n ? n.date + " " + n.label : ""); }
+      return cell(c[k]);
+    }).join(",")));
+    try { await downloads.save({ filename: "contracts-" + todayISO + ".csv", data: new Blob(["﻿" + lines.join("\n")], { type: "text/csv" }) }); }
+    catch (e) { if (e?.code !== "cancelled" && e?.code !== "declined") toast("Export didn't finish."); }
+  }
+
+  // ---------- events ----------
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+    view = t.dataset.view;
+    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x === t)));
+    for (const v of ["contracts", "deadlines", "ask"]) $("view-" + v).hidden = v !== view;
+  }));
+  ["q", "fIndustry", "fStatus"].forEach((id) => $(id).addEventListener("input", renderRegister));
+  $("register").addEventListener("click", (e) => {
+    const s = e.target.closest("[data-sort]");
+    if (s) { const k = s.dataset.sort; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; renderRegister(); return; }
+    const tr = e.target.closest("tr[data-id]"); if (tr) openSheet(tr.dataset.id);
+  });
+  $("deadlines").addEventListener("click", (e) => { const r = e.target.closest("[data-id]"); if (r) openSheet(r.dataset.id); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("sheet").hidden) closeSheet();
+    if (e.key === "Enter" && e.target.matches("tr[data-id], .dl[data-id]")) openSheet(e.target.dataset.id);
+  });
+  $("scrim").addEventListener("click", closeSheet);
+  $("sheet").addEventListener("click", (e) => {
+    const id = e.target.id;
+    if (id === "closeSheet" || id === "cancelSheet") closeSheet();
+    else if (id === "saveSheet") saveSheet();
+    else if (id === "kdAdd") { kdDraft.push({ date: "", label: "" }); renderKd(); }
+    else if (e.target.dataset.rm !== undefined) { kdDraft.splice(Number(e.target.dataset.rm), 1); renderKd(); }
+    else if (id === "delBtn") { $("delZone").innerHTML = `<div class="confirm"><span>Delete this contract?</span><button class="btn danger" id="delYes">Delete</button><button class="btn" id="delNo">Keep</button></div>`; }
+    else if (id === "delNo") { $("delZone").innerHTML = `<button class="btn danger" id="delBtn">Delete</button>`; }
+    else if (id === "delYes") { const cid = editing?.id; closeSheet(); removeContract(cid).then(() => toast("Deleted"), () => toast("Couldn't delete. Try again.")); }
+  });
+  $("sheet").addEventListener("input", (e) => { const i = e.target.dataset.i; if (i !== undefined) kdDraft[Number(i)][e.target.dataset.k] = e.target.value; });
+  $("chips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (c) { $("question").value = c.textContent; ask(); } });
+  $("askBtn").addEventListener("click", ask);
+  $("stopBtn").addEventListener("click", () => askCtl?.abort());
+  $("exportBtn").addEventListener("click", exportCsv);
+  $("sampleBtn").addEventListener("click", toggleExamples);
+  $("chooseBtn").addEventListener("click", () => $("fileInput").click());
+  $("addBtn").addEventListener("click", () => { $("intake").scrollIntoView({ behavior: "smooth", block: "start" }); $("fileInput").click(); });
+  $("fileInput").addEventListener("change", (e) => { processFiles([...e.target.files]); e.target.value = ""; });
+  const intake = $("intake");
+  ["dragenter", "dragover"].forEach((t) => intake.addEventListener(t, (e) => { e.preventDefault(); intake.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach((t) => intake.addEventListener(t, (e) => { e.preventDefault(); intake.classList.remove("drag"); }));
+  intake.addEventListener("drop", (e) => processFiles([...(e.dataTransfer?.files || [])]));
+
+  // ---------- boot ----------
+  render();
+  if (window.pdfjsLib) { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; } catch {} }
+  const banner = (msg) => { $("banner").textContent = msg; $("banner").hidden = !msg; };
+  (async () => {
+    const use = window.claude?.use;
+    if (!use) { banner("Open this page on claude.ai to save contracts and use AI reading. Changes here aren't saved."); return; }
+    const [db, user, smp, dl] = await Promise.all(["db", "user", "sample", "downloads"].map((n) => use(n).catch(() => null)));
+    sample = smp; downloads = dl;
+    if (!sample) { $("chooseBtn").disabled = true; $("addBtn").disabled = true; banner("AI reading isn't available in this view, so new contracts can't be added. You can still view and edit saved ones."); }
+    const uid = user ? await user.id().catch(() => null) : null;
+    if (db && uid) {
+      store = db.doc("data/users/" + uid + "/ledger").collection("contracts");
+      store.onSnapshot((snap) => {
+        contracts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        if (editing && !contracts.find((c) => c.id === editing.id)) closeSheet();
+        render();
+      }, (e) => banner("Your saved contracts couldn't be loaded (" + (e?.code || "error") + "). Reload the page to try again."));
+    } else {
+      banner("Sign in to claude.ai to save your contracts. Until then, anything you add disappears when you close the page.");
+      $("privacy").hidden = true;
+    }
+    render();
+  })();
+})();
+</script>
