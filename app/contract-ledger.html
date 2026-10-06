@@ -1,251 +1,340 @@
 <title>Contract Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
-/* Layout: a working ledger. Header + figures strip, then one wide register (table) with tabs; a side sheet opens for a single contract. */
+/* Layout: CRM workspace. Navy global header + object tabs; main workspace of cards (home, list views, record pages); an AI assistant docked on the right. */
 :root {
-  --bg: #f3f5f4;
+  --bg: #eef1f6;
   --surface: #ffffff;
-  --sunken: #e8ecea;
-  --fg: #17211d;
-  --muted: #5b6862;
-  --line: #d3dbd7;
-  --accent: #1d6a50;
+  --sunken: #f4f6fa;
+  --fg: #172033;
+  --muted: #5d6781;
+  --line: #dde2ec;
+  --head: #0f1d3a;
+  --head-fg: #e8edf8;
+  --head-muted: #9aa8c7;
+  --accent: #2453c7;
   --accent-ink: #ffffff;
-  --accent-soft: #dcece5;
-  --ok: #1f7a4d;
-  --ok-soft: #dff1e6;
-  --warn: #9a5b00;
-  --warn-soft: #fbedd5;
-  --bad: #b3261e;
-  --bad-soft: #f9e0de;
-  --info: #285ea8;
-  --info-soft: #e0eaf8;
-  --shadow: 0 10px 40px rgba(16, 33, 26, .18);
-  --f-display: "Newsreader", Georgia, "Times New Roman", serif;
-  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --r: 6px;
+  --accent-soft: #e5ecfb;
+  --ai: #6b3fd4;
+  --ai-soft: #efe9fc;
+  --ai-grad: linear-gradient(135deg, #2453c7, #6b3fd4);
+  --series-1: #2a78d6;
+  --ok: #1d7a46; --ok-soft: #e1f3e8;
+  --warn: #935d00; --warn-soft: #fcf0d8;
+  --bad: #b42318; --bad-soft: #fde5e2;
+  --info: #2453c7; --info-soft: #e5ecfb;
+  --shadow: 0 1px 2px rgba(15, 29, 58, .06), 0 2px 8px rgba(15, 29, 58, .05);
+  --shadow-lg: 0 20px 50px rgba(15, 29, 58, .25);
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --r: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101614; --surface: #17201d; --sunken: #1e2925; --fg: #e4ebe8; --muted: #95a39d; --line: #2c3a35;
-    --accent: #5cc39b; --accent-ink: #0c1512; --accent-soft: #1d3a30;
-    --ok: #6fd39c; --ok-soft: #173426; --warn: #f0b45a; --warn-soft: #3a2b12; --bad: #f2867d; --bad-soft: #3d1c19;
-    --info: #8db7f0; --info-soft: #1a2a40; --shadow: 0 10px 40px rgba(0,0,0,.5);
+    --bg: #0d1220; --surface: #161d2e; --sunken: #1b2335; --fg: #e6eaf3; --muted: #9aa5bf; --line: #2a3349;
+    --head: #080d18; --head-fg: #e6eaf3; --head-muted: #8592ad;
+    --accent: #7ea2ff; --accent-ink: #0b1224; --accent-soft: #1d2a4a;
+    --ai: #b39bff; --ai-soft: #2a2248; --ai-grad: linear-gradient(135deg, #4c74e8, #8a63f0);
+    --series-1: #3987e5;
+    --ok: #6fd39c; --ok-soft: #173426; --warn: #f0b45a; --warn-soft: #3a2b12; --bad: #f2867d; --bad-soft: #3d1c19; --info: #7ea2ff; --info-soft: #1d2a4a;
+    --shadow: 0 1px 2px rgba(0,0,0,.3); --shadow-lg: 0 20px 50px rgba(0,0,0,.55);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #101614; --surface: #17201d; --sunken: #1e2925; --fg: #e4ebe8; --muted: #95a39d; --line: #2c3a35;
-  --accent: #5cc39b; --accent-ink: #0c1512; --accent-soft: #1d3a30;
-  --ok: #6fd39c; --ok-soft: #173426; --warn: #f0b45a; --warn-soft: #3a2b12; --bad: #f2867d; --bad-soft: #3d1c19;
-  --info: #8db7f0; --info-soft: #1a2a40; --shadow: 0 10px 40px rgba(0,0,0,.5);
+  --bg: #0d1220; --surface: #161d2e; --sunken: #1b2335; --fg: #e6eaf3; --muted: #9aa5bf; --line: #2a3349;
+  --head: #080d18; --head-fg: #e6eaf3; --head-muted: #8592ad;
+  --accent: #7ea2ff; --accent-ink: #0b1224; --accent-soft: #1d2a4a;
+  --ai: #b39bff; --ai-soft: #2a2248; --ai-grad: linear-gradient(135deg, #4c74e8, #8a63f0);
+  --series-1: #3987e5;
+  --ok: #6fd39c; --ok-soft: #173426; --warn: #f0b45a; --warn-soft: #3a2b12; --bad: #f2867d; --bad-soft: #3d1c19; --info: #7ea2ff; --info-soft: #1d2a4a;
+  --shadow: 0 1px 2px rgba(0,0,0,.3); --shadow-lg: 0 20px 50px rgba(0,0,0,.55);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
-.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 20px 60px; display: grid; gap: 18px; }
-h1, h2, h3 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
-.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
-.label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
-button, select, input, textarea { font: inherit; color: inherit; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+h1, h2, h3 { margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
+.muted { color: var(--muted); }
 
-/* header */
-.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--fg); padding-bottom: 12px; }
-.brand h1 { font-size: 30px; line-height: 1.1; }
-.brand p { margin: 2px 0 0; color: var(--muted); }
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: var(--r); font-weight: 600; }
+/* app shell */
+.app { height: 100%; display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.gh { background: var(--head); color: var(--head-fg); display: flex; align-items: center; gap: 14px; padding: 10px 16px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; white-space: nowrap; }
+.logo i { width: 28px; height: 28px; border-radius: 8px; background: var(--ai-grad); display: grid; place-items: center; font-style: normal; font-size: 13px; color: #fff; }
+.gsearch { flex: 1; max-width: 560px; margin-inline: auto; position: relative; min-width: 0; }
+.gsearch input { width: 100%; border: 1px solid transparent; background: rgba(255,255,255,.1); color: var(--head-fg); border-radius: 8px; padding: 8px 12px 8px 34px; }
+.gsearch input::placeholder { color: var(--head-muted); }
+.gsearch input:focus { background: rgba(255,255,255,.16); outline: none; border-color: var(--head-muted); }
+.gsearch svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--head-muted); }
+.gh-actions { display: flex; gap: 8px; }
+.gbtn { border: 1px solid rgba(255,255,255,.18); background: transparent; color: var(--head-fg); border-radius: 8px; padding: 7px 12px; font-weight: 600; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.gbtn:hover { background: rgba(255,255,255,.08); }
+.gbtn.ai { background: var(--ai-grad); border-color: transparent; color: #fff; }
+.gbtn.ai[aria-pressed="true"] { box-shadow: 0 0 0 2px rgba(255,255,255,.5) inset; }
+@media (max-width: 640px) { .gsearch { display: none; } .gbtn .t { display: none; } }
+
+.nav { background: var(--surface); border-bottom: 1px solid var(--line); display: flex; gap: 2px; padding-inline: 12px; overflow-x: auto; }
+.nav button { border: 0; background: none; padding: 11px 14px; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
+.nav button[aria-current="page"] { color: var(--fg); border-bottom-color: var(--accent); }
+.nav button:hover { color: var(--fg); }
+
+.body { display: grid; grid-template-columns: minmax(0, 1fr) auto; min-height: 0; }
+main { overflow-y: auto; padding-inline: 16px; padding-block: 16px 48px; min-width: 0; }
+.page { max-width: 1280px; margin: 0 auto; display: grid; gap: 14px; }
+
+/* cards */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); min-width: 0; }
+.card > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.card > header h2 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.card .pad { padding: 14px 16px; }
+.ico { width: 26px; height: 26px; border-radius: 7px; display: inline-grid; place-items: center; color: #fff; font-size: 12px; font-weight: 800; flex: none; }
+.ico.c { background: #2f6fd6; } .ico.a { background: #1d8a6b; } .ico.d { background: #c4562b; } .ico.x { background: var(--ai-grad); }
+
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.page-head h1 { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 13px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .btn:hover { border-color: var(--muted); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn.primary:hover { filter: brightness(1.08); }
+.btn.ai { background: var(--ai-soft); color: var(--ai); border-color: transparent; }
+.btn.ai:hover { filter: brightness(.97); }
 .btn.danger { color: var(--bad); }
 .btn.ghost { border-color: transparent; background: transparent; }
+.btn.sm { padding: 4px 9px; font-size: 13px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 6px 12px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 
-.banner { padding: 10px 14px; border-radius: var(--r); background: var(--warn-soft); color: var(--fg); border: 1px solid var(--line); }
+.banner { padding: 10px 14px; border-radius: var(--r); background: var(--warn-soft); border: 1px solid var(--line); }
 
-/* figures */
-.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); }
-.fig { padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
-.fig + .fig { border-left: 1px solid var(--line); }
-.fig .v { font-family: var(--f-mono); font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.fig .s { color: var(--muted); font-size: 12px; }
-@media (max-width: 760px) { .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fig:nth-child(3) { border-left: 0; } .fig:nth-child(n+3) { border-top: 1px solid var(--line); } }
+/* KPIs */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi { padding: 14px 16px; display: grid; gap: 2px; }
+.kpi .v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.kpi .s { color: var(--muted); font-size: 12px; }
+@media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* intake */
-.intake { border: 1.5px dashed var(--line); border-radius: var(--r); background: var(--surface); padding: 18px; display: grid; gap: 12px; }
-.intake.drag { border-color: var(--accent); background: var(--accent-soft); }
-.intake-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
-.intake-head h2 { font-size: 20px; }
-.intake-head p { margin: 2px 0 0; color: var(--muted); max-width: 62ch; }
-.queue { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.queue li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; background: var(--sunken); border-radius: var(--r); }
-.queue .fn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.queue .err { grid-column: 1 / -1; color: var(--bad); font-size: 12px; }
+.grid-home { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.stack { display: grid; gap: 14px; min-width: 0; }
+@media (max-width: 960px) { .grid-home { grid-template-columns: 1fr; } }
 
-/* tabs */
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.tab { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
-.tab .count { font-family: var(--f-mono); font-size: 11px; background: var(--sunken); padding: 1px 6px; border-radius: 10px; margin-left: 4px; }
+/* AI card */
+.ai-card { border-color: transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--ai-grad) border-box; border: 1.5px solid transparent; }
+.ai-out { white-space: pre-wrap; line-height: 1.55; }
+.ai-out.dim { color: var(--muted); }
+.spark { color: var(--ai); }
 
-/* filters */
-.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.filters input, .filters select { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 7px 10px; min-width: 0; }
-.filters input { flex: 1 1 220px; }
+/* path */
+.path { display: flex; gap: 3px; overflow-x: auto; }
+.path .st { flex: 1 0 auto; min-width: 110px; padding: 9px 18px 9px 22px; background: var(--sunken); color: var(--muted); font-weight: 700; font-size: 13px; text-align: center; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%); border: 0; white-space: nowrap; }
+.path .st:first-child { clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%); border-radius: 8px 0 0 8px; }
+.path .st:last-child { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 12px 50%); border-radius: 0 8px 8px 0; }
+.path .st.done { background: var(--accent-soft); color: var(--accent); }
+.path .st.cur { background: var(--accent); color: var(--accent-ink); }
+.path .st .n { font-family: var(--f-mono); margin-left: 6px; opacity: .85; }
+button.st:hover { filter: brightness(.96); }
 
-/* register */
-.register { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
-table { border-collapse: collapse; width: 100%; min-width: 900px; }
-th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; background: var(--sunken); position: sticky; top: 0; }
+/* chart */
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 34%) minmax(0, 1fr); gap: 10px; align-items: center; cursor: default; }
+.bar-row .nm { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+.bar-track { display: flex; align-items: center; gap: 8px; min-width: 0; padding-block: 4px; }
+.bar { height: 14px; background: var(--series-1); border-radius: 0 4px 4px 0; min-width: 2px; }
+.bar-row:hover .bar { filter: brightness(1.1); }
+.bar-row .val { font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.tip { position: fixed; z-index: 40; background: var(--head); color: var(--head-fg); padding: 8px 10px; border-radius: 8px; font-size: 12px; pointer-events: none; box-shadow: var(--shadow-lg); max-width: 240px; }
+.tip b { display: block; font-size: 13px; }
+
+/* lists */
+.mini { list-style: none; margin: 0; padding: 0; }
+.mini li { display: grid; grid-template-columns: 108px minmax(0, 1fr) auto; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); align-items: baseline; cursor: pointer; }
+.mini li:last-child { border-bottom: 0; }
+.mini li:hover { background: var(--sunken); }
+.mini .t { min-width: 0; }
+.mini .num { white-space: nowrap; font-size: 13px; }
+[hidden] { display: none !important; }
+.mini .t b { font-weight: 600; }
+.mini .t span { color: var(--muted); display: block; font-size: 12px; }
+.due { font-size: 12px; font-weight: 700; white-space: nowrap; }
+.due.soon { color: var(--bad); } .due.mid { color: var(--warn); } .due.far { color: var(--muted); }
+
+/* table */
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.toolbar select, .toolbar input { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; min-width: 0; }
+.toolbar input { flex: 1 1 200px; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 920px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; background: var(--sunken); }
 th button { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
 th.r, td.r { text-align: right; }
 tbody tr { cursor: pointer; }
-tbody tr:hover { background: var(--accent-soft); }
-tbody tr:last-child td { border-bottom: 0; }
-td .org { font-weight: 600; }
+tbody tr:hover { background: var(--sunken); }
+td a, .link { color: var(--accent); font-weight: 600; text-decoration: none; background: none; border: 0; padding: 0; text-align: left; }
 td .sub { color: var(--muted); font-size: 12px; }
-td.clip { max-width: 280px; }
-td.clip .sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-tfoot td { font-weight: 700; background: var(--sunken); border-top: 2px solid var(--line); border-bottom: 0; cursor: default; }
+td.clip .sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 260px; }
+tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
 
-.pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; letter-spacing: .03em; white-space: nowrap; }
-.pill.active { background: var(--ok-soft); color: var(--ok); }
-.pill.expiring { background: var(--warn-soft); color: var(--warn); }
-.pill.expired { background: var(--bad-soft); color: var(--bad); }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.pill.active, .pill.low { background: var(--ok-soft); color: var(--ok); }
+.pill.expiring, .pill.medium { background: var(--warn-soft); color: var(--warn); }
+.pill.expired, .pill.high { background: var(--bad-soft); color: var(--bad); }
 .pill.upcoming, .pill.renewing { background: var(--info-soft); color: var(--info); }
-.pill.unknown { background: var(--sunken); color: var(--muted); }
+.pill.unknown, .pill.none { background: var(--sunken); color: var(--muted); }
 .pill.example { background: var(--sunken); color: var(--muted); border: 1px dashed var(--line); }
+.pill.aip { background: var(--ai-soft); color: var(--ai); }
 
-.empty { padding: 36px 20px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
-.empty h3 { color: var(--fg); font-size: 20px; }
+/* board */
+.board { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.col { background: var(--sunken); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; display: grid; gap: 8px; align-content: start; min-height: 120px; }
+.col h3 { font-size: 13px; display: flex; justify-content: space-between; padding: 2px 4px 6px; border-bottom: 3px solid var(--line); }
+.col h3.s-Active { border-color: var(--ok); } .col h3.s-Expiring { border-color: var(--warn); } .col h3.s-Expired { border-color: var(--bad); } .col h3.s-Upcoming, .col h3.s-Renewing { border-color: var(--info); }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 4px; cursor: pointer; box-shadow: var(--shadow); text-align: left; }
+.tile:hover { border-color: var(--accent); }
+.tile b { font-weight: 700; }
+.tile .row { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
 
-/* deadlines */
-.deadlines { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
-.dl { display: grid; grid-template-columns: 110px 90px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); align-items: baseline; cursor: pointer; }
-.dl:last-child { border-bottom: 0; }
-.dl:hover { background: var(--accent-soft); }
-.dl.past { opacity: .55; }
-.dl .when { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
-.dl .what b { font-weight: 600; }
-.dl .what span { color: var(--muted); }
-.dl .in { font-size: 12px; font-weight: 700; }
-.dl .in.soon { color: var(--bad); } .dl .in.mid { color: var(--warn); } .dl .in.far { color: var(--muted); }
-@media (max-width: 560px) { .dl { grid-template-columns: 1fr; gap: 2px; } }
+/* record */
+.crumb { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+.hl { padding: 16px; display: grid; gap: 14px; }
+.hl-top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.hl-top h1 { font-size: 22px; font-weight: 800; }
+.hl-fields { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.hl-fields > div { display: grid; gap: 2px; min-width: 0; }
+.hl-fields .v { font-weight: 700; overflow-wrap: anywhere; }
+@media (max-width: 860px) { .hl-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.rec-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 1000px) { .rec-grid { grid-template-columns: 1fr; } }
+.subtabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); padding-inline: 10px; overflow-x: auto; }
+.subtabs button { border: 0; background: none; padding: 11px 12px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.subtabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.dgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+@media (max-width: 560px) { .dgrid { grid-template-columns: 1fr; } }
+.df { display: grid; gap: 3px; padding: 10px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.df.wide { grid-column: 1 / -1; }
+.df .v { overflow-wrap: anywhere; white-space: pre-wrap; }
+.df input, .df textarea, .df select { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 7px 10px; width: 100%; }
+.df textarea { min-height: 72px; resize: vertical; }
+.kd-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 6px; margin-bottom: 6px; }
+.kd-row input { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 6px 8px; min-width: 0; }
+.act { list-style: none; margin: 0; padding: 0; }
+.act li { padding: 10px 0 10px 18px; border-left: 2px solid var(--line); margin-left: 6px; position: relative; }
+.act li::before { content: ""; position: absolute; left: -6px; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+.act li.ai::before { background: var(--ai); }
+.act time { display: block; font-size: 12px; color: var(--muted); }
+.bullets { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.confirm { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--bad-soft); padding: 6px 10px; border-radius: 8px; }
 
-/* ask */
-.ask { display: grid; gap: 12px; }
-.ask textarea { width: 100%; min-height: 80px; border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; background: var(--surface); resize: vertical; }
-.ask .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 4px 10px; font-size: 12px; }
-.chip:hover { border-color: var(--accent); }
-.answer { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; white-space: pre-wrap; max-width: 80ch; min-height: 48px; }
-.answer.dim { color: var(--muted); }
+.empty { padding: 34px 20px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
+.empty h3 { color: var(--fg); font-size: 18px; }
 
-/* sheet */
-.scrim { position: fixed; inset: 0; background: rgba(10, 20, 16, .35); z-index: 10; }
-.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--surface); box-shadow: var(--shadow); z-index: 11; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.sheet header { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-.sheet header h2 { font-size: 22px; }
-.sheet .body { overflow-y: auto; padding: 16px 20px; display: grid; gap: 14px; align-content: start; }
-.sheet footer { padding: 12px 20px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
-.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
-.field { display: grid; gap: 4px; min-width: 0; }
-.field input, .field textarea, .field select { border: 1px solid var(--line); background: var(--bg); border-radius: var(--r); padding: 7px 10px; width: 100%; }
-.field textarea { min-height: 70px; resize: vertical; }
-.kd { display: grid; gap: 6px; }
-.kd-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 6px; }
-.kd-row input { border: 1px solid var(--line); background: var(--bg); border-radius: var(--r); padding: 6px 8px; min-width: 0; }
-.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--bad-soft); padding: 6px 10px; border-radius: var(--r); }
+/* assistant */
+.asst { width: 380px; border-left: 1px solid var(--line); background: var(--surface); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
+.asst[hidden] { display: none !important; }
+.asst header { padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.asst header h2 { font-size: 15px; display: flex; gap: 8px; align-items: center; }
+.asst .ctx { font-size: 12px; color: var(--muted); }
+.thread { overflow-y: auto; padding: 14px; display: grid; gap: 12px; align-content: start; }
+.msg { max-width: 92%; padding: 10px 12px; border-radius: 12px; white-space: pre-wrap; line-height: 1.5; overflow-wrap: anywhere; }
+.msg.u { justify-self: end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.msg.a { justify-self: start; background: var(--sunken); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg.a.err { border-color: var(--bad); }
+.steps { display: flex; flex-wrap: wrap; gap: 4px; justify-self: start; }
+.steps .pill { font-weight: 600; }
+.sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 5px 10px; font-size: 12px; text-align: left; }
+.chip:hover { border-color: var(--ai); color: var(--ai); }
+.composer { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 8px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+.composer textarea { width: 100%; min-height: 64px; max-height: 160px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--bg); }
+.composer .row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+@media (max-width: 1100px) {
+  .asst { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); z-index: 30; box-shadow: var(--shadow-lg); padding-top: env(safe-area-inset-top, 0px); }
+}
 
-.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: var(--r); z-index: 20; font-weight: 600; max-width: calc(100% - 32px); }
+/* modal */
+.scrim { position: fixed; inset: 0; background: rgba(8, 14, 28, .45); z-index: 25; }
+.modal { position: fixed; z-index: 26; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100% - 32px)); max-height: calc(100% - 48px); overflow-y: auto; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-lg); }
+.modal header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.modal header h2 { font-size: 17px; }
+.modal .pad { padding: 16px 18px; display: grid; gap: 12px; }
+.drop { border: 2px dashed var(--line); border-radius: 12px; padding: 26px 16px; text-align: center; display: grid; gap: 8px; justify-items: center; color: var(--muted); }
+.drop.drag { border-color: var(--ai); background: var(--ai-soft); }
+.drop strong { color: var(--fg); font-size: 15px; }
+.queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.queue li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 10px; background: var(--sunken); border-radius: 8px; }
+.queue .fn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue .err { grid-column: 1 / -1; color: var(--bad); font-size: 12px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--head); color: var(--head-fg); padding: 10px 16px; border-radius: 10px; z-index: 50; font-weight: 600; max-width: calc(100% - 32px); box-shadow: var(--shadow-lg); }
 .foot { color: var(--muted); font-size: 12px; }
-@media (prefers-reduced-motion: no-preference) { .sheet { animation: slide .18s ease-out; } @keyframes slide { from { transform: translateX(24px); opacity: .6; } } }
+@media (prefers-reduced-motion: no-preference) {
+  .msg, .card { animation: rise .2s ease-out; }
+  @keyframes rise { from { transform: translateY(4px); } }
+  .thinking::after { content: "…"; animation: blink 1s steps(3) infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+}
 </style>
 
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <h1>Contract Ledger</h1>
-      <p>Upload contracts. AI reads them and keeps the key terms, money and deadlines in one place.</p>
+<div class="app">
+  <header class="gh">
+    <div class="logo"><i aria-hidden="true">CL</i><span>Contract Ledger</span></div>
+    <div class="gsearch">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="gq" type="search" placeholder="Search contracts, accounts, terms…" aria-label="Search everything">
     </div>
-    <div class="actions">
-      <button class="btn" id="exportBtn" hidden>Export CSV</button>
-      <button class="btn primary" id="addBtn">Add contracts</button>
+    <div class="gh-actions">
+      <button class="gbtn" id="addBtn"><span aria-hidden="true">+</span><span class="t">Add contracts</span></button>
+      <button class="gbtn ai" id="asstBtn" aria-pressed="true"><span aria-hidden="true">✦</span><span class="t">Assistant</span></button>
     </div>
   </header>
-
-  <div class="banner" id="banner" hidden></div>
-
-  <section class="figures" aria-label="Summary">
-    <div class="fig"><span class="label">Contracts</span><span class="v" id="kCount">0</span><span class="s" id="kCountS">none yet</span></div>
-    <div class="fig"><span class="label">Year-1 earnings</span><span class="v" id="kValue">$0</span><span class="s">committed fees, first 12 months</span></div>
-    <div class="fig"><span class="label">Bonuses at stake</span><span class="v" id="kBonus">$0</span><span class="s" id="kBonusS">maximum possible</span></div>
-    <div class="fig"><span class="label">Deadlines, next 90 days</span><span class="v" id="kDue">0</span><span class="s" id="kDueS">nothing due</span></div>
-  </section>
-
-  <section class="intake" id="intake" aria-label="Add contracts">
-    <div class="intake-head">
-      <div>
-        <h2>Add contracts</h2>
-        <p>Drop PDF, Word (.docx) or text files here, or choose them. Claude reads each one and fills in the organization, industry, earnings, bonuses and key dates. You can correct anything afterwards.</p>
-      </div>
-      <div class="actions">
-        <button class="btn primary" id="chooseBtn">Choose files</button>
-        <button class="btn" id="sampleBtn">Load example contracts</button>
-      </div>
-      <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
-    </div>
-    <ul class="queue" id="queue"></ul>
-  </section>
-
-  <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-contracts" aria-selected="true" data-view="contracts">Contracts <span class="count" id="cTab">0</span></button>
-    <button class="tab" role="tab" id="tab-deadlines" aria-selected="false" data-view="deadlines">Deadlines <span class="count" id="dTab">0</span></button>
-    <button class="tab" role="tab" id="tab-ask" aria-selected="false" data-view="ask">Ask about your contracts</button>
+  <nav class="nav" aria-label="Main">
+    <button data-go="home" aria-current="page">Home</button>
+    <button data-go="contracts">Contracts</button>
+    <button data-go="accounts">Accounts</button>
+    <button data-go="deadlines">Deadlines</button>
   </nav>
-
-  <section id="view-contracts" class="ask">
-    <div class="filters">
-      <input type="search" id="q" placeholder="Search organization, industry, terms…" aria-label="Search contracts">
-      <select id="fIndustry" aria-label="Industry"><option value="">All industries</option></select>
-      <select id="fStatus" aria-label="Status">
-        <option value="">All statuses</option><option>Active</option><option>Expiring</option><option>Renewing</option><option>Upcoming</option><option>Expired</option>
-      </select>
-    </div>
-    <div class="register" id="register"></div>
-  </section>
-
-  <section id="view-deadlines" hidden>
-    <div class="deadlines" id="deadlines"></div>
-  </section>
-
-  <section id="view-ask" class="ask" hidden>
-    <div class="chips" id="chips"></div>
-    <textarea id="question" placeholder="e.g. Which contracts renew automatically in the next 6 months, and when must I send notice?"></textarea>
-    <div class="row">
-      <button class="btn primary" id="askBtn">Ask</button>
-      <button class="btn" id="stopBtn" hidden>Stop</button>
-      <span class="foot">Claude answers from the details saved for your contracts.</span>
-    </div>
-    <div class="answer dim" id="answer">Answers appear here.</div>
-  </section>
-
-  <p class="foot" id="privacy">Your contracts are saved privately to your account. Other people who open this page see only their own contracts.</p>
+  <div class="body">
+    <main id="main"><div class="page" id="page"></div></main>
+    <aside class="asst" id="asst" aria-label="AI assistant">
+      <header>
+        <div><h2><span class="ico x" aria-hidden="true">✦</span>Ledger Assistant</h2><div class="ctx" id="asstCtx">Looking at: all contracts</div></div>
+        <div style="display:flex;gap:4px"><button class="btn ghost sm" id="newChat">New chat</button><button class="btn ghost sm" id="closeAsst" aria-label="Close assistant">Close</button></div>
+      </header>
+      <div class="thread" id="thread"></div>
+      <div class="composer">
+        <div class="sugg" id="sugg"></div>
+        <textarea id="prompt" placeholder="Ask anything about your contracts, or ask me to draft something…" aria-label="Message the assistant"></textarea>
+        <div class="row"><span class="foot">Answers come from your saved contracts.</span><span><button class="btn sm" id="stopBtn" hidden>Stop</button> <button class="btn primary sm" id="sendBtn">Send</button></span></div>
+      </div>
+    </aside>
+  </div>
 </div>
 
 <div class="scrim" id="scrim" hidden></div>
-<aside class="sheet" id="sheet" hidden aria-label="Contract details"></aside>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" hidden>
+  <header><h2 id="mTitle">Add contracts</h2><button class="btn ghost sm" id="closeModal">Close</button></header>
+  <div class="pad">
+    <div class="drop" id="drop">
+      <strong>Drop contract files here</strong>
+      <span>PDF, Word (.docx) or .txt. AI reads each one and creates a record with the organization, industry, earnings, bonuses, key dates and a risk rating.</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="btn primary" id="chooseBtn">Choose files</button><button class="btn" id="sampleBtn">Load example contracts</button></div>
+      <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+    </div>
+    <ul class="queue" id="queue"></ul>
+  </div>
+</div>
+<div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -256,7 +345,6 @@ tfoot td { font-weight: 700; background: var(--sunken); border-top: 2px solid va
   const DAY = 86400000;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const todayISO = iso(today);
-
   function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function parseD(s) { if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null; const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
   function fmtD(s) { const d = parseD(s); return d ? d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—"; }
@@ -265,16 +353,20 @@ tfoot td { font-weight: 700; background: var(--sunken); border-top: 2px solid va
     try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD", maximumFractionDigits: 0 }).format(Number(n)); }
     catch { return "$" + Math.round(Number(n)).toLocaleString(); }
   }
+  function compact(n) { n = Number(n) || 0; return n >= 1e6 ? "$" + (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + "M" : n >= 1e3 ? "$" + Math.round(n / 1e3) + "K" : "$" + Math.round(n); }
   function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2600); }
+  const daysTo = (s) => Math.round((parseD(s) - today) / DAY);
 
   // ---------- state ----------
-  let contracts = [];          // [{id, ...fields}]
-  let store = null;            // collection ref, or null => in-memory only
-  let sample = null, downloads = null;
-  let view = "contracts", sortKey = "org", sortDir = 1;
+  let contracts = [];
+  let store = null, sample = null, downloads = null, toolsOK = false, maxPrompt = 262144;
+  let route = { name: "home" };
+  let listView = "all", listMode = "table", sortKey = "org", sortDir = 1, listQuery = "", accountFilter = "";
+  let recTab = "details", editMode = false, kdDraft = [];
   let localSeq = 0;
 
   // ---------- derived ----------
+  const STAGES = ["Upcoming", "Active", "Expiring", "Renewing", "Expired"];
   function status(c) {
     const s = parseD(c.startDate), e = parseD(c.endDate);
     if (s && s > today) return "Upcoming";
@@ -288,164 +380,231 @@ tfoot td { font-weight: 700; background: var(--sunken); border-top: 2px solid va
     const e = parseD(c.endDate);
     if (e) {
       const nd = Number(c.renewalNoticeDays);
-      if (nd > 0) out.push({ date: iso(new Date(e.getTime() - nd * DAY)), label: c.autoRenew ? `Last day to send non-renewal notice (${nd} days)` : `Last day to give ${nd} days' notice before term ends` , kind: "notice" });
-      out.push({ date: c.endDate, label: c.autoRenew ? "Current term ends (renews automatically)" : "Term ends", kind: "end" });
+      if (nd > 0) out.push({ date: iso(new Date(e.getTime() - nd * DAY)), label: c.autoRenew ? `Last day to send non-renewal notice (${nd} days)` : `Last day to give ${nd} days' notice` });
+      out.push({ date: c.endDate, label: c.autoRenew ? "Current term ends (auto-renews)" : "Term ends" });
     }
-    for (const k of c.keyDates || []) if (parseD(k.date)) out.push({ date: k.date, label: k.label || "Key date", kind: "key" });
+    for (const k of c.keyDates || []) if (parseD(k.date)) out.push({ date: k.date, label: k.label || "Key date" });
     return out.map((d) => ({ ...d, c }));
   }
-  function allDeadlines() { return contracts.flatMap(deadlinesOf).sort((a, b) => a.date.localeCompare(b.date)); }
-  function nextDeadline(c) { return deadlinesOf(c).filter((d) => d.date >= todayISO).sort((a, b) => a.date.localeCompare(b.date))[0]; }
-  function daysTo(s) { return Math.round((parseD(s) - today) / DAY); }
+  const allDeadlines = () => contracts.flatMap(deadlinesOf).sort((a, b) => a.date.localeCompare(b.date));
+  const nextDeadline = (c) => deadlinesOf(c).filter((d) => d.date >= todayISO).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const riskOf = (c) => (["High", "Medium", "Low"].includes(c.riskLevel) ? c.riskLevel : null);
+  const riskPill = (c) => { const r = riskOf(c); return r ? `<span class="pill ${r.toLowerCase()}">${r === "High" ? "▲" : r === "Medium" ? "●" : "▼"} ${r} risk</span>` : `<span class="pill none">Not analyzed</span>`; };
+  const statusPill = (c) => { const s = status(c); return `<span class="pill ${s.toLowerCase()}">${s}</span>`; };
+  const dueCls = (x) => (x < 0 ? "far" : x <= 30 ? "soon" : x <= 90 ? "mid" : "far");
+  const dueTxt = (x) => (x < 0 ? `${-x}d ago` : x === 0 ? "today" : `in ${x}d`);
+  const byId = (id) => contracts.find((c) => c.id === id);
 
-  // ---------- render ----------
+  // ---------- routing ----------
+  function go(name, id) {
+    route = { name, id }; editMode = false;
+    if (name === "record") recTab = "details";
+    document.querySelectorAll(".nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.go === (name === "record" ? "contracts" : name) ? "page" : "false"));
+    render(); $("main").scrollTop = 0; updateAsstContext();
+  }
   function render() {
-    const n = contracts.length;
-    $("kCount").textContent = n;
-    const ex = contracts.filter((c) => c.example).length;
-    $("kCountS").textContent = n ? (ex ? `${ex} example${ex > 1 ? "s" : ""} included` : "in your ledger") : "none yet";
-    $("kValue").textContent = money(contracts.reduce((s, c) => s + (Number(c.annualValue) || 0), 0));
-    const bonus = contracts.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0);
-    $("kBonus").textContent = money(bonus);
-    $("kBonusS").textContent = contracts.filter((c) => Number(c.maxBonus) > 0).length + " contract(s) with a bonus";
-    const due = allDeadlines().filter((d) => { const x = daysTo(d.date); return x >= 0 && x <= 90; });
-    $("kDue").textContent = due.length;
-    $("kDueS").textContent = due.length ? "next: " + fmtD(due[0].date) : "nothing due";
-    $("cTab").textContent = n;
-    $("dTab").textContent = allDeadlines().filter((d) => d.date >= todayISO).length;
-    $("exportBtn").hidden = !(downloads && n);
-    $("sampleBtn").textContent = ex ? "Remove examples" : "Load example contracts";
-
-    const inds = [...new Set(contracts.map((c) => c.industry).filter(Boolean))].sort();
-    const sel = $("fIndustry"), cur = sel.value;
-    sel.innerHTML = '<option value="">All industries</option>' + inds.map((i) => `<option${i === cur ? " selected" : ""}>${esc(i)}</option>`).join("");
-
-    renderRegister(); renderDeadlines(); renderChips();
+    const p = $("page");
+    if (route.name === "record" && !byId(route.id)) route = { name: "contracts" };
+    p.innerHTML = ({ home: pageHome, contracts: pageContracts, accounts: pageAccounts, deadlines: pageDeadlines, record: pageRecord })[route.name]();
+    if (route.name === "record") renderKd();
   }
 
-  function renderRegister() {
-    const reg = $("register");
-    if (!contracts.length) {
-      reg.innerHTML = `<div class="empty"><h3>No contracts yet</h3><p>Add your first contract above, or load the example contracts to see how the ledger works.</p></div>`;
-      return;
-    }
-    const q = $("q").value.trim().toLowerCase(), fi = $("fIndustry").value, fs = $("fStatus").value;
-    let rows = contracts.filter((c) => {
-      if (fi && c.industry !== fi) return false;
-      if (fs && status(c) !== fs) return false;
-      if (q && ![c.org, c.counterparty, c.industry, c.contractType, c.earnings, c.bonuses, c.summary, c.fileName].join(" ").toLowerCase().includes(q)) return false;
+  // ---------- pages ----------
+  const bannerHtml = () => (state.banner ? `<div class="banner">${esc(state.banner)}</div>` : "");
+  const state = { banner: "" };
+
+  function emptyAll(msg) {
+    return `<div class="card"><div class="empty"><h3>No contracts yet</h3><p>${msg || "Add contract files and the AI builds your records, or load the example contracts to explore."}</p><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="btn primary" data-act="add">Add contracts</button><button class="btn" data-act="examples">Load example contracts</button></div></div></div>`;
+  }
+
+  function pageHome() {
+    const n = contracts.length;
+    const yv = contracts.reduce((s, c) => s + (Number(c.annualValue) || 0), 0);
+    const bonus = contracts.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0);
+    const due = allDeadlines().filter((d) => { const x = daysTo(d.date); return x >= 0 && x <= 90; });
+    const high = contracts.filter((c) => riskOf(c) === "High").length;
+    const kpis = `<div class="kpis">
+      <div class="card kpi"><span class="label">Contracts</span><span class="v">${n}</span><span class="s">${new Set(contracts.map((c) => c.org)).size} accounts</span></div>
+      <div class="card kpi"><span class="label">Year-1 earnings</span><span class="v">${compact(yv)}</span><span class="s">${money(yv)} committed</span></div>
+      <div class="card kpi"><span class="label">Bonuses at stake</span><span class="v">${compact(bonus)}</span><span class="s">${contracts.filter((c) => Number(c.maxBonus) > 0).length} contract(s) with a bonus</span></div>
+      <div class="card kpi"><span class="label">Due in 90 days</span><span class="v">${due.length}</span><span class="s">${high ? high + " high-risk contract(s)" : due.length ? "next " + fmtD(due[0].date) : "nothing due"}</span></div>
+    </div>`;
+    if (!n) return bannerHtml() + `<div class="page-head"><h1>Good ${greet()}</h1></div>` + kpis + emptyAll();
+
+    // pipeline
+    const counts = Object.fromEntries(STAGES.map((s) => [s, contracts.filter((c) => status(c) === s).length]));
+    const path = `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-stage="${s}">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>`;
+
+    // chart: year-1 earnings by industry
+    const byInd = {};
+    for (const c of contracts) { const k = c.industry || "Unspecified"; (byInd[k] ||= { v: 0, n: 0 }); byInd[k].v += Number(c.annualValue) || 0; byInd[k].n++; }
+    const rows = Object.entries(byInd).sort((a, b) => b[1].v - a[1].v).slice(0, 8);
+    const max = Math.max(1, ...rows.map((r) => r[1].v));
+    const chart = `<div class="bars" id="chart">${rows.map(([k, r]) => `<div class="bar-row" data-tip="${esc(k)}|${money(r.v)}|${r.n} contract${r.n > 1 ? "s" : ""}"><span class="nm" title="${esc(k)}">${esc(k)}</span><span class="bar-track"><span class="bar" style="width:${Math.max(1, (r.v / max) * 82)}%"></span><span class="val">${compact(r.v)}</span></span></div>`).join("")}</div>`;
+
+    const upcoming = allDeadlines().filter((d) => d.date >= todayISO).slice(0, 6);
+    const dl = upcoming.length ? `<ul class="mini">${upcoming.map((d) => { const x = daysTo(d.date); return `<li data-open="${esc(d.c.id)}" tabindex="0"><span class="num">${fmtD(d.date)}</span><span class="t"><b>${esc(d.c.org)}</b><span>${esc(d.label)}</span></span><span class="due ${dueCls(x)}">${dueTxt(x)}</span></li>`; }).join("")}</ul>` : `<div class="empty"><p>No upcoming deadlines.</p></div>`;
+
+    const recent = [...contracts].sort((a, b) => String(b.addedAt || "").localeCompare(String(a.addedAt || ""))).slice(0, 5);
+    const rec = `<ul class="mini">${recent.map((c) => `<li data-open="${esc(c.id)}" tabindex="0"><span>${statusPill(c)}</span><span class="t"><b>${esc(c.org)}</b><span>${esc(c.industry || "")}</span></span><span>${riskPill(c)}</span></li>`).join("")}</ul>`;
+
+    return bannerHtml() + `<div class="page-head"><h1>Good ${greet()}</h1><span class="muted">${today.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</span></div>
+      ${kpis}
+      <div class="grid-home">
+        <div class="stack">
+          <section class="card ai-card"><header><h2><span class="ico x" aria-hidden="true">✦</span>AI briefing</h2><button class="btn ai sm" data-act="briefing" ${sample ? "" : "disabled"}>${state.briefing ? "Refresh" : "Generate briefing"}</button></header>
+            <div class="pad ai-out ${state.briefing ? "" : "dim"}" id="briefing">${esc(state.briefing || "Get a short AI summary of what needs your attention: upcoming deadlines, contracts at risk, renewals and bonus opportunities.")}</div></section>
+          <section class="card"><header><h2>Renewal pipeline</h2><span class="foot">Click a stage to see its contracts</span></header><div class="pad">${path}</div></section>
+          <section class="card"><header><h2>Year-1 earnings by industry</h2><span class="foot">Committed fees, first 12 months</span></header><div class="pad">${chart}</div></section>
+        </div>
+        <div class="stack">
+          <section class="card"><header><h2><span class="ico d" aria-hidden="true">D</span>Upcoming deadlines</h2><button class="link" data-go="deadlines">View all</button></header>${dl}</section>
+          <section class="card"><header><h2><span class="ico c" aria-hidden="true">C</span>Recently added</h2><button class="link" data-go="contracts">View all</button></header>${rec}</section>
+        </div>
+      </div>`;
+  }
+  function greet() { const h = new Date().getHours(); return h < 12 ? "morning" : h < 18 ? "afternoon" : "evening"; }
+
+  const VIEWS = { all: "All contracts", soon: "Deadlines in 90 days", bonus: "With bonuses", risk: "High risk", renew: "Auto-renewing" };
+  function filtered() {
+    const q = (listQuery || "").toLowerCase();
+    return contracts.filter((c) => {
+      if (accountFilter && c.org !== accountFilter) return false;
+      if (listView === "soon" && !deadlinesOf(c).some((d) => { const x = daysTo(d.date); return x >= 0 && x <= 90; })) return false;
+      if (listView === "bonus" && !(Number(c.maxBonus) > 0)) return false;
+      if (listView === "risk" && riskOf(c) !== "High") return false;
+      if (listView === "renew" && !c.autoRenew) return false;
+      if (STAGES.includes(listView) && status(c) !== listView) return false;
+      if (q && ![c.org, c.counterparty, c.industry, c.contractType, c.earnings, c.bonuses, c.summary, c.fileName, c.risks].join(" ").toLowerCase().includes(q)) return false;
       return true;
     });
-    const key = { org: (c) => (c.org || "").toLowerCase(), industry: (c) => (c.industry || "").toLowerCase(), status: status,
-      end: (c) => c.endDate || "9999", value: (c) => Number(c.annualValue) || 0, bonus: (c) => Number(c.maxBonus) || 0,
-      next: (c) => nextDeadline(c)?.date || "9999" }[sortKey];
+  }
+  function pageContracts() {
+    if (!contracts.length) return bannerHtml() + `<div class="page-head"><h1><span class="ico c">C</span>Contracts</h1></div>` + emptyAll();
+    const rows = filtered();
+    const key = { org: (c) => (c.org || "").toLowerCase(), industry: (c) => (c.industry || "").toLowerCase(), status, risk: (c) => ({ High: 0, Medium: 1, Low: 2 }[riskOf(c)] ?? 3),
+      value: (c) => Number(c.annualValue) || 0, bonus: (c) => Number(c.maxBonus) || 0, next: (c) => nextDeadline(c)?.date || "9999" }[sortKey];
     rows.sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * sortDir);
-    const th = (k, label, cls = "") => `<th class="${cls}" aria-sort="${sortKey === k ? (sortDir > 0 ? "ascending" : "descending") : "none"}"><button data-sort="${k}">${label}${sortKey === k ? (sortDir > 0 ? " ↑" : " ↓") : ""}</button></th>`;
-    const body = rows.map((c) => {
-      const st = status(c), nd = nextDeadline(c);
-      return `<tr data-id="${esc(c.id)}" tabindex="0">
-        <td><div class="org">${esc(c.org || "Untitled")}</div><div class="sub">${esc(c.contractType || "")}${c.example ? ' <span class="pill example">Example</span>' : ""}</div></td>
-        <td>${esc(c.industry || "—")}</td>
-        <td><span class="pill ${st.toLowerCase()}">${st}</span></td>
-        <td class="num">${fmtD(c.startDate)}<div class="sub">to ${fmtD(c.endDate)}</div></td>
-        <td class="clip"><div class="sub">${esc(c.earnings || "—")}</div></td>
-        <td class="r num">${money(c.annualValue, c.currency)}</td>
-        <td class="clip"><div class="sub">${esc(c.bonuses || "—")}</div></td>
-        <td class="r num">${money(c.maxBonus, c.currency)}</td>
-        <td>${nd ? `<span class="num">${fmtD(nd.date)}</span><div class="sub">${esc(nd.label)}</div>` : '<span class="sub">—</span>'}</td>
-      </tr>`;
-    }).join("");
-    const tv = rows.reduce((s, c) => s + (Number(c.annualValue) || 0), 0), tb = rows.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0);
-    reg.innerHTML = rows.length ? `<table>
-      <thead><tr>${th("org", "Org name")}${th("industry", "Industry")}${th("status", "Status")}${th("end", "Term")}<th>Earnings</th>${th("value", "Year-1 earnings", "r")}<th>Bonuses</th>${th("bonus", "Max bonus", "r")}${th("next", "Next deadline")}</tr></thead>
-      <tbody>${body}</tbody>
-      <tfoot><tr><td colspan="5">Total, ${rows.length} contract${rows.length > 1 ? "s" : ""}</td><td class="r num">${money(tv)}</td><td></td><td class="r num">${money(tb)}</td><td></td></tr></tfoot>
-    </table>` : `<div class="empty"><h3>No matches</h3><p>No contract matches these filters.</p></div>`;
+    const opts = Object.entries(VIEWS).map(([k, v]) => `<option value="${k}"${k === listView ? " selected" : ""}>${v}</option>`).join("") + STAGES.map((s) => `<option value="${s}"${s === listView ? " selected" : ""}>Status: ${s}</option>`).join("");
+    const th = (k, l, cls = "") => `<th class="${cls}" aria-sort="${sortKey === k ? (sortDir > 0 ? "ascending" : "descending") : "none"}"><button data-sort="${k}">${l}${sortKey === k ? (sortDir > 0 ? " ↑" : " ↓") : ""}</button></th>`;
+    let body;
+    if (!rows.length) body = `<div class="empty"><h3>No matches</h3><p>No contract matches this view.</p></div>`;
+    else if (listMode === "board") {
+      body = `<div class="pad"><div class="board">${STAGES.map((s) => { const cs = rows.filter((c) => status(c) === s); return `<div class="col"><h3 class="s-${s}"><span>${s}</span><span class="num">${cs.length}</span></h3>${cs.map((c) => `<button class="tile" data-open="${esc(c.id)}"><b>${esc(c.org)}</b><span class="row"><span>${esc(c.industry || "")}</span></span><span class="row"><span class="num">${compact(c.annualValue)}/yr 1</span>${riskPill(c)}</span>${nextDeadline(c) ? `<span class="row"><span>Next: ${fmtD(nextDeadline(c).date)}</span></span>` : ""}</button>`).join("")}</div>`; }).join("")}</div></div>`;
+    } else {
+      const tv = rows.reduce((s, c) => s + (Number(c.annualValue) || 0), 0), tb = rows.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0);
+      body = `<div class="tbl-wrap"><table><thead><tr>${th("org", "Org name")}${th("industry", "Industry")}${th("status", "Status")}${th("risk", "AI risk")}<th>Earnings</th>${th("value", "Year-1 earnings", "r")}<th>Bonuses</th>${th("bonus", "Max bonus", "r")}${th("next", "Next deadline")}</tr></thead><tbody>${rows.map((c) => { const nd = nextDeadline(c); return `<tr data-open="${esc(c.id)}" tabindex="0">
+        <td><a href="#" data-open="${esc(c.id)}">${esc(c.org || "Untitled")}</a><div class="sub">${esc(c.contractType || "")}${c.example ? ' <span class="pill example">Example</span>' : ""}</div></td>
+        <td>${esc(c.industry || "—")}</td><td>${statusPill(c)}</td><td>${riskPill(c)}</td>
+        <td class="clip"><div class="sub">${esc(c.earnings || "—")}</div></td><td class="r num">${money(c.annualValue, c.currency)}</td>
+        <td class="clip"><div class="sub">${esc(c.bonuses || "—")}</div></td><td class="r num">${money(c.maxBonus, c.currency)}</td>
+        <td>${nd ? `<span class="num">${fmtD(nd.date)}</span><div class="sub">${esc(nd.label)}</div>` : '<span class="sub">—</span>'}</td></tr>`; }).join("")}</tbody>
+        <tfoot><tr><td colspan="5">${rows.length} contract${rows.length > 1 ? "s" : ""}</td><td class="r num">${money(tv)}</td><td></td><td class="r num">${money(tb)}</td><td></td></tr></tfoot></table></div>`;
+    }
+    return bannerHtml() + `<div class="page-head"><h1><span class="ico c">C</span>Contracts</h1><div style="display:flex;gap:8px;flex-wrap:wrap">${downloads ? '<button class="btn" data-act="export">Export CSV</button>' : ""}<button class="btn primary" data-act="add">Add contracts</button></div></div>
+      <section class="card"><header><div class="toolbar" style="flex:1"><select id="lv" aria-label="List view">${opts}</select><input type="search" id="lq" placeholder="Search this list…" value="${esc(listQuery)}" aria-label="Search this list">${accountFilter ? `<span class="pill aip">Account: ${esc(accountFilter)} <button class="btn ghost sm" data-act="clearAcct" aria-label="Clear account filter" style="padding:0 2px">×</button></span>` : ""}</div>
+        <div class="seg" role="group" aria-label="Layout"><button data-mode="table" aria-pressed="${listMode === "table"}">Table</button><button data-mode="board" aria-pressed="${listMode === "board"}">Board</button></div></header>${body}</section>`;
   }
 
-  function renderDeadlines() {
+  function pageAccounts() {
+    if (!contracts.length) return bannerHtml() + `<div class="page-head"><h1><span class="ico a">A</span>Accounts</h1></div>` + emptyAll();
+    const acc = {};
+    for (const c of contracts) { const a = (acc[c.org || "Untitled"] ||= { org: c.org || "Untitled", industry: c.industry, list: [] }); a.list.push(c); }
+    const rows = Object.values(acc).map((a) => ({ ...a, v: a.list.reduce((s, c) => s + (Number(c.annualValue) || 0), 0), t: a.list.reduce((s, c) => s + (Number(c.totalValue) || 0), 0), b: a.list.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0), nd: a.list.map(nextDeadline).filter(Boolean).sort((x, y) => x.date.localeCompare(y.date))[0], hi: a.list.some((c) => riskOf(c) === "High") })).sort((a, b) => b.v - a.v);
+    return bannerHtml() + `<div class="page-head"><h1><span class="ico a">A</span>Accounts</h1><span class="muted">${rows.length} organizations</span></div>
+      <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Account</th><th>Industry</th><th class="r">Contracts</th><th class="r">Year-1 earnings</th><th class="r">Initial-term earnings</th><th class="r">Max bonus</th><th>Next deadline</th></tr></thead><tbody>
+      ${rows.map((a) => `<tr data-acct="${esc(a.org)}" tabindex="0"><td><a href="#" data-acct="${esc(a.org)}">${esc(a.org)}</a>${a.hi ? ' <span class="pill high">▲ High risk</span>' : ""}</td><td>${esc(a.industry || "—")}</td><td class="r num">${a.list.length}</td><td class="r num">${money(a.v)}</td><td class="r num">${money(a.t)}</td><td class="r num">${money(a.b)}</td><td>${a.nd ? `<span class="num">${fmtD(a.nd.date)}</span><div class="sub">${esc(a.nd.label)}</div>` : "—"}</td></tr>`).join("")}
+      </tbody></table></div></section>`;
+  }
+
+  function pageDeadlines() {
     const list = allDeadlines().filter((d) => daysTo(d.date) >= -30);
-    const el = $("deadlines");
-    if (!list.length) { el.innerHTML = `<div class="empty"><h3>No deadlines</h3><p>Notice dates, term ends and other key dates from your contracts appear here.</p></div>`; return; }
-    el.innerHTML = list.map((d) => {
-      const x = daysTo(d.date), past = x < 0;
-      const cls = x <= 30 ? "soon" : x <= 90 ? "mid" : "far";
-      const when = past ? `${-x} days ago` : x === 0 ? "today" : `in ${x} days`;
-      return `<div class="dl${past ? " past" : ""}" data-id="${esc(d.c.id)}" tabindex="0">
-        <span class="when">${fmtD(d.date)}</span><span class="in ${past ? "far" : cls}">${when}</span>
-        <span class="what"><b>${esc(d.c.org || "Untitled")}</b> <span>· ${esc(d.label)}</span></span></div>`;
-    }).join("");
+    const body = list.length ? `<ul class="mini">${list.map((d) => { const x = daysTo(d.date); return `<li data-open="${esc(d.c.id)}" tabindex="0" style="${x < 0 ? "opacity:.55" : ""}"><span class="num">${fmtD(d.date)}</span><span class="t"><b>${esc(d.c.org)}</b><span>${esc(d.label)}</span></span><span class="due ${dueCls(x)}">${dueTxt(x)}</span></li>`; }).join("")}</ul>` : `<div class="empty"><h3>No deadlines</h3><p>Notice dates, term ends and key dates from your contracts appear here.</p></div>`;
+    return bannerHtml() + `<div class="page-head"><h1><span class="ico d">D</span>Deadlines</h1><span class="muted">Red: within 30 days · Amber: within 90 days</span></div><section class="card">${body}</section>`;
   }
 
-  const CHIPS = ["What deadlines do I have in the next 90 days?", "Which contracts renew automatically, and when must I give notice?", "Which contracts have bonuses, and what do I need to do to earn them?", "Summarize total earnings by industry.", "Which contracts carry early termination fees?"];
-  function renderChips() { $("chips").innerHTML = CHIPS.map((c) => `<button class="chip">${esc(c)}</button>`).join(""); }
-
-  // ---------- detail sheet ----------
-  const FIELDS = [
-    ["org", "Org name"], ["counterparty", "Other party"], ["industry", "Industry"], ["contractType", "Contract type"],
-    ["startDate", "Start date", "date"], ["endDate", "End of current term", "date"], ["autoRenew", "Renews automatically", "bool"], ["renewalNoticeDays", "Notice period (days)", "number"],
-    ["annualValue", "Year-1 earnings", "number"], ["totalValue", "Initial-term earnings", "number"], ["maxBonus", "Max bonus", "number"], ["currency", "Currency"],
-  ];
-  let editing = null, kdDraft = [];
-  function openSheet(id) {
-    const c = contracts.find((x) => x.id === id); if (!c) return;
-    editing = c; kdDraft = (c.keyDates || []).map((k) => ({ ...k }));
-    const fld = ([k, label, type]) => {
+  function pageRecord() {
+    const c = byId(route.id), st = status(c), si = STAGES.indexOf(st);
+    const path = `<div class="path">${STAGES.map((s, i) => `<div class="st${i === si ? " cur" : i < si ? " done" : ""}">${s}</div>`).join("")}</div>`;
+    const field = (k, label, opt = {}) => {
       const v = c[k];
-      if (type === "bool") return `<label class="field"><span class="label">${label}</span><select id="f_${k}"><option value="true"${v ? " selected" : ""}>Yes</option><option value="false"${v ? "" : " selected"}>No</option></select></label>`;
-      return `<label class="field"><span class="label">${label}</span><input id="f_${k}" type="${type || "text"}" value="${esc(v ?? "")}"></label>`;
+      if (editMode) {
+        if (opt.type === "bool") return `<label class="df${opt.wide ? " wide" : ""}"><span class="label">${label}</span><select id="f_${k}"><option value="true"${v ? " selected" : ""}>Yes</option><option value="false"${v ? "" : " selected"}>No</option></select></label>`;
+        if (opt.type === "text") return `<label class="df wide"><span class="label">${label}</span><textarea id="f_${k}">${esc(v || "")}</textarea></label>`;
+        return `<label class="df${opt.wide ? " wide" : ""}"><span class="label">${label}</span><input id="f_${k}" type="${opt.type || "text"}" value="${esc(v ?? "")}"></label>`;
+      }
+      const shown = opt.type === "bool" ? (v ? "Yes" : "No") : opt.type === "date" ? fmtD(v) : opt.money ? money(v, c.currency) : esc(v ?? "") || "—";
+      return `<div class="df${opt.wide || opt.type === "text" ? " wide" : ""}"><span class="label">${label}</span><span class="v${opt.money ? " num" : ""}">${shown}</span></div>`;
     };
-    const ta = (k, label) => `<label class="field"><span class="label">${label}</span><textarea id="f_${k}">${esc(c[k] || "")}</textarea></label>`;
-    $("sheet").innerHTML = `
-      <header><div><span class="label">${esc(c.fileName || "Contract")}${c.example ? " · Example" : ""}</span><h2>${esc(c.org || "Untitled")}</h2><span class="pill ${status(c).toLowerCase()}">${status(c)}</span></div>
-        <button class="btn ghost" id="closeSheet" aria-label="Close">Close</button></header>
-      <div class="body">
+    const details = `<div class="pad"><div class="dgrid">
+      ${field("org", "Org name")}${field("counterparty", "Other party")}${field("industry", "Industry")}${field("contractType", "Contract type")}
+      ${field("startDate", "Start date", { type: "date" })}${field("endDate", "End of current term", { type: "date" })}${field("autoRenew", "Renews automatically", { type: "bool" })}${field("renewalNoticeDays", "Notice period (days)", { type: "number" })}
+      ${field("annualValue", "Year-1 earnings", { type: editMode ? "number" : "", money: true })}${field("totalValue", "Initial-term earnings", { type: editMode ? "number" : "", money: true })}${field("maxBonus", "Max bonus", { type: editMode ? "number" : "", money: true })}${field("currency", "Currency")}
+      ${field("earnings", "Earnings (fee terms)", { type: "text" })}${field("bonuses", "Bonuses", { type: "text" })}${field("risks", "Terms to watch", { type: "text" })}
+      ${editMode ? `<div class="df wide"><span class="label">Key dates</span><div id="kd"></div><button class="btn sm" data-act="kdAdd" style="justify-self:start">Add date</button></div>` : ""}
+    </div></div>`;
+    const dates = deadlinesOf(c).sort((a, b) => a.date.localeCompare(b.date));
+    const datesHtml = dates.length ? `<ul class="mini">${dates.map((d) => { const x = daysTo(d.date); return `<li style="cursor:default;${x < 0 ? "opacity:.55" : ""}"><span class="num">${fmtD(d.date)}</span><span class="t"><b>${esc(d.label)}</b></span><span class="due ${dueCls(x)}">${dueTxt(x)}</span></li>`; }).join("")}</ul>` : `<div class="empty"><p>No dates on this contract.</p></div>`;
+    const acts = [...(c.activity || [])].reverse();
+    const actHtml = `<div class="pad">${acts.length ? `<ul class="act">${acts.map((a) => `<li class="${a.ai ? "ai" : ""}"><span>${esc(a.text)}</span><time>${new Date(a.at).toLocaleString()}</time></li>`).join("")}</ul>` : '<p class="muted">No activity yet.</p>'}</div>`;
+    const tabBody = { details, dates: datesHtml, activity: actHtml }[recTab];
+    const ins = c.insights;
+    const insHtml = `<section class="card ai-card"><header><h2><span class="ico x" aria-hidden="true">✦</span>AI insights</h2><button class="btn ai sm" data-act="analyze" ${sample ? "" : "disabled"}>${ins ? "Re-analyze" : "Analyze"}</button></header>
+      <div class="pad" id="insights" style="display:grid;gap:12px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${riskPill(c)}${ins?.at ? `<span class="foot">Analyzed ${new Date(ins.at).toLocaleDateString()}</span>` : ""}</div>
         ${c.summary ? `<p style="margin:0">${esc(c.summary)}</p>` : ""}
-        <div class="grid2">${FIELDS.map(fld).join("")}</div>
-        ${ta("earnings", "Earnings (fee terms)")}
-        ${ta("bonuses", "Bonuses")}
-        ${ta("risks", "Terms to watch")}
-        <div class="field"><span class="label">Key dates</span><div class="kd" id="kd"></div><button class="btn" id="kdAdd" style="justify-self:start">Add date</button></div>
-      </div>
-      <footer><div id="delZone"><button class="btn danger" id="delBtn">Delete</button></div><div class="actions"><button class="btn" id="cancelSheet">Cancel</button><button class="btn primary" id="saveSheet">Save changes</button></div></footer>`;
-    renderKd();
-    $("sheet").hidden = false; $("scrim").hidden = false;
-    $("closeSheet").focus();
+        ${ins?.reasons?.length ? `<div><span class="label">Why</span><ul class="bullets">${ins.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></div>` : ""}
+        ${ins?.actions?.length ? `<div><span class="label">Recommended next steps</span><ul class="bullets">${ins.actions.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></div>` : ""}
+        ${!ins ? '<p class="foot" style="margin:0">Run an analysis to get a risk rating with reasons and recommended next steps.</p>' : ""}
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="chip" data-ask="Draft a short, friendly email to ${esc(c.org)} about the next upcoming deadline on their contract.">✉ Draft email</button><button class="chip" data-ask="Summarize the ${esc(c.org)} contract in 5 bullet points.">Summarize</button><button class="chip" data-ask="What should I negotiate at renewal with ${esc(c.org)}?">Renewal ideas</button></div>
+      </div></section>`;
+    const nd = nextDeadline(c);
+    return `<div class="crumb"><button class="link" data-go="contracts">Contracts</button><span>›</span><span>${esc(c.org)}</span></div>
+      <section class="card hl"><div class="hl-top"><div><span class="label">Contract${c.example ? " · Example" : ""}</span><h1>${esc(c.org || "Untitled")}</h1><span class="muted">${esc(c.contractType || "")}${c.counterparty ? " with " + esc(c.counterparty) : ""}</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${editMode ? `<button class="btn" data-act="cancelEdit">Cancel</button><button class="btn primary" data-act="saveEdit">Save</button>` : `<button class="btn" data-act="edit">Edit</button><span id="delZone"><button class="btn danger" data-act="del">Delete</button></span>`}</div></div>
+        <div class="hl-fields"><div><span class="label">Industry</span><span class="v">${esc(c.industry || "—")}</span></div><div><span class="label">Year-1 earnings</span><span class="v num">${money(c.annualValue, c.currency)}</span></div><div><span class="label">Max bonus</span><span class="v num">${money(c.maxBonus, c.currency)}</span></div><div><span class="label">Term ends</span><span class="v">${fmtD(c.endDate)}</span></div><div><span class="label">Next deadline</span><span class="v">${nd ? fmtD(nd.date) : "—"}</span></div></div>
+        ${path}</section>
+      <div class="rec-grid">
+        <section class="card"><div class="subtabs" role="tablist">${[["details", "Details"], ["dates", "Key dates"], ["activity", "Activity"]].map(([k, l]) => `<button role="tab" data-rtab="${k}" aria-selected="${recTab === k}">${l}</button>`).join("")}</div>${tabBody}</section>
+        <div class="stack">${insHtml}<section class="card"><header><h2>Source</h2></header><div class="pad"><span class="label">File</span><div style="overflow-wrap:anywhere">${esc(c.fileName || "—")}</div><div class="foot" style="margin-top:6px">Added ${c.addedAt ? new Date(c.addedAt).toLocaleDateString() : "—"}</div></div></section></div>
+      </div>`;
   }
   function renderKd() {
-    $("kd").innerHTML = kdDraft.map((k, i) => `<div class="kd-row"><input type="date" data-i="${i}" data-k="date" value="${esc(k.date || "")}" aria-label="Date"><input data-i="${i}" data-k="label" value="${esc(k.label || "")}" aria-label="What happens"><button class="btn ghost" data-rm="${i}" aria-label="Remove date">Remove</button></div>`).join("") || '<span class="foot">No key dates.</span>';
-  }
-  function closeSheet() { $("sheet").hidden = true; $("scrim").hidden = true; editing = null; }
-  async function saveSheet() {
-    if (!editing) return;
-    const patch = {};
-    for (const [k, , type] of FIELDS) {
-      const raw = $("f_" + k).value.trim();
-      patch[k] = type === "number" ? (raw === "" ? null : Number(raw)) : type === "bool" ? raw === "true" : raw || null;
-    }
-    for (const k of ["earnings", "bonuses", "risks"]) patch[k] = $("f_" + k).value.trim();
-    patch.keyDates = kdDraft.filter((k) => parseD(k.date)).map((k) => ({ date: k.date, label: (k.label || "").trim() || "Key date" }));
-    patch.updatedAt = new Date().toISOString();
-    try { await saveContract(editing.id, { ...stripId(editing), ...patch }); toast("Saved"); closeSheet(); }
-    catch (e) { toast("Couldn't save: " + (e?.message || e?.code || "try again")); }
+    const el = $("kd"); if (!el) return;
+    el.innerHTML = kdDraft.map((k, i) => `<div class="kd-row"><input type="date" data-i="${i}" data-k="date" value="${esc(k.date || "")}" aria-label="Date"><input data-i="${i}" data-k="label" value="${esc(k.label || "")}" aria-label="What happens"><button class="btn ghost sm" data-rm="${i}">Remove</button></div>`).join("") || '<span class="foot">No key dates.</span>';
   }
 
   // ---------- persistence ----------
-  function stripId(c) { const { id, ...rest } = c; return rest; }
+  const stripId = (c) => { const { id, ...rest } = c; return rest; };
+  const withAct = (c, text, ai) => [...(c.activity || []), { at: new Date().toISOString(), text, ai: !!ai }].slice(-40);
   async function saveContract(id, data) {
-    if (store) { await store.doc(id).set(data); }
-    else { const i = contracts.findIndex((c) => c.id === id); const row = { id, ...data }; if (i >= 0) contracts[i] = row; else contracts.push(row); render(); }
+    if (store) await store.doc(id).set(data);
+    else { const i = contracts.findIndex((c) => c.id === id); if (i >= 0) contracts[i] = { id, ...data }; render(); }
   }
   async function addContract(data) {
-    if (store) { const ref = await store.add(data); return ref.id; }
+    if (store) return (await store.add(data)).id;
     const id = "local" + ++localSeq; contracts.push({ id, ...data }); render(); return id;
   }
   async function removeContract(id) {
-    if (store) await store.doc(id).delete();
-    else { contracts = contracts.filter((c) => c.id !== id); render(); }
+    if (store) await store.doc(id).delete(); else { contracts = contracts.filter((c) => c.id !== id); render(); }
   }
 
-  // ---------- reading files ----------
+  // ---------- AI: shared ----------
+  const SAMPLE_ERRORS = {
+    not_granted: "AI access wasn't allowed. Allow it from this page's permissions menu to use AI features.",
+    rate_limited: "Too many AI requests right now. Wait a minute and try again.",
+    prompt_too_large: "That's too much text for one AI request.",
+    refused: "The AI declined this request.",
+    invalid_json: "The AI's answer couldn't be read. Try again.",
+    session_expired: "Your session expired. Reload the page and sign in.",
+    sampling_disabled: "AI features are turned off for your account.",
+    upstream_error: "The AI service had a problem. Try again.",
+  };
+  const errCopy = (e) => SAMPLE_ERRORS[e?.code] || e?.message || "Something went wrong. Try again.";
+  const num = (v) => (v === null || v === undefined || v === "" || isNaN(Number(v)) ? null : Number(v));
+  const record = (c) => ({ id: c.id, org: c.org, counterparty: c.counterparty, industry: c.industry, contractType: c.contractType, status: status(c), startDate: c.startDate, endDate: c.endDate, autoRenew: c.autoRenew, renewalNoticeDays: c.renewalNoticeDays, currency: c.currency, earnings: c.earnings, annualValue: c.annualValue, totalValue: c.totalValue, bonuses: c.bonuses, maxBonus: c.maxBonus, riskLevel: c.riskLevel || null, risks: c.risks, summary: c.summary, example: !!c.example, deadlines: deadlinesOf(c).map(({ date, label }) => ({ date, label })) });
+
+  // ---------- file intake ----------
   async function readText(file) {
     const name = file.name.toLowerCase();
     if (name.endsWith(".txt") || file.type === "text/plain") return await file.text();
@@ -453,10 +612,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-top: 2px solid va
       if (!window.pdfjsLib) throw new Error("The PDF reader didn't load. Reload the page and try again.");
       const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
       const parts = [];
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const tc = await (await pdf.getPage(p)).getTextContent();
-        parts.push(tc.items.map((it) => it.str + (it.hasEOL ? "\n" : " ")).join(""));
-      }
+      for (let p = 1; p <= pdf.numPages; p++) { const tc = await (await pdf.getPage(p)).getTextContent(); parts.push(tc.items.map((it) => it.str + (it.hasEOL ? "\n" : " ")).join("")); }
       return parts.join("\n\n");
     }
     if (name.endsWith(".docx")) {
@@ -465,51 +621,38 @@ tfoot td { font-weight: 700; background: var(--sunken); border-top: 2px solid va
     }
     throw new Error("Unsupported file type. Use PDF, Word (.docx) or .txt.");
   }
-
   function extractionPrompt(fileName, text) {
-    return `You extract structured data from a business contract so it can be tracked in a contract register. Today is ${todayISO}.
+    return `You extract structured data from a business contract for a contract management system. Today is ${todayISO}.
 Return ONLY one JSON object with exactly these keys:
-- "org": the client or customer organization in the contract (the party receiving the service, product or employment). If unclear, the main counterparty that is not the drafting company.
-- "counterparty": the other party (e.g. supplier, provider, employer).
+- "org": the client or customer organization (the party receiving the service, product or employment). If unclear, the main counterparty that is not the drafting company.
+- "counterparty": the other party.
 - "industry": the org's industry, short (e.g. "Healthcare - Urgent care", "Retail", "Construction").
 - "contractType": short type (e.g. "SaaS subscription", "Services agreement", "Employment", "Lease").
-- "startDate": "YYYY-MM-DD" or null.
-- "endDate": end of the initial (or current) term, "YYYY-MM-DD" or null.
-- "termMonths": number or null.
-- "autoRenew": true or false.
+- "startDate", "endDate": "YYYY-MM-DD" or null. endDate is the end of the initial or current term.
+- "termMonths": number or null. "autoRenew": true or false.
 - "renewalNoticeDays": days of written notice needed to stop renewal or end the contract at term end, number or null.
 - "currency": ISO code, e.g. "USD".
 - "earnings": 1-3 plain sentences summarizing all fees, pay or compensation, with amounts and timing.
-- "annualValue": number or null. Committed money in the first 12 months (one-time + recurring fees). Exclude usage-based extras and bonuses.
+- "annualValue": number or null. Committed money in the first 12 months (one-time + recurring). Exclude usage-based extras and bonuses.
 - "totalValue": number or null. Committed money over the whole initial term, same rules.
-- "bonuses": plain summary of any bonus, incentive or performance payments with amounts and conditions, or "None".
-- "maxBonus": number, the highest total bonus possible, 0 if none.
-- "keyDates": array of up to 8 {"date": "YYYY-MM-DD", "label": "short description"} for milestones and deadlines (payment milestones, price increases, measurement dates, termination windows). Do not include the term end or the non-renewal notice date; those are computed.
-- "risks": 1-2 sentences on terms that need attention (early termination fees, auto-renewal, penalties, minimums), or "".
+- "bonuses": summary of bonus, incentive or performance payments with amounts and conditions, or "None".
+- "maxBonus": number, highest total bonus possible, 0 if none.
+- "keyDates": up to 8 {"date": "YYYY-MM-DD", "label": "short description"} milestones and deadlines (payments, price increases, measurement dates, termination windows). Exclude the term end and non-renewal notice date.
+- "risks": 1-2 sentences on terms that need attention, or "".
 - "summary": one sentence describing the contract.
-If the file includes amendments, apply them. Use null when something is not stated. Never invent amounts.
+- "riskLevel": "Low", "Medium" or "High" for the business tracking this contract (early termination fees, auto-renewal traps, penalties, minimums, short notice windows, revenue at risk).
+- "riskReasons": 2-4 short reasons for the risk level.
+- "nextActions": 2-4 short, concrete recommended next steps with dates where relevant.
+Apply any amendments in the file. Use null when not stated. Never invent amounts.
 
 <contract file="${fileName.replace(/"/g, "")}">
 ${text}
 </contract>`;
   }
-
-  const SAMPLE_ERRORS = {
-    not_granted: "Claude access wasn't allowed. Allow it from this page's permissions to read contracts.",
-    rate_limited: "Too many requests right now. Wait a minute, then add the file again.",
-    prompt_too_large: "This contract is too long to read in one go.",
-    refused: "Claude declined to read this file.",
-    invalid_json: "Claude's answer couldn't be read. Add the file again.",
-    session_expired: "Your session expired. Reload the page and sign in.",
-    sampling_disabled: "AI reading is turned off for your account.",
-  };
-  const errCopy = (e) => SAMPLE_ERRORS[e?.code] || e?.message || "Something went wrong. Add the file again.";
-
   async function processFiles(files) {
     if (!files.length) return;
     if (!sample) { toast("AI reading isn't available here. Open this page signed in to claude.ai."); return; }
-    const limits = await sample.limits().catch(() => null);
-    const maxBytes = (limits?.maxPromptBytes || 262144) - 6000;
+    const maxBytes = maxPrompt - 7000;
     for (const file of files) {
       const li = document.createElement("li");
       li.innerHTML = `<span class="fn"></span><span class="pill unknown">Reading…</span>`;
@@ -518,13 +661,13 @@ ${text}
       const set = (t, cls) => { const p = li.querySelector(".pill"); p.textContent = t; p.className = "pill " + cls; };
       try {
         let text = (await readText(file)).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-        if (text.length < 40) throw new Error("No readable text found. Scanned PDFs (images of pages) can't be read yet.");
+        if (text.length < 40) throw new Error("No readable text found. Scanned PDFs (pictures of pages) can't be read yet.");
         let truncated = false;
         while (new TextEncoder().encode(text).length > maxBytes) { text = text.slice(0, Math.floor(text.length * 0.9)); truncated = true; }
-        set("Claude is reading…", "upcoming");
+        set("✦ AI is reading…", "aip");
         const out = await sample.json(extractionPrompt(file.name, text), { modelTier: "default" });
-        if (!out || typeof out !== "object" || Array.isArray(out)) throw new Error("Claude's answer couldn't be read. Add the file again.");
-        const num = (v) => (v === null || v === undefined || v === "" || isNaN(Number(v)) ? null : Number(v));
+        if (!out || typeof out !== "object" || Array.isArray(out)) throw new Error("The AI's answer couldn't be read. Add the file again.");
+        const strs = (a, n) => (Array.isArray(a) ? a : []).map((x) => String(x).slice(0, 300)).slice(0, n);
         const rec = {
           org: String(out.org || "").slice(0, 200) || file.name, counterparty: String(out.counterparty || "").slice(0, 200),
           industry: String(out.industry || "").slice(0, 120), contractType: String(out.contractType || "").slice(0, 120),
@@ -535,10 +678,14 @@ ${text}
           bonuses: String(out.bonuses || "").slice(0, 2000), maxBonus: num(out.maxBonus) || 0,
           keyDates: (Array.isArray(out.keyDates) ? out.keyDates : []).filter((k) => k && parseD(k.date)).slice(0, 12).map((k) => ({ date: k.date, label: String(k.label || "Key date").slice(0, 200) })),
           risks: String(out.risks || "").slice(0, 1000), summary: String(out.summary || "").slice(0, 500),
+          riskLevel: ["Low", "Medium", "High"].includes(out.riskLevel) ? out.riskLevel : null,
+          insights: { reasons: strs(out.riskReasons, 4), actions: strs(out.nextActions, 4), at: new Date().toISOString() },
           fileName: file.name, addedAt: new Date().toISOString(), example: false,
+          activity: [{ at: new Date().toISOString(), text: `Record created by AI from ${file.name}${truncated ? " (long file, partly read)" : ""}`, ai: true }],
         };
-        await addContract(rec);
-        set(truncated ? "Added (long file, partly read)" : "Added", truncated ? "expiring" : "active");
+        const id = await addContract(rec);
+        set(truncated ? "Added (partly read)" : "Added", truncated ? "expiring" : "active");
+        const open = document.createElement("button"); open.className = "link"; open.textContent = "Open"; open.dataset.open = id; open.style.gridColumn = "1 / -1"; open.style.justifySelf = "start"; li.append(open);
       } catch (e) {
         set("Not added", "expired");
         const er = document.createElement("span"); er.className = "err"; er.textContent = errCopy(e); li.append(er);
@@ -546,142 +693,229 @@ ${text}
     }
   }
 
+  // ---------- AI: briefing & analysis ----------
+  let briefCtl = null;
+  async function briefing() {
+    if (!sample || !contracts.length) return;
+    briefCtl?.abort(); briefCtl = new AbortController();
+    const el = $("briefing"); el.classList.add("dim"); el.innerHTML = '<span class="thinking">Preparing your briefing</span>';
+    const prompt = `You are an AI assistant inside a contract management system. Today is ${todayISO}. Write a short morning briefing for the business owner based on these contract records. Plain text, no markdown headings or asterisks. Use 3 short sections with these exact labels on their own line: "Needs attention", "Opportunities", "Coming up". Under each, 1-3 lines starting with "• ", naming the organization, date and amount. Keep it under 140 words. Records with example:true are sample data; still use them.\n\n${JSON.stringify(contracts.map(record))}`;
+    try {
+      const { text } = await sample(prompt, { signal: briefCtl.signal, cache: false, onText: ({ text }) => { if ($("briefing")) { $("briefing").classList.remove("dim"); $("briefing").textContent = text; } } });
+      state.briefing = text; if (route.name === "home") render();
+    } catch (e) { if (e?.code !== "cancelled" && $("briefing")) $("briefing").textContent = errCopy(e); }
+  }
+  async function analyze(c) {
+    const btn = document.querySelector('[data-act="analyze"]'); if (btn) { btn.disabled = true; btn.innerHTML = '<span class="thinking">Analyzing</span>'; }
+    const prompt = `You are a contract risk analyst inside a contract management system. Today is ${todayISO}. Analyze this contract record for the business tracking it. Return ONLY JSON: {"riskLevel": "Low"|"Medium"|"High", "reasons": [2-4 short reasons], "actions": [2-4 short concrete next steps with dates where relevant], "summary": "one sentence"}.\n\n${JSON.stringify(record(c))}`;
+    try {
+      const out = await sample.json(prompt, { cache: false });
+      const strs = (a) => (Array.isArray(a) ? a : []).map((x) => String(x).slice(0, 300)).slice(0, 4);
+      const level = ["Low", "Medium", "High"].includes(out?.riskLevel) ? out.riskLevel : null;
+      const fresh = byId(c.id) || c;
+      await saveContract(c.id, { ...stripId(fresh), riskLevel: level, summary: fresh.summary || String(out?.summary || "").slice(0, 500), insights: { reasons: strs(out?.reasons), actions: strs(out?.actions), at: new Date().toISOString() }, activity: withAct(fresh, `AI analysis: ${level || "unrated"} risk`, true) });
+      toast("Analysis updated");
+    } catch (e) { toast(errCopy(e)); if (btn) { btn.disabled = false; btn.textContent = "Analyze"; } }
+  }
+
+  // ---------- assistant ----------
+  let turns = [], asstCtl = null, busy = false;
+  function updateAsstContext() {
+    const c = route.name === "record" ? byId(route.id) : null;
+    $("asstCtx").textContent = c ? "Looking at: " + c.org : "Looking at: all contracts";
+    const sugg = c ? [`Summarize the ${c.org} contract`, `What are the risks with ${c.org}?`, `Draft a renewal reminder email to ${c.org}`]
+      : contracts.length ? ["What needs my attention this month?", "Which contracts renew automatically and when must I give notice?", "Which bonuses can I still earn?", "Compare earnings by industry"]
+      : ["How do I add contracts?"];
+    $("sugg").innerHTML = turns.length > 4 ? "" : sugg.map((s) => `<button class="chip" data-ask="${esc(s)}">${esc(s)}</button>`).join("");
+  }
+  function renderThread() {
+    const th = $("thread");
+    if (!turns.length) th.innerHTML = `<div class="msg a">Hi! I'm your contract assistant. I can find contracts, explain terms, flag risks and deadlines, and draft emails. Ask me anything.</div>`;
+    else th.innerHTML = turns.map((t) => `${t.steps?.length ? `<div class="steps">${t.steps.map((s) => `<span class="pill aip">✦ ${esc(s)}</span>`).join("")}</div>` : ""}<div class="msg ${t.role === "user" ? "u" : "a"}${t.err ? " err" : ""}">${esc(t.content)}</div>`).join("");
+    th.scrollTop = th.scrollHeight;
+  }
+  const TOOLS = () => [
+    { name: "search_contracts", description: "Search the user's contracts by text (organization, industry, terms) and/or filters. Returns matching contract records with id, org, industry, status, dates, money, bonuses, risk and deadlines.", inputSchema: { type: "object", properties: { query: { type: "string", description: "Free text; empty for all" }, status: { type: "string", enum: STAGES }, hasBonus: { type: "boolean" }, riskLevel: { type: "string", enum: ["Low", "Medium", "High"] } } },
+      execute: (i) => { step("Searched contracts"); const q = String(i.query || "").toLowerCase(); return contracts.filter((c) => (!q || [c.org, c.industry, c.contractType, c.earnings, c.bonuses, c.summary, c.risks, c.counterparty].join(" ").toLowerCase().includes(q)) && (!i.status || status(c) === i.status) && (i.hasBonus === undefined || (Number(c.maxBonus) > 0) === !!i.hasBonus) && (!i.riskLevel || riskOf(c) === i.riskLevel)).slice(0, 25).map(record); } },
+    { name: "list_deadlines", description: "List contract deadlines (notice dates, term ends, key dates) between today and N days from now, sorted by date.", inputSchema: { type: "object", properties: { days: { type: "number", description: "Look-ahead window in days, default 90" } } },
+      execute: (i) => { const n = Number(i.days) || 90; step(`Checked deadlines (${n} days)`); return allDeadlines().filter((d) => { const x = daysTo(d.date); return x >= 0 && x <= n; }).slice(0, 40).map((d) => ({ date: d.date, daysAway: daysTo(d.date), org: d.c.org, contractId: d.c.id, label: d.label })); } },
+    { name: "portfolio_summary", description: "Totals across all contracts: count, year-1 and initial-term earnings, max bonuses, and breakdowns by industry, status and risk.", inputSchema: { type: "object", properties: {} },
+      execute: () => { step("Calculated portfolio totals"); const g = (f) => contracts.reduce((m, c) => { const k = f(c) || "Unspecified"; (m[k] ||= { contracts: 0, year1: 0 }); m[k].contracts++; m[k].year1 += Number(c.annualValue) || 0; return m; }, {}); return { contracts: contracts.length, year1Earnings: contracts.reduce((s, c) => s + (Number(c.annualValue) || 0), 0), initialTermEarnings: contracts.reduce((s, c) => s + (Number(c.totalValue) || 0), 0), maxBonuses: contracts.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0), byIndustry: g((c) => c.industry), byStatus: g(status), byRisk: g(riskOf) }; } },
+  ];
+  let curSteps = null;
+  function step(s) { if (curSteps && !curSteps.includes(s)) { curSteps.push(s); renderThread(); } }
+  async function send(text) {
+    text = (text || "").trim(); if (!text || busy) return;
+    if (!sample) { turns.push({ role: "user", content: text }, { role: "assistant", content: "The assistant isn't available in this view. Open this page signed in to claude.ai.", err: true }); renderThread(); return; }
+    $("prompt").value = ""; busy = true; $("sendBtn").disabled = true; $("stopBtn").hidden = false;
+    turns.push({ role: "user", content: text });
+    const reply = { role: "assistant", content: "", steps: [] }; turns.push(reply); curSteps = reply.steps;
+    const c = route.name === "record" ? byId(route.id) : null;
+    const rules = `You are Ledger Assistant, the AI inside a contract management app (like a CRM AI assistant). Today is ${todayISO}. Help the user understand and act on their contracts: answer questions, flag risks and deadlines, compare accounts, and draft emails or notes. Be concise and specific: name organizations, dates and amounts. Use plain text with short lines; "• " for lists; no markdown headings or asterisks. Only use facts from the user's contract data; if something isn't there, say so. Records with example:true are sample data.
+${c ? `The user is currently viewing this contract: ${JSON.stringify(record(c))}` : "The user is on the main workspace."}
+${toolsOK ? "Use the tools to look up contracts, deadlines and totals before answering." : `All contract records: ${JSON.stringify(contracts.map(record)).slice(0, maxPrompt - 20000)}`}`;
+    const input = [{ role: "user", content: rules }, { role: "assistant", content: "Understood. I'll answer from the contract data." }, ...turns.slice(0, -1).filter((t) => !t.err && t.content).slice(-12).map((t) => ({ role: t.role, content: t.content }))].reduce((acc, m) => { const last = acc[acc.length - 1]; if (last && last.role === m.role) last.content += "\n\n" + m.content; else acc.push({ ...m }); return acc; }, []);
+    asstCtl = new AbortController(); renderThread();
+    try {
+      const { text: out } = await sample(input, { signal: asstCtl.signal, cache: false, tools: toolsOK ? TOOLS() : undefined, onText: ({ text }) => { reply.content = text; renderThread(); } });
+      reply.content = out || reply.content || "(No answer.)";
+    } catch (e) {
+      if (e?.code === "cancelled") reply.content = (reply.content || "") + (reply.content ? "\n\n(Stopped.)" : "Stopped.");
+      else { reply.content = (e?.text ? e.text + "\n\n" : "") + errCopy(e); reply.err = !e?.text; }
+    }
+    curSteps = null; busy = false; asstCtl = null; $("sendBtn").disabled = false; $("stopBtn").hidden = true;
+    renderThread(); updateAsstContext();
+  }
+  function openAsst(open) {
+    $("asst").hidden = !open; $("asstBtn").setAttribute("aria-pressed", String(open));
+    if (open) $("prompt").focus();
+  }
+
   // ---------- examples ----------
+  const EX_AT = "2026-10-06T09:00:00.000Z";
   const EXAMPLES = [
     { org: "Lakeshore Private Hospital", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Hospital", contractType: "SaaS subscription", startDate: "2025-01-01", endDate: "2027-12-31", termMonths: 36, autoRenew: true, renewalNoticeDays: 120, currency: "USD",
       earnings: "Implementation fee $240,000 (30/40/30). Subscription $480,000/yr billed quarterly, rising 5% each year. $90/bed/month above 250 beds; optional Telehealth $6,000/month.", annualValue: 720000, totalValue: 1753200,
       bonuses: "None", maxBonus: 0, keyDates: [{ date: "2026-12-31", label: "Client may terminate for convenience after this date (180 days' notice, fee up to $250,000)" }],
-      risks: "Early termination fee up to $250,000; 120-day non-renewal notice.", summary: "36-month patient management platform subscription for a 220-bed hospital.", fileName: "Contract_1_-_Lakeshore_Private_Hospital.pdf" },
+      risks: "Early termination fee capped at $250,000; 120-day non-renewal notice.", summary: "36-month patient management platform subscription for a 220-bed hospital.", riskLevel: "Medium",
+      insights: { reasons: ["Largest account: $1.75M over the term", "Client can exit for convenience from Jan 2027, with a fee capped at $250,000", "Service credits up to 20% if availability drops"], actions: ["Schedule a value review before Dec 31, 2026", "Track uptime monthly to avoid service credits", "Start the renewal conversation by Sep 2027"], at: EX_AT },
+      fileName: "Contract_1_-_Lakeshore_Private_Hospital.pdf" },
     { org: "Brightsight Eye Clinic, P.A.", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Ophthalmology", contractType: "SaaS subscription", startDate: "2026-03-01", endDate: "2027-02-28", termMonths: 12, autoRenew: true, renewalNoticeDays: 60, currency: "USD",
       earnings: "Onboarding $9,500. $495 per provider/month (6 providers = $2,970/month). Imaging add-on $1,200/month from Sep 1, 2026 at the latest. SMS over 3,000/month at $0.04.", annualValue: 52340, totalValue: 52340,
-      bonuses: "None. On renewal the client gets one month's subscription as a loyalty credit.", maxBonus: 0, keyDates: [{ date: "2026-09-01", label: "Imaging add-on fee starts (latest date)" }, { date: "2026-11-30", label: "Last day for provider to give notice of a renewal price increase" }],
-      risks: "Early termination in the first term costs three months of fees.", summary: "12-month scheduling and imaging platform subscription for an eye clinic.", fileName: "Contract_2_-_Brightsight_Eye_Clinic.pdf" },
+      bonuses: "None. On renewal the client gets one month's subscription as a loyalty credit.", maxBonus: 0, keyDates: [{ date: "2026-09-01", label: "Imaging add-on fee starts (latest date)" }, { date: "2026-11-30", label: "Last day to give notice of a renewal price increase" }],
+      risks: "Short 12-month term; client can exit for three months of fees.", summary: "12-month scheduling and imaging platform subscription for an eye clinic.", riskLevel: "High",
+      insights: { reasons: ["Term ends Feb 28, 2027; client can cancel with 60 days' notice", "Price increase notice must go out by Nov 30, 2026", "Renewal gives away one month free"], actions: ["Send renewal price-increase notice before Nov 30, 2026", "Confirm imaging add-on is live and billed", "Book a renewal call in November"], at: EX_AT },
+      fileName: "Contract_2_-_Brightsight_Eye_Clinic.pdf" },
     { org: "Maple Street Family Medicine, LLC", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Primary care", contractType: "SaaS subscription", startDate: "2026-06-01", endDate: "2028-05-31", termMonths: 24, autoRenew: true, renewalNoticeDays: 90, currency: "USD",
       earnings: "Implementation $6,000 (50/50). $425 per provider/month for 4 providers, +3% each June from 2027. Amendment 1 adds a 5th provider at $375/month from Dec 1, 2026.", annualValue: 28650, totalValue: 54297,
       bonuses: "Adoption Incentive Fee: $8,000 if 60% to under 75% of patients activate the portal; $12,000 if 75% or more. Measured Mar 15, 2027.", maxBonus: 12000,
       keyDates: [{ date: "2027-03-15", label: "Portal adoption measured (bonus date)" }, { date: "2027-03-30", label: "Bonus invoiced by this date" }, { date: "2027-06-01", label: "3% price increase; client may terminate for convenience from now" }],
-      risks: "No termination for convenience in the first 12 months.", summary: "24-month patient portal subscription with an adoption bonus, amended Nov 2026.", fileName: "Contract_3_-_Maple_Street_Family_Medicine_with_Amendment.pdf" },
+      risks: "Bonus depends on patient portal adoption; client can leave without a fee after June 2027.", summary: "24-month patient portal subscription with an adoption bonus, amended Nov 2026.", riskLevel: "Low",
+      insights: { reasons: ["Up to $12,000 bonus available", "No early exit in the first 12 months", "Small account value"], actions: ["Push portal sign-ups before Mar 15, 2027 to reach 75%", "Invoice the bonus by Mar 30, 2027", "Apply the 3% increase on Jun 1, 2027"], at: EX_AT },
+      fileName: "Contract_3_-_Maple_Street_Family_Medicine_with_Amendment.pdf" },
     { org: "NorthPoint Urgent Care Center, LLC", counterparty: "MediLink Systems, Inc.", industry: "Healthcare - Urgent care", contractType: "Services agreement", startDate: "2026-10-01", endDate: "2027-09-30", termMonths: 12, autoRenew: false, renewalNoticeDays: 30, currency: "USD",
       earnings: "Implementation $4,500 (50/50). Platform $3,500/month from Dec 1, 2026 (Oct-Nov waived). Visits over 1,500/month at $1.80, over 3,000 at $1.20. Minimum $4,200/month.", annualValue: 46500, totalValue: 46500,
       bonuses: "None", maxBonus: 0, keyDates: [{ date: "2026-11-01", label: "Target go-live; second implementation payment due" }, { date: "2026-12-01", label: "Platform fee and $4,200 monthly minimum begin" }],
-      risks: "Continues month to month after the first year; rates can change on 60 days' notice.", summary: "12-month online check-in and queue platform for an urgent care center.", fileName: "Contract_4_-_NorthPoint_Urgent_Care_Center.pdf" },
+      risks: "Becomes month-to-month after the first year; client can leave on 30 days' notice.", summary: "12-month online check-in and queue platform for an urgent care center.", riskLevel: "Medium",
+      insights: { reasons: ["No auto-renewal: goes month-to-month after Sep 2027", "Go-live on Nov 1, 2026 triggers a $2,250 payment", "Visit fees add upside above 1,500 visits/month"], actions: ["Hit the Nov 1, 2026 go-live date", "Invoice the first platform fee on Dec 1, 2026", "Propose a multi-year renewal by Jul 2027"], at: EX_AT },
+      fileName: "Contract_4_-_NorthPoint_Urgent_Care_Center.pdf" },
   ];
   async function toggleExamples() {
     const ex = contracts.filter((c) => c.example);
-    $("sampleBtn").disabled = true;
     try {
       if (ex.length) { for (const c of ex) await removeContract(c.id); toast("Examples removed"); }
-      else { for (const e of EXAMPLES) await addContract({ ...e, example: true, addedAt: new Date().toISOString() }); toast("Example contracts added"); }
+      else { for (const e of EXAMPLES) await addContract({ ...e, example: true, addedAt: new Date().toISOString(), activity: [{ at: new Date().toISOString(), text: "Example record loaded", ai: false }] }); toast("Example contracts added"); closeModal(); }
     } catch (e) { toast("Couldn't update examples: " + (e?.message || e?.code || "try again")); }
-    $("sampleBtn").disabled = false;
-  }
-
-  // ---------- ask ----------
-  let askCtl = null;
-  async function ask() {
-    const q = $("question").value.trim(); if (!q) { $("question").focus(); return; }
-    const out = $("answer");
-    if (!sample) { out.textContent = "Asking Claude isn't available here. Open this page signed in to claude.ai."; return; }
-    if (!contracts.length) { out.textContent = "Add some contracts first."; return; }
-    const data = contracts.map((c) => ({ ...stripId(c), status: status(c), deadlines: deadlinesOf(c).map(({ date, label }) => ({ date, label })) }));
-    const prompt = `You help a business owner understand their contracts. Today is ${todayISO}. Answer the question using only the contract records below. Be concise and specific: name the organizations, dates and amounts. Use short paragraphs or a short list. If the records don't contain the answer, say what is missing. Records marked example:true are sample data.
-
-<contracts>
-${JSON.stringify(data)}
-</contracts>
-
-Question: ${q}`;
-    askCtl = new AbortController();
-    $("askBtn").disabled = true; $("stopBtn").hidden = false;
-    out.classList.add("dim"); out.textContent = "Thinking…";
-    try {
-      const { text } = await sample(prompt, { signal: askCtl.signal, cache: false, onText: ({ text }) => { out.classList.remove("dim"); out.textContent = text; } });
-      out.classList.remove("dim"); out.textContent = text;
-    } catch (e) {
-      if (e?.code === "cancelled") { if (!out.textContent || out.textContent === "Thinking…") out.textContent = "Stopped."; }
-      else { out.textContent = (e?.text ? e.text + "\n\n" : "") + errCopy(e); }
-    }
-    $("askBtn").disabled = false; $("stopBtn").hidden = true; askCtl = null;
   }
 
   // ---------- export ----------
   async function exportCsv() {
-    const cols = [["org", "Org Name"], ["industry", "Industry"], ["counterparty", "Other Party"], ["contractType", "Type"], ["status", "Status"], ["startDate", "Start"], ["endDate", "Term End"], ["autoRenew", "Auto-renew"], ["renewalNoticeDays", "Notice Days"], ["earnings", "Earnings"], ["annualValue", "Year-1 Earnings"], ["totalValue", "Initial-Term Earnings"], ["bonuses", "Bonuses"], ["maxBonus", "Max Bonus"], ["next", "Next Deadline"], ["fileName", "File"]];
+    const cols = [["org", "Org Name"], ["industry", "Industry"], ["counterparty", "Other Party"], ["contractType", "Type"], ["status", "Status"], ["riskLevel", "AI Risk"], ["startDate", "Start"], ["endDate", "Term End"], ["autoRenew", "Auto-renew"], ["renewalNoticeDays", "Notice Days"], ["earnings", "Earnings"], ["annualValue", "Year-1 Earnings"], ["totalValue", "Initial-Term Earnings"], ["bonuses", "Bonuses"], ["maxBonus", "Max Bonus"], ["next", "Next Deadline"], ["fileName", "File"]];
     const cell = (v) => { const s = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-    const lines = [cols.map((c) => c[1]).join(",")].concat(contracts.map((c) => cols.map(([k]) => {
-      if (k === "status") return cell(status(c));
-      if (k === "next") { const n = nextDeadline(c); return cell(n ? n.date + " " + n.label : ""); }
-      return cell(c[k]);
-    }).join(",")));
+    const lines = [cols.map((c) => c[1]).join(",")].concat(filtered().map((c) => cols.map(([k]) => k === "status" ? cell(status(c)) : k === "next" ? cell((nextDeadline(c) || {}).date ? nextDeadline(c).date + " " + nextDeadline(c).label : "") : cell(c[k])).join(",")));
     try { await downloads.save({ filename: "contracts-" + todayISO + ".csv", data: new Blob(["﻿" + lines.join("\n")], { type: "text/csv" }) }); }
-    catch (e) { if (e?.code !== "cancelled" && e?.code !== "declined") toast("Export didn't finish."); }
+    catch (e) { if (!["cancelled", "declined"].includes(e?.code)) toast("Export didn't finish."); }
   }
 
+  // ---------- modal ----------
+  function openModal() { $("modal").hidden = false; $("scrim").hidden = false; $("chooseBtn").focus(); $("sampleBtn").textContent = contracts.some((c) => c.example) ? "Remove examples" : "Load example contracts"; }
+  function closeModal() { $("modal").hidden = true; $("scrim").hidden = true; }
+
   // ---------- events ----------
-  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
-    view = t.dataset.view;
-    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x === t)));
-    for (const v of ["contracts", "deadlines", "ask"]) $("view-" + v).hidden = v !== view;
-  }));
-  ["q", "fIndustry", "fStatus"].forEach((id) => $(id).addEventListener("input", renderRegister));
-  $("register").addEventListener("click", (e) => {
-    const s = e.target.closest("[data-sort]");
-    if (s) { const k = s.dataset.sort; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; renderRegister(); return; }
-    const tr = e.target.closest("tr[data-id]"); if (tr) openSheet(tr.dataset.id);
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-go],[data-open],[data-acct],[data-act],[data-sort],[data-mode],[data-stage],[data-rtab],[data-ask],[data-rm]");
+    if (!t) return;
+    if (t.tagName === "A") e.preventDefault();
+    if (t.dataset.go) return go(t.dataset.go);
+    if (t.dataset.open) { closeModal(); return go("record", t.dataset.open); }
+    if (t.dataset.acct) { accountFilter = t.dataset.acct; listView = "all"; return go("contracts"); }
+    if (t.dataset.sort) { const k = t.dataset.sort; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; return render(); }
+    if (t.dataset.mode) { listMode = t.dataset.mode; return render(); }
+    if (t.dataset.stage) { listView = t.dataset.stage; accountFilter = ""; return go("contracts"); }
+    if (t.dataset.rtab) { recTab = t.dataset.rtab; return render(); }
+    if (t.dataset.ask) { openAsst(true); return send(t.dataset.ask); }
+    if (t.dataset.rm !== undefined) { kdDraft.splice(Number(t.dataset.rm), 1); return renderKd(); }
+    const c = route.name === "record" ? byId(route.id) : null;
+    switch (t.dataset.act) {
+      case "add": return openModal();
+      case "examples": return toggleExamples();
+      case "export": return exportCsv();
+      case "briefing": return briefing();
+      case "clearAcct": accountFilter = ""; return render();
+      case "analyze": return c && analyze(c);
+      case "edit": editMode = true; recTab = "details"; kdDraft = (c.keyDates || []).map((k) => ({ ...k })); return render();
+      case "cancelEdit": editMode = false; return render();
+      case "kdAdd": kdDraft.push({ date: "", label: "" }); return renderKd();
+      case "saveEdit": return saveEdit(c);
+      case "del": $("delZone").innerHTML = `<span class="confirm">Delete this contract? <button class="btn danger sm" data-act="delYes">Delete</button><button class="btn sm" data-act="delNo">Keep</button></span>`; return;
+      case "delNo": return render();
+      case "delYes": { const id = c.id; go("contracts"); removeContract(id).then(() => toast("Deleted"), () => toast("Couldn't delete. Try again.")); return; }
+    }
   });
-  $("deadlines").addEventListener("click", (e) => { const r = e.target.closest("[data-id]"); if (r) openSheet(r.dataset.id); });
+  async function saveEdit(c) {
+    const patch = {};
+    const F = [["org"], ["counterparty"], ["industry"], ["contractType"], ["startDate"], ["endDate"], ["autoRenew", "bool"], ["renewalNoticeDays", "n"], ["annualValue", "n"], ["totalValue", "n"], ["maxBonus", "n"], ["currency"], ["earnings"], ["bonuses"], ["risks"]];
+    for (const [k, ty] of F) { const el = $("f_" + k); if (!el) continue; const raw = el.value.trim(); patch[k] = ty === "n" ? (raw === "" ? null : Number(raw)) : ty === "bool" ? raw === "true" : raw || null; }
+    patch.keyDates = kdDraft.filter((k) => parseD(k.date)).map((k) => ({ date: k.date, label: (k.label || "").trim() || "Key date" }));
+    try { await saveContract(c.id, { ...stripId(c), ...patch, activity: withAct(c, "Details edited") }); editMode = false; render(); toast("Saved"); }
+    catch (e) { toast("Couldn't save: " + (e?.message || e?.code || "try again")); }
+  }
+  document.addEventListener("input", (e) => {
+    const i = e.target.dataset?.i; if (i !== undefined) { kdDraft[Number(i)][e.target.dataset.k] = e.target.value; return; }
+    if (e.target.id === "lq") { listQuery = e.target.value; const pos = e.target.selectionStart; render(); const el = $("lq"); el.focus(); el.setSelectionRange(pos, pos); }
+    if (e.target.id === "lv") { listView = e.target.value; render(); }
+  });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !$("sheet").hidden) closeSheet();
-    if (e.key === "Enter" && e.target.matches("tr[data-id], .dl[data-id]")) openSheet(e.target.dataset.id);
+    if (e.key === "Escape") { if (!$("modal").hidden) closeModal(); }
+    if (e.key === "Enter" && e.target.matches("[data-open],[data-acct]") && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") e.target.click();
   });
-  $("scrim").addEventListener("click", closeSheet);
-  $("sheet").addEventListener("click", (e) => {
-    const id = e.target.id;
-    if (id === "closeSheet" || id === "cancelSheet") closeSheet();
-    else if (id === "saveSheet") saveSheet();
-    else if (id === "kdAdd") { kdDraft.push({ date: "", label: "" }); renderKd(); }
-    else if (e.target.dataset.rm !== undefined) { kdDraft.splice(Number(e.target.dataset.rm), 1); renderKd(); }
-    else if (id === "delBtn") { $("delZone").innerHTML = `<div class="confirm"><span>Delete this contract?</span><button class="btn danger" id="delYes">Delete</button><button class="btn" id="delNo">Keep</button></div>`; }
-    else if (id === "delNo") { $("delZone").innerHTML = `<button class="btn danger" id="delBtn">Delete</button>`; }
-    else if (id === "delYes") { const cid = editing?.id; closeSheet(); removeContract(cid).then(() => toast("Deleted"), () => toast("Couldn't delete. Try again.")); }
-  });
-  $("sheet").addEventListener("input", (e) => { const i = e.target.dataset.i; if (i !== undefined) kdDraft[Number(i)][e.target.dataset.k] = e.target.value; });
-  $("chips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (c) { $("question").value = c.textContent; ask(); } });
-  $("askBtn").addEventListener("click", ask);
-  $("stopBtn").addEventListener("click", () => askCtl?.abort());
-  $("exportBtn").addEventListener("click", exportCsv);
-  $("sampleBtn").addEventListener("click", toggleExamples);
+  $("gq").addEventListener("keydown", (e) => { if (e.key === "Enter") { listQuery = e.target.value; listView = "all"; accountFilter = ""; go("contracts"); } });
+  $("addBtn").addEventListener("click", openModal);
+  $("closeModal").addEventListener("click", closeModal);
+  $("scrim").addEventListener("click", closeModal);
   $("chooseBtn").addEventListener("click", () => $("fileInput").click());
-  $("addBtn").addEventListener("click", () => { $("intake").scrollIntoView({ behavior: "smooth", block: "start" }); $("fileInput").click(); });
+  $("sampleBtn").addEventListener("click", toggleExamples);
   $("fileInput").addEventListener("change", (e) => { processFiles([...e.target.files]); e.target.value = ""; });
-  const intake = $("intake");
-  ["dragenter", "dragover"].forEach((t) => intake.addEventListener(t, (e) => { e.preventDefault(); intake.classList.add("drag"); }));
-  ["dragleave", "drop"].forEach((t) => intake.addEventListener(t, (e) => { e.preventDefault(); intake.classList.remove("drag"); }));
-  intake.addEventListener("drop", (e) => processFiles([...(e.dataTransfer?.files || [])]));
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("drag"); }));
+  drop.addEventListener("drop", (e) => processFiles([...(e.dataTransfer?.files || [])]));
+  $("asstBtn").addEventListener("click", () => openAsst($("asst").hidden));
+  $("closeAsst").addEventListener("click", () => openAsst(false));
+  $("newChat").addEventListener("click", () => { asstCtl?.abort(); turns = []; renderThread(); updateAsstContext(); });
+  $("sendBtn").addEventListener("click", () => send($("prompt").value));
+  $("stopBtn").addEventListener("click", () => asstCtl?.abort());
+  $("prompt").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("prompt").value); } });
+  // chart tooltip
+  document.addEventListener("mousemove", (e) => {
+    const r = e.target.closest?.(".bar-row"); const tip = $("tip");
+    if (!r) { tip.hidden = true; return; }
+    const [k, v, n] = r.dataset.tip.split("|");
+    tip.innerHTML = `<b>${esc(k)}</b>${esc(v)} year-1 · ${esc(n)}`; tip.hidden = false;
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - 250) + "px"; tip.style.top = e.clientY + 14 + "px";
+  });
 
   // ---------- boot ----------
-  render();
-  if (window.pdfjsLib) { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; } catch {} }
-  const banner = (msg) => { $("banner").textContent = msg; $("banner").hidden = !msg; };
+  if (innerWidth < 1100) openAsst(false);
+  render(); renderThread(); updateAsstContext();
   (async () => {
     const use = window.claude?.use;
-    if (!use) { banner("Open this page on claude.ai to save contracts and use AI reading. Changes here aren't saved."); return; }
+    if (!use) { state.banner = "Open this page on claude.ai to save contracts and use the AI features. Changes here aren't saved."; render(); return; }
     const [db, user, smp, dl] = await Promise.all(["db", "user", "sample", "downloads"].map((n) => use(n).catch(() => null)));
     sample = smp; downloads = dl;
-    if (!sample) { $("chooseBtn").disabled = true; $("addBtn").disabled = true; banner("AI reading isn't available in this view, so new contracts can't be added. You can still view and edit saved ones."); }
+    if (sample) { const lim = await sample.limits().catch(() => null); if (lim) { maxPrompt = lim.maxPromptBytes || maxPrompt; toolsOK = !!lim.tools; } }
+    else state.banner = "AI features aren't available in this view. You can still view and edit saved contracts.";
     const uid = user ? await user.id().catch(() => null) : null;
     if (db && uid) {
       store = db.doc("data/users/" + uid + "/ledger").collection("contracts");
       store.onSnapshot((snap) => {
         contracts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        if (editing && !contracts.find((c) => c.id === editing.id)) closeSheet();
-        render();
-      }, (e) => banner("Your saved contracts couldn't be loaded (" + (e?.code || "error") + "). Reload the page to try again."));
-    } else {
-      banner("Sign in to claude.ai to save your contracts. Until then, anything you add disappears when you close the page.");
-      $("privacy").hidden = true;
-    }
-    render();
+        const active = document.activeElement;
+        if (!(editMode && route.name === "record") && !(active && ["lq", "prompt"].includes(active.id))) render();
+        updateAsstContext();
+      }, (e) => { state.banner = "Your saved contracts couldn't be loaded (" + (e?.code || "error") + "). Reload the page to try again."; render(); });
+    } else if (!state.banner) state.banner = "Sign in to claude.ai to save your contracts. Until then, anything you add disappears when you close the page.";
+    render(); updateAsstContext();
   })();
 })();
 </script>
