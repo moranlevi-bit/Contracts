@@ -358,6 +358,56 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
 
 .toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); background: #2e844a; color: #fff; padding: 12px 18px; border-radius: 6px; z-index: 80; font-weight: 600; max-width: calc(100% - 32px); box-shadow: var(--shadow-lg); }
 .foot { color: var(--muted); font-size: 12px; }
+/* obligations */
+.ico.o { background: #0b827c; }
+.sidetag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-right: 8px; vertical-align: 2px; letter-spacing: .02em; }
+.sidetag.mine { background: var(--brand); color: var(--brand-ink); }
+.sidetag.theirs { background: var(--teal); color: #fff; }
+.obcard.mine { box-shadow: inset 0 4px 0 var(--brand), var(--shadow); }
+.obcard.theirs { box-shadow: inset 0 4px 0 var(--teal), var(--shadow); }
+.obwrap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start; }
+.obwrap .ringbox { grid-template-columns: auto auto; }
+@media (max-width: 760px) { .obwrap { grid-template-columns: 1fr; } }
+.obnext { min-width: 0; display: grid; gap: 2px; }
+.oblist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.ob { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 10px; align-items: start; padding: 7px 8px; border-radius: 8px; }
+.ob:hover { background: var(--sunken); }
+.ob input { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--brand); }
+.ob .t { min-width: 0; display: grid; gap: 2px; }
+.ob .tx { overflow-wrap: anywhere; }
+.ob .meta { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.ob .meta .sep { opacity: .5; }
+.ob.s-done .tx { text-decoration: line-through; color: var(--muted); }
+.ob.s-overdue { background: var(--red-pill); }
+.ob.s-overdue:hover { filter: brightness(.98); }
+.oblist.compact .ob { padding: 4px 6px; gap: 8px; }
+.oblist.compact .ob .tx { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.oblist.compact .ob .meta { font-size: 11px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+.oblist.compact .ob .meta .pill { padding: 0 6px; }
+.obw { font-size: 12px; font-weight: 700; white-space: nowrap; text-align: right; display: grid; }
+.obw small { font-weight: 400; color: var(--muted); font-size: 11px; }
+.obw.overdue { color: var(--red); } .obw.soon { color: var(--blue-ink); } .obw.later { color: var(--fg); } .obw.ongoing { color: var(--teal-ink); font-weight: 600; } .obw.done { color: var(--ok); }
+.obh { margin: 12px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.obh:first-child { margin-top: 0; }
+.obh span { background: var(--sunken); border-radius: 8px; padding: 0 7px; color: var(--fg); }
+.obh.s-overdue { color: var(--red); }
+.obsplit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.obsplit.inner { gap: 16px; }
+@media (max-width: 900px) { .obsplit { grid-template-columns: 1fr; } }
+.card.obcol.mine { box-shadow: inset 0 4px 0 var(--brand), var(--shadow); }
+.card.obcol.theirs { box-shadow: inset 0 4px 0 var(--teal), var(--shadow); }
+div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--title); }
+.obdel { border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; padding: 0 4px; }
+.obdel:hover { color: var(--red); }
+.obadd { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.obadd input, .obadd select { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+@media (max-width: 640px) { .obadd { grid-template-columns: 1fr 1fr; } .obadd #nobText { grid-column: 1 / -1; } }
+.obtop { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; font-size: 12px; }
+.persp { font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-left: auto; }
+.persp b { color: var(--fg); }
+.persp input, .meorg input { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 6px; padding: 5px 8px; }
+.meorg { display: grid; gap: 4px; text-align: left; font-size: 13px; }
+.meorg input { width: 100%; }
 @media (prefers-reduced-motion: no-preference) {
   .dock { animation: up .16s ease-out; } @keyframes up { from { transform: translateY(10px); opacity: .7; } }
   .thinking::after { content: "…"; animation: blink 1s steps(3) infinite; } @keyframes blink { 50% { opacity: .3; } }
@@ -377,7 +427,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     <div class="gicons">
       <button class="gicon" id="addBtn" title="Add contracts" aria-label="Add contracts"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M12 7v10M7 12h10" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round"/></svg></button>
       <button class="gicon ai" id="asstBtn" title="Assistant" aria-label="Open assistant" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
-      <button class="gicon hide-sm" id="bellBtn" title="Deadlines in the next 30 days" aria-label="Deadlines in the next 30 days"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="badge" id="bellN" hidden>0</span></button>
+      <button class="gicon hide-sm" id="bellBtn" title="Obligations needing attention" aria-label="Obligations needing attention"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg><span class="badge" id="bellN" hidden>0</span></button>
       <button class="avatar" id="avatar" title="You" aria-label="Your account"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.8-4.3 4.2-6.8 8.5-6.8s7.7 2.5 8.5 6.8z"/></svg></button>
     </div>
   </header>
@@ -385,6 +435,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     <div class="appname"><button class="waffle" data-go="reports" title="All reports" aria-label="All reports"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button>Contracts</div>
     <div class="tabs" id="tabs">
       <div class="tabwrap" data-tab="home" aria-current="page"><button class="tab" data-go="home">Home</button></div>
+      <div class="tabwrap" data-tab="obligations"><button class="tab" data-go="obligations">Obligations</button><button class="caret" data-menu="obligations" aria-label="Obligations menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div>
       <div class="tabwrap" data-tab="contracts"><button class="tab" data-go="contracts">Contracts</button><button class="caret" data-menu="contracts" aria-label="Contracts menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div>
       <div class="tabwrap" data-tab="accounts"><button class="tab" data-go="accounts">Accounts</button><button class="caret" data-menu="accounts" aria-label="Accounts menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div>
       <div class="tabwrap" data-tab="deadlines"><button class="tab" data-go="deadlines">Deadlines</button><button class="caret" data-menu="deadlines" aria-label="Deadlines menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button></div>
@@ -409,7 +460,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   </div>
 </aside>
 <aside class="dock todo" id="todo" aria-label="To do list" hidden>
-  <header><h2><span aria-hidden="true">☑</span>To Do List</h2><button class="btn sm" id="closeTodo" aria-label="Minimize to do list">—</button></header>
+  <header><h2><span aria-hidden="true">☑</span>My To Do List</h2><button class="btn sm" id="closeTodo" aria-label="Minimize to do list">—</button></header>
   <ul class="todo-list" id="todoList"></ul>
 </aside>
 <nav class="ubar" aria-label="Utilities">
@@ -422,8 +473,9 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   <header><h2 id="mTitle">Add contracts</h2><button class="btn ghost sm" id="closeModal">Close</button></header>
   <div class="pad">
     <div class="drop" id="drop">
+      <label class="meorg" for="myOrg">Your organization (so the AI knows which obligations are yours)<input id="myOrg" placeholder="e.g. Acme Ltd."></label>
       <strong>Drop contract files here</strong>
-      <span>PDF, Word (.docx) or .txt. AI reads each one and creates a record with the organization, industry, earnings, bonuses, key dates and a risk rating.</span>
+      <span>PDF, Word (.docx) or .txt. AI reads each one and lists what you owe, what the other side owes you, key dates, money and a risk rating.</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="btn primary" id="chooseBtn">Choose files</button><button class="btn" id="sampleBtn">Load example contracts</button></div>
       <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
     </div>
@@ -460,7 +512,8 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   let listView = "all", listMode = "table", sortKey = "org", sortDir = 1, listQuery = "", accountFilter = "";
   let recTab = "details", editMode = false, kdDraft = [];
   let localSeq = 0;
-  let userName = "", todoDone = {}, ledgerDoc = null;
+  let userName = "", todoDone = {}, ledgerDoc = null, myCompany = "", editingMe = false;
+  let obSide = "all", obStatus = "open", obAccount = "", obCat = "", obQuery = "", showDone = false;
 
   // ---------- derived ----------
   const STAGES = ["Upcoming", "Active", "Expiring", "Renewing", "Expired"];
@@ -495,7 +548,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   // ---------- routing ----------
   function go(name, id) {
     route = { name, id }; editMode = false;
-    if (name === "record") recTab = "details";
+    if (name === "record") recTab = "obligations";
     const cur = { record: "contracts", report: "reports" }[name] || name;
     document.querySelectorAll(".tabwrap").forEach((w) => w.setAttribute("aria-current", w.dataset.tab === cur ? "page" : "false"));
     closeMenu();
@@ -504,7 +557,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   function render() {
     const p = $("page");
     if (route.name === "record" && !byId(route.id)) route = { name: "contracts" };
-    p.innerHTML = ({ home: pageHome, contracts: pageContracts, accounts: pageAccounts, deadlines: pageDeadlines, record: pageRecord, reports: pageReports, report: pageReport })[route.name]();
+    p.innerHTML = ({ home: pageHome, contracts: pageContracts, accounts: pageAccounts, deadlines: pageDeadlines, record: pageRecord, obligations: pageObligations, reports: pageReports, report: pageReport })[route.name]();
     if (route.name === "record") renderKd();
     renderChrome();
   }
@@ -536,61 +589,226 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
       body: `<div class="ringbox"><button class="ring" data-report="${esc(report)}" aria-label="${esc(center + " " + centerLabel)}: open report">${ringSvg(segs.map((s) => ({ v: s.v, color: s.color })))}<span class="c"><b>${esc(center)}</b><span>${esc(centerLabel)}</span></span></button><ul class="legend">${legend}</ul></div>` });
   }
 
+  // ---------- obligations ----------
+  const OB_CATS = ["Payment", "Delivery", "Service level", "Notice", "Reporting", "Compliance", "Insurance", "Data & security", "Other"];
+  const OB_REC = ["One-time", "Monthly", "Quarterly", "Annual", "Ongoing"];
+  const newObId = () => "o" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  function obState(o) { if (o.done) return "done"; if (!parseD(o.due)) return "ongoing"; const x = daysTo(o.due); return x < 0 ? "overdue" : x <= 30 ? "soon" : "later"; }
+  const OB_STATE_LABEL = { overdue: "Overdue", soon: "Due in 30 days", later: "Upcoming", ongoing: "Ongoing", done: "Done" };
+  function obligationsOf(c) { return (Array.isArray(c.obligations) ? c.obligations : []).map((o) => ({ ...o, c, state: obState(o) })); }
+  function allObligations() {
+    const rank = { overdue: 0, soon: 1, later: 2, ongoing: 3, done: 4 };
+    return contracts.flatMap(obligationsOf).sort((a, b) => rank[a.state] - rank[b.state] || String(a.due || "9999").localeCompare(String(b.due || "9999")) || String(a.c.org).localeCompare(String(b.c.org)));
+  }
+  const sideName = (s) => (s === "mine" ? "I owe" : "Owed to me");
+  const meName = () => myCompany || "Your organization";
+  function obWhen(o) {
+    if (o.state === "done") return `<span class="obw done">✓ Done</span>`;
+    if (o.state === "ongoing") return `<span class="obw ongoing">${esc(o.recurrence && o.recurrence !== "One-time" ? o.recurrence : "Ongoing")}</span>`;
+    const x = daysTo(o.due);
+    return `<span class="obw ${o.state}">${o.state === "overdue" ? "⚠ " + -x + "d overdue" : x === 0 ? "Due today" : "in " + x + "d"}<small>${fmtD(o.due)}</small></span>`;
+  }
+  function obItem(o, { showOrg = true } = {}) {
+    const meta = [showOrg ? `<button class="link" data-open="${esc(o.c.id)}">${esc(o.c.org)}</button>` : "", `<span class="pill none">${esc(o.category || "Other")}</span>`, o.recurrence && o.recurrence !== "One-time" && o.due ? esc(o.recurrence) : "", num(o.amount) ? `<b>${money(o.amount, o.c.currency)}</b>` : "", o.ref ? esc(o.ref) : ""].filter(Boolean).join('<span class="sep">·</span>');
+    return `<li class="ob s-${o.state}"><input type="checkbox" data-ob="${esc(o.c.id)}|${esc(o.id)}" ${o.done ? "checked" : ""} aria-label="Mark done: ${esc(o.text)}"><div class="t"><span class="tx">${esc(o.text)}</span><span class="meta">${meta}</span></div>${obWhen(o)}</li>`;
+  }
+  function obGroups(list, opts = {}) {
+    const groups = ["overdue", "soon", "later", "ongoing"].map((s) => [s, list.filter((o) => o.state === s)]).filter(([, l]) => l.length);
+    const done = list.filter((o) => o.state === "done");
+    if (!groups.length && !done.length) return `<p class="muted" style="margin:6px 0">${opts.empty || "No obligations."}</p>`;
+    return groups.map(([s, l]) => `<h4 class="obh s-${s}">${OB_STATE_LABEL[s]} <span>${l.length}</span></h4><ul class="oblist">${l.map((o) => obItem(o, opts)).join("")}</ul>`).join("")
+      + (done.length ? (showDone ? `<h4 class="obh s-done">Done <span>${done.length}</span> <button class="link" data-act="toggleDone">Hide</button></h4><ul class="oblist">${done.map((o) => obItem(o, opts)).join("")}</ul>` : `<p class="foot" style="margin:8px 0 0"><button class="link" data-act="toggleDone">Show ${done.length} done</button></p>`) : "");
+  }
+  function obCounts(list) { const n = (s) => list.filter((o) => o.state === s).length; return { overdue: n("overdue"), soon: n("soon"), later: n("later"), ongoing: n("ongoing"), done: n("done"), open: list.filter((o) => o.state !== "done").length }; }
+
+  function obSideCard(side) {
+    const list = allObligations().filter((o) => o.side === side), k = obCounts(list);
+    const mine = side === "mine";
+    const segs = [{ v: k.overdue, color: "red", text: `${k.overdue} Overdue`, f: side + ":overdue" }, { v: k.soon, color: "blue", text: `${k.soon} Due in 30 Days`, f: side + ":soon" }, { v: k.later + k.ongoing, color: "teal", text: `${k.later + k.ongoing} Upcoming & Ongoing`, f: side + ":open" }];
+    const next = list.filter((o) => ["overdue", "soon", "later"].includes(o.state)).slice(0, 4);
+    const legend = segs.map((s) => `<li><span class="dot ${s.color}"></span><button class="lp ${s.color}" data-obf="${s.f}">${esc(s.text)}</button></li>`).join("");
+    return `<section class="hcard span2 obcard ${mine ? "mine" : "theirs"}"><div class="hd"><div><h2><span class="sidetag ${side}">${mine ? "↗ I owe" : "↙ Owed to me"}</span>${mine ? "My Obligations" : "Their Obligations"}</h2><p>${mine ? `What ${esc(meName())} must do` : "What the other parties must do for you"}</p></div></div>
+      <div class="bd"><div class="obwrap"><div class="ringbox"><button class="ring" data-obf="${side}:open" aria-label="${k.open} open obligations">${ringSvg(segs.map((s) => ({ v: s.v, color: s.color })))}<span class="c"><b>${k.open}</b><span>Open</span></span></button><ul class="legend">${legend}</ul></div>
+      <div class="obnext"><span class="label">Next up</span>${next.length ? `<ul class="oblist compact">${next.map((o) => obItem(o)).join("")}</ul>` : `<p class="muted" style="margin:4px 0">${list.length ? "Nothing dated is coming up." : "No obligations recorded yet."}</p>`}</div></div></div>
+      <div class="ft"><button class="btn outline" data-obf="${side}:open">View ${mine ? "My" : "Their"} Obligations</button></div></section>`;
+  }
+
   function pageHome() {
     const all = contracts, y = sum(all, "annualValue");
-    const title = `<div class="home-title"><h1>Contract Home</h1><p>Good ${greet()}${userName ? ", " + esc(userName.split(" ")[0]) : ""}. Let's review your contracts!</p></div>`;
+    const persp = editingMe ? `<span class="persp"><label for="meInput">Your organization</label><input id="meInput" value="${esc(myCompany)}" placeholder="e.g. Acme Ltd."><button class="btn primary sm" data-act="saveMe">Save</button><button class="btn sm" data-act="cancelMe">Cancel</button></span>`
+      : `<span class="persp">Your side: <b>${esc(meName())}</b> <button class="link" data-act="editMe">Change</button></span>`;
+    const title = `<div class="home-title"><h1>Contract Home</h1><p>Good ${greet()}${userName ? ", " + esc(userName.split(" ")[0]) : ""}. Here's who owes what.</p>${persp}</div>`;
     if (!all.length) return bannerHtml() + title + emptyAll();
 
     const st = (c) => status(c);
     const yAct = sum(all.filter((c) => ["Active", "Upcoming"].includes(st(c))), "annualValue");
     const yRen = sum(all.filter((c) => st(c) === "Renewing"), "annualValue");
     const yRisk = sum(all.filter((c) => ["Expiring", "Expired"].includes(st(c))), "annualValue");
-    const earnCard = ringCard({ title: "Grow Earnings", sub: "Committed year-1 fees across all contracts", center: compact(y), centerLabel: "Year-1 Earnings", report: "earnings",
+    const earnCard = ringCard({ title: "Contract Value", sub: "Committed year-1 fees across all contracts", center: compact(y), centerLabel: "Year-1 Value", report: "earnings",
       segs: [{ v: yAct, color: "teal", text: `${compact(yAct)} Active`, report: "status:Active" }, { v: yRen, color: "blue", text: `${compact(yRen)} Renewing`, report: "status:Renewing" }, { v: yRisk, color: "red", text: `${compact(yRisk)} Expiring`, report: "status:Expiring" }],
-      foot: `<button class="btn outline" data-report="earnings">View Earnings</button>` });
-
-    const accs = groupBy(all, (c) => c.org);
-    const worst = (g) => (g.list.some((c) => riskOf(c) === "High") ? "High" : g.list.some((c) => riskOf(c) === "Medium") ? "Medium" : g.list.some((c) => riskOf(c) === "Low") ? "Low" : null);
-    const nR = (lvl) => accs.filter((g) => worst(g) === lvl).length;
-    const accCard = ringCard({ title: "Plan My Accounts", sub: "Organizations you hold contracts with", center: String(accs.length), centerLabel: "Accounts", report: "contracts",
-      segs: [{ v: nR("Low"), color: "teal", text: `${nR("Low")} Low Risk`, report: "risk:Low" }, { v: nR("Medium"), color: "blue", text: `${nR("Medium")} Medium Risk`, report: "risk:Medium" }, { v: nR("High"), color: "red", text: `${nR("High")} High Risk`, report: "risk:High" }],
-      foot: `<button class="btn outline" data-go="accounts">View Accounts</button>` });
-
+      foot: `<button class="btn outline" data-report="earnings">View Value</button>` });
     const ds = allDeadlines().filter((d) => d.date >= todayISO && daysTo(d.date) <= 365);
     const d30 = ds.filter((d) => daysTo(d.date) <= 30).length, d90 = ds.filter((d) => daysTo(d.date) > 30 && daysTo(d.date) <= 90).length, dLater = ds.length - d30 - d90;
-    const dlCard = ringCard({ title: "Stay Ahead of Deadlines", sub: "Notice dates, term ends and key dates in the next 12 months", center: String(ds.length), centerLabel: "Deadlines", report: "deadlines",
-      segs: [{ v: dLater, color: "teal", text: `${dLater} Later This Year`, report: "deadlines" }, { v: d90, color: "blue", text: `${d90} In 31–90 Days`, report: "deadlines" }, { v: d30, color: "red", text: `${d30} In Next 30 Days`, report: "deadlines" }],
-      foot: `<button class="btn outline" data-report="deadlines">View Deadlines</button>` });
-
+    const dlCard = ringCard({ title: "Key Dates", sub: "Notice dates, term ends and milestones, next 12 months", center: String(ds.length), centerLabel: "Dates", report: "deadlines",
+      segs: [{ v: d30, color: "red", text: `${d30} In Next 30 Days`, report: "deadlines" }, { v: d90, color: "blue", text: `${d90} In 31–90 Days`, report: "deadlines" }, { v: dLater, color: "teal", text: `${dLater} Later This Year`, report: "deadlines" }],
+      foot: `<button class="btn outline" data-report="deadlines">View Dates</button>` });
     const bon = all.filter((c) => Number(c.maxBonus) > 0);
     const bonusDates = bon.flatMap((c) => (c.keyDates || []).filter((k) => BONUS_RE.test(k.label || "") && k.date >= todayISO)).sort((a, b) => a.date.localeCompare(b.date));
-    const bonusCard = ringCard({ title: "Earn Bonuses", sub: "Bonus and incentive payments your contracts allow", center: compact(sum(bon, "maxBonus")), centerLabel: "Max Bonuses", report: "bonuses",
+    const bonusCard = ringCard({ title: "Bonuses", sub: "Bonus and incentive payments in your contracts", center: compact(sum(bon, "maxBonus")), centerLabel: "Max Bonuses", report: "bonuses",
       segs: [{ v: bon.length, color: "teal", text: `${bon.length} With a Bonus`, report: "bonuses" }, { v: all.length - bon.length, color: "blue", text: `${all.length - bon.length} Without`, report: "contracts" }, { v: 0, color: "red", text: bonusDates[0] ? `Next: ${fmtD(bonusDates[0].date)}` : "No Bonus Dates", report: "bonuses" }],
       foot: `<button class="btn outline" data-report="bonuses">View Bonuses</button>` });
-
-    const aiCard = hcard({ title: "AI Briefing", sub: "A short summary of what needs your attention today.", cls: "",
-      extra: `<button class="round-ico" data-act="briefing" title="${state.briefing ? "Refresh briefing" : "Generate briefing"}" aria-label="Generate briefing" ${sample ? "" : "disabled"}><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--ai)" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg></button>`,
-      body: `<div class="ai-out ${state.briefing ? "" : "dim"}" id="briefing">${esc(state.briefing || (sample ? "Click Generate to get an AI summary of deadlines, contracts at risk, renewals and bonus opportunities." : "AI features need this page open on claude.ai."))}</div>`,
+    const aiCard = hcard({ title: "AI Briefing", sub: "What needs your attention today",
+      extra: `<button class="round-ico" data-act="briefing" title="Generate briefing" aria-label="Generate briefing" ${sample ? "" : "disabled"}><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--ai)" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg></button>`,
+      body: `<div class="ai-out ${state.briefing ? "" : "dim"}" id="briefing">${esc(state.briefing || (sample ? "Get an AI summary of overdue obligations on both sides, what's due next, and what to chase." : "AI features need this page open on claude.ai."))}</div>`,
       foot: `<button class="btn outline" data-act="briefing" ${sample ? "" : "disabled"}>${state.briefing ? "Refresh Briefing" : "Generate Briefing"}</button>` });
-
-    const up = allDeadlines().filter((d) => d.date >= todayISO).slice(0, 3);
-    const evCard = hcard({ title: "Upcoming Events", sub: "Your next contract dates",
-      body: up.length ? `<ul class="events">${up.map((d) => { const dt = parseD(d.date); return `<li data-open="${esc(d.c.id)}" tabindex="0"><span class="cal"><span>${dt.toLocaleDateString(undefined, { month: "short" })}</span><b>${dt.getDate()}</b></span><span class="t"><b>${esc(d.c.org)}</b><span>${esc(d.label)} · ${dueTxt(daysTo(d.date))}</span></span></li>`; }).join("")}</ul>` : '<p class="muted">Nothing coming up.</p>',
-      foot: `<button class="btn outline" data-go="deadlines">View Calendar</button>` });
-
-    const chartCard = hcard({ title: "Earnings by Industry", sub: "Year-1 committed fees. Click a bar for its report.",
-      body: barChart(groupBy(all, (c) => c.industry).map((g) => ({ label: g.key, value: g.year1, tip: `${money(g.year1)} year-1 · ${plural(g.list.length, "contract")}`, report: "industry:" + g.key })), compact),
-      foot: `<button class="btn outline" data-report="earnings">View Report</button>` });
-    const recent = [...all].sort((a, b) => String(b.addedAt || "").localeCompare(String(a.addedAt || ""))).slice(0, 3);
-    const recCard = hcard({ title: "Recent Records", sub: "Contracts you added most recently",
-      body: `<ul class="events">${recent.map((c) => `<li data-open="${esc(c.id)}" tabindex="0" style="grid-template-columns:auto minmax(0,1fr)"><span class="ico c" aria-hidden="true">C</span><span class="t"><b style="color:var(--brand)">${esc(c.org)}</b><span>${esc(c.industry || "")} · ${status(c)}</span></span></li>`).join("")}</ul>`,
-      foot: `<button class="btn outline" data-go="contracts">View Contracts</button>` });
     const counts = Object.fromEntries(STAGES.map((s) => [s, all.filter((c) => status(c) === s).length]));
     const pipeCard = hcard({ title: "Renewal Pipeline", sub: "", cls: "span3",
       body: `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-report="status:${esc(s)}">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>` });
-
-    return bannerHtml() + title + `<div class="home-grid">${earnCard}${accCard}${dlCard}${bonusCard}${aiCard}${evCard}${chartCard}${recCard}${pipeCard}</div>`;
+    return bannerHtml() + title + `<div class="home-grid">${obSideCard("mine")}${obSideCard("theirs")}${earnCard}${dlCard}${bonusCard}${aiCard}${pipeCard}</div>`;
   }
+
+  function obFiltered() {
+    const q = obQuery.toLowerCase();
+    return allObligations().filter((o) => (obSide === "all" || o.side === obSide)
+      && (obStatus === "all" || (obStatus === "open" ? o.state !== "done" : o.state === obStatus))
+      && (!obAccount || o.c.org === obAccount) && (!obCat || o.category === obCat)
+      && (!q || [o.text, o.c.org, o.category, o.ref].join(" ").toLowerCase().includes(q)));
+  }
+  function pageObligations() {
+    if (!contracts.length) return bannerHtml() + `<div class="page-head"><h1><span class="ico o">⇄</span>Obligations</h1></div>` + emptyAll();
+    const list = obFiltered();
+    const sel = (id, val, opts) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${v === val ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    const accs = [...new Set(contracts.map((c) => c.org))].sort();
+    const tools = `<div class="toolbar">${sel("obSide", obSide, [["all", "Both sides"], ["mine", "I owe"], ["theirs", "Owed to me"]])}${sel("obStatus", obStatus, [["open", "All open"], ["overdue", "Overdue"], ["soon", "Due in 30 days"], ["later", "Upcoming"], ["ongoing", "Ongoing"], ["done", "Done"], ["all", "Everything"]])}${sel("obAccount", obAccount, [["", "All accounts"], ...accs.map((a) => [a, a])])}${sel("obCat", obCat, [["", "All categories"], ...OB_CATS.map((c) => [c, c])])}<input type="search" id="obQ" placeholder="Search obligations…" value="${esc(obQuery)}"></div>`;
+    const col = (side) => { const l = list.filter((o) => o.side === side), k = obCounts(l); return `<section class="card obcol ${side}"><header><h2><span class="sidetag ${side}">${side === "mine" ? "↗ I owe" : "↙ Owed to me"}</span>${side === "mine" ? `What ${esc(meName())} must do` : "What the other parties must do"}</h2><span class="foot">${k.overdue ? `<b style="color:var(--red)">${k.overdue} overdue</b> · ` : ""}${k.open} open</span></header><div class="pad">${obGroups(l, { empty: "Nothing matches these filters." })}</div></section>`; };
+    const cols = obSide === "all" ? `<div class="obsplit">${col("mine")}${col("theirs")}</div>` : col(obSide);
+    return bannerHtml() + `<div class="page-head"><div><h1><span class="ico o">⇄</span>Obligations</h1><span class="muted">Your side: <b>${esc(meName())}</b> · ${list.filter((o) => o.state !== "done").length} open in this view</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${downloads && list.length ? '<button class="btn" data-act="exportObXlsx">Export Excel</button><button class="btn" data-act="exportObCsv">Export CSV</button>' : ""}<button class="btn ai" data-ask="Which obligations are overdue or due in the next 30 days, on my side and theirs? What should I do or chase first?" ${sample ? "" : "disabled"}>✦ Prioritize with AI</button></div></div>
+      <section class="card"><div class="pad">${tools}</div></section>${cols}`;
+  }
+
+  function recObligations(c) {
+    const l = obligationsOf(c), rank = { overdue: 0, soon: 1, later: 2, ongoing: 3, done: 4 };
+    l.sort((a, b) => rank[a.state] - rank[b.state] || String(a.due || "9999").localeCompare(String(b.due || "9999")));
+    const col = (side) => `<div class="obcol ${side}"><h3><span class="sidetag ${side}">${side === "mine" ? "↗ I owe" : "↙ Owed to me"}</span>${side === "mine" ? esc(meName()) + " must" : esc(c.org) + " must"}</h3><ul class="oblist">${l.filter((o) => o.side === side).map((o) => obItem(o, { showOrg: false }).replace("</li>", `<button class="obdel" data-obdel="${esc(o.id)}" aria-label="Remove obligation" title="Remove">×</button></li>`)).join("") || '<li class="muted" style="display:block">None recorded.</li>'}</ul></div>`;
+    const form = `<div class="obadd"><select id="nobSide"><option value="mine">I owe</option><option value="theirs">They owe</option></select><input id="nobText" placeholder="Add an obligation, e.g. Send quarterly usage report"><input id="nobDue" type="date" aria-label="Due date"><select id="nobCat">${OB_CATS.map((x) => `<option>${x}</option>`).join("")}</select><button class="btn sm" data-act="addOb">Add</button></div>`;
+    const ai = c.sourceText && sample ? `<button class="btn ai sm" data-act="findObs">✦ Re-read obligations with AI</button>` : "";
+    return `<div class="pad"><div class="obtop"><span class="muted">Ticking an obligation marks it done for everyone viewing your ledger.</span>${ai}</div><div class="obsplit inner">${col("mine")}${col("theirs")}</div>${form}</div>`;
+  }
+
+  async function updateObs(c, obs, actText) {
+    const fresh = byId(c.id) || c;
+    await saveContract(c.id, { ...stripId(fresh), obligations: obs, activity: actText ? withAct(fresh, actText) : fresh.activity || [] });
+  }
+  async function toggleOb(cid, oid, done) {
+    const c = byId(cid); if (!c) return;
+    const obs = (c.obligations || []).map((o) => (o.id === oid ? { ...o, done, doneAt: done ? new Date().toISOString() : null } : o));
+    const o = obs.find((x) => x.id === oid);
+    try { await updateObs(c, obs, o ? `${done ? "Completed" : "Reopened"}: ${o.text}` : ""); toast(done ? "Marked done" : "Reopened"); } catch { toast("Couldn't save. Try again."); }
+  }
+  async function addOb(c) {
+    const text = $("nobText").value.trim(); if (!text) { $("nobText").focus(); return; }
+    const o = { id: newObId(), side: $("nobSide").value, text: text.slice(0, 400), category: $("nobCat").value, due: parseD($("nobDue").value) ? $("nobDue").value : null, recurrence: parseD($("nobDue").value) ? "One-time" : "Ongoing", amount: null, ref: "", done: false, manual: true };
+    try { await updateObs(c, [...(c.obligations || []), o], "Added obligation: " + o.text); toast("Obligation added"); } catch { toast("Couldn't save. Try again."); }
+  }
+  async function removeOb(c, oid) {
+    const o = (c.obligations || []).find((x) => x.id === oid);
+    try { await updateObs(c, (c.obligations || []).filter((x) => x.id !== oid), o ? "Removed obligation: " + o.text : ""); } catch { toast("Couldn't save. Try again."); }
+  }
+  function normalizeObs(arr) {
+    return (Array.isArray(arr) ? arr : []).filter((o) => o && o.text && ["mine", "theirs"].includes(o.side)).slice(0, 40).map((o) => ({
+      id: newObId(), side: o.side, text: String(o.text).slice(0, 400), category: OB_CATS.includes(o.category) ? o.category : "Other",
+      due: parseD(o.due) ? o.due : null, recurrence: OB_REC.includes(o.recurrence) ? o.recurrence : parseD(o.due) ? "One-time" : "Ongoing",
+      amount: num(o.amount), ref: String(o.ref || "").slice(0, 60), done: false }));
+  }
+  const OB_PROMPT_SPEC = (me) => `"obligations": up to 30 concrete commitments the parties must perform, each {"side": "mine" | "theirs", "text": short imperative sentence (e.g. "Pay quarterly subscription of $126,000 in advance"), "category": one of ${JSON.stringify(OB_CATS)}, "due": next due date "YYYY-MM-DD" on or after today for recurring items (or the fixed date for one-time items; null if ongoing with no date), "recurrence": one of ${JSON.stringify(OB_REC)}, "amount": number or null, "ref": section reference like "Sec. 3.2"}. "mine" means obligations of ${me ? `the user's organization (${me})` : "the user's organization (the party that is not \"org\")"}; "theirs" means obligations of "org". Include payments, deliveries and deadlines, service levels, notices, reports, insurance, compliance and data/security duties. Skip boilerplate that applies equally to both parties unless it has a deadline.`;
+  async function findObs(c) {
+    const btn = document.querySelector('[data-act="findObs"]'); if (btn) { btn.disabled = true; btn.innerHTML = '<span class="thinking">Reading</span>'; }
+    const prompt = `You extract obligations from a contract. Today is ${todayISO}. The other party ("org") is ${c.org}. The user's organization is ${myCompany || c.counterparty || "the other party to the contract"}. Return ONLY JSON: {${OB_PROMPT_SPEC(myCompany || c.counterparty)}}\n\n<contract>\n${c.sourceText}\n</contract>`;
+    try {
+      const out = await sample.json(prompt, { modelTier: "default", cache: false });
+      const fresh = byId(c.id) || c, keep = (fresh.obligations || []).filter((o) => o.manual);
+      const doneTexts = new Set((fresh.obligations || []).filter((o) => o.done).map((o) => o.text));
+      const found = normalizeObs(out?.obligations).map((o) => ({ ...o, done: doneTexts.has(o.text) }));
+      await saveContract(c.id, { ...stripId(fresh), obligations: [...found, ...keep], activity: withAct(fresh, `AI found ${found.length} obligations`, true) });
+      toast(`Found ${found.length} obligations`);
+    } catch (e) { toast(errCopy(e)); if (btn) { btn.disabled = false; btn.textContent = "✦ Re-read obligations with AI"; } }
+  }
+  async function saveMe(name) {
+    myCompany = name.trim().slice(0, 200); editingMe = false; render();
+    if (ledgerDoc) { try { await ledgerDoc.set({ todoDone, myCompany }); toast("Saved"); } catch { toast("Couldn't save your organization."); } }
+  }
+  function obRows(list) { return list.map((o) => [sideName(o.side), o.c.org || "", o.text, o.category || "", o.due || "", o.due ? daysTo(o.due) : "", o.recurrence || "", num(o.amount), OB_STATE_LABEL[o.state], o.ref || ""]); }
+  const OB_HEAD = ["Side", "Account", "Obligation", "Category", "Due Date", "Days Away", "Recurrence", "Amount", "Status", "Section"];
+  async function exportObligations(list, fmt) {
+    const fname = "obligations-" + todayISO;
+    if (fmt === "csv") {
+      const cell = (v) => { const s = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+      const lines = [OB_HEAD.join(","), ...obRows(list).map((r) => r.map(cell).join(","))];
+      try { await downloads.save({ filename: fname + ".csv", data: new Blob(["﻿" + lines.join("\n")], { type: "text/csv" }) }); } catch (e) { if (!["cancelled", "declined"].includes(e?.code)) toast("Export didn't finish."); }
+      return;
+    }
+    const X = window.XLSX; if (!X) { toast("The Excel exporter didn't load. Reload the page, or use Export CSV."); return; }
+    const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, obSheet(X, list), "Obligations");
+    const out = X.write(wb, { bookType: "xlsx", type: "array", cellDates: true });
+    try { await downloads.save({ filename: fname + ".xlsx", data: new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }) }); } catch (e) { if (!["cancelled", "declined"].includes(e?.code)) toast("Export didn't finish."); }
+  }
+  function obSheet(X, list) {
+    const rows = obRows(list).map((r) => { r[4] = parseD(r[4]) || null; return r; });
+    const ws = X.utils.aoa_to_sheet([OB_HEAD, ...rows], { cellDates: true });
+    for (let i = 1; i <= rows.length; i++) { const d = ws[X.utils.encode_cell({ r: i, c: 4 })]; if (d) d.z = "mmm d, yyyy"; const a = ws[X.utils.encode_cell({ r: i, c: 7 })]; if (a) a.z = '"$"#,##0'; }
+    ws["!cols"] = [12, 30, 60, 16, 13, 10, 12, 12, 14, 14].map((w) => ({ wch: w }));
+    if (rows.length) ws["!autofilter"] = { ref: "A1:J" + (rows.length + 1) };
+    return ws;
+  }
+
+  // ---------- examples: obligations from MediLink's side ----------
+  const OB_EX = {
+    "Lakeshore Private Hospital": [
+      ["mine", "Keep the platform available 99.5% of each month (credits of 5-20% if missed)", "Service level", null, "Ongoing", null, "Sec. 5"],
+      ["mine", "Notify the hospital of any security incident within 48 hours", "Data & security", null, "Ongoing", null, "Sec. 12.5"],
+      ["mine", "Provide SOC 2 report and penetration test summary on request (once a year)", "Reporting", null, "Annual", null, "Sec. 12.3"],
+      ["mine", "Maintain $2M/$4M general liability and $10M cyber insurance", "Insurance", null, "Ongoing", null, "Sec. 15"],
+      ["mine", "Provide 24/7 support; respond to Severity 1 issues within 30 minutes", "Service level", null, "Ongoing", null, "Exh. B"],
+      ["mine", "Go live at the main campus", "Delivery", "2025-07-01", "One-time", null, "Sec. 1.2", true],
+      ["theirs", "Pay Q4 2026 subscription invoice", "Payment", "2026-11-15", "Quarterly", 126000, "Sec. 3.2, 4.1"],
+      ["theirs", "Pay Q1 2027 subscription invoice (after 5% increase)", "Payment", "2027-02-15", "Quarterly", 132300, "Sec. 3.3"],
+      ["theirs", "Certify licensed bed count for the year", "Reporting", "2027-01-31", "Annual", null, "Sec. 16.3"],
+      ["theirs", "Report any change in licensed beds within 30 days", "Notice", null, "Ongoing", null, "Sec. 16.3"],
+      ["theirs", "Pay Final Acceptance installment", "Payment", "2025-08-30", "One-time", 72000, "Sec. 3.1(c)", true],
+    ],
+    "Brightsight Eye Clinic, P.A.": [
+      ["mine", "Connect the imaging add-on to the clinic's devices (Imaging Go-Live)", "Delivery", "2026-09-01", "One-time", null, "Exh. D"],
+      ["mine", "Give written notice of any renewal price increase", "Notice", "2026-11-30", "One-time", null, "Sec. 3.5"],
+      ["mine", "Keep the platform available 99.0% each month (10% credit if missed)", "Service level", null, "Ongoing", null, "Sec. 5"],
+      ["mine", "Notify the clinic of any security incident within 72 hours", "Data & security", null, "Ongoing", null, "Sec. 12.5"],
+      ["mine", "Credit one month's subscription on the first renewal invoice", "Payment", "2027-03-01", "One-time", 2970, "Sec. 3.6"],
+      ["theirs", "Pay monthly subscription and imaging fee (net 30)", "Payment", "2026-10-31", "Monthly", 4170, "Sec. 3.2-3.3, 4.2"],
+      ["theirs", "Keep at least 4 providers on the subscription", "Compliance", null, "Ongoing", null, "Sec. 3.2"],
+      ["theirs", "Get patient consent for texts and automated calls (TCPA)", "Compliance", null, "Ongoing", null, "Sec. 11.3"],
+      ["theirs", "Have imaging equipment vendors cooperate with the integration", "Delivery", null, "Ongoing", null, "Sec. 11.4"],
+    ],
+    "Maple Street Family Medicine, LLC": [
+      ["mine", "Deliver the portal adoption measurement report", "Reporting", "2027-03-30", "One-time", null, "Amend. 1 §2.2"],
+      ["mine", "Supply registration prompts, scripts and message templates", "Delivery", null, "Ongoing", null, "Sec. 11.3"],
+      ["mine", "Notify the practice of any security incident within 72 hours", "Data & security", null, "Ongoing", null, "Sec. 12.5"],
+      ["mine", "Answer the yearly security questionnaire within 30 days", "Reporting", null, "Annual", null, "Sec. 12.6"],
+      ["theirs", "Pay Q4 2026 subscription invoice (4 providers)", "Payment", "2026-10-31", "Quarterly", 5100, "Sec. 4.1"],
+      ["theirs", "Pay Q1 2027 invoice incl. 5th provider and December catch-up", "Payment", "2027-01-31", "Quarterly", 6225, "Amend. 1 §1.3"],
+      ["theirs", "Encourage patients to activate portal accounts", "Compliance", null, "Ongoing", null, "Sec. 11.3"],
+      ["theirs", "Report changes in provider count within 15 days", "Notice", null, "Ongoing", null, "Sec. 11.6"],
+    ],
+    "NorthPoint Urgent Care Center, LLC": [
+      ["mine", "Go live at the initial location", "Delivery", "2026-11-01", "One-time", null, "Sec. 1.2"],
+      ["mine", "Provide support 7 days a week, 7am-11pm ET; Severity 1 response in 30 minutes", "Service level", null, "Ongoing", null, "Exh. B"],
+      ["mine", "Send visit report by date and location within 30 days of a request", "Reporting", null, "Ongoing", null, "Sec. 16.3"],
+      ["mine", "Restore service within 4 hours after a late payment is received", "Service level", null, "Ongoing", null, "Sec. 16.2"],
+      ["theirs", "Pay second implementation installment at Go-Live", "Payment", "2026-11-16", "One-time", 2250, "Sec. 3.1"],
+      ["theirs", "Pay first monthly platform fee by ACH (net 15)", "Payment", "2026-12-16", "Monthly", 3500, "Sec. 3.2, 4.2"],
+      ["theirs", "Keep a valid ACH authorization; give 10 days' notice before bank changes", "Compliance", null, "Ongoing", null, "Sec. 11.4"],
+      ["theirs", "Check in every patient visit through the system; no split or suppressed check-ins", "Compliance", null, "Ongoing", null, "Sec. 11.3"],
+    ],
+  };
+  const exObligations = (org) => (OB_EX[org] || []).map(([side, text, category, due, recurrence, amount, ref, done], i) => ({ id: "ex" + i, side, text, category, due, recurrence, amount, ref, done: !!done }));
 
   // ---------- header menus, bell, to-do ----------
   function menuHtml(kind) {
@@ -599,9 +817,11 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
       const recent = [...contracts].sort((a, b) => String(b.addedAt || "").localeCompare(String(a.addedAt || ""))).slice(0, 5);
       return `<h4>Recent records</h4>${recent.map((c) => btn(`data-open="${esc(c.id)}"`, c.org)).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr><h4>List views</h4>${Object.entries(VIEWS).map(([k, v]) => btn(`data-view="${k}"`, v)).join("")}<hr>${btn('data-act="add"', "+ New: add contracts")}`;
     }
+    if (kind === "obligations") { const all = allObligations(), n = (side, st) => all.filter((o) => o.side === side && (st === "open" ? o.state !== "done" : o.state === st)).length;
+      return `<h4>I owe</h4>${btn('data-obf="mine:overdue"', "Overdue", n("mine", "overdue"))}${btn('data-obf="mine:soon"', "Due in 30 days", n("mine", "soon"))}${btn('data-obf="mine:open"', "All open", n("mine", "open"))}<hr><h4>Owed to me</h4>${btn('data-obf="theirs:overdue"', "Overdue", n("theirs", "overdue"))}${btn('data-obf="theirs:soon"', "Due in 30 days", n("theirs", "soon"))}${btn('data-obf="theirs:open"', "All open", n("theirs", "open"))}<hr>${btn('data-obf="all:open"', "Both sides")}`; }
     if (kind === "accounts") return `<h4>Accounts</h4>${groupBy(contracts, (c) => c.org).slice(0, 8).map((g) => btn(`data-report="account:${esc(g.key)}"`, g.key, compact(g.year1))).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr>${btn('data-go="accounts"', "All accounts")}`;
     if (kind === "deadlines") return `<h4>Next up</h4>${allDeadlines().filter((d) => d.date >= todayISO).slice(0, 6).map((d) => btn(`data-open="${esc(d.c.id)}"`, d.c.org, fmtD(d.date))).join("") || '<p class="foot" style="padding:4px 14px">Nothing upcoming</p>'}<hr>${btn('data-report="deadlines"', "Deadlines report")}${btn('data-go="deadlines"', "All deadlines")}`;
-    if (kind === "reports") return `<h4>Reports</h4>${btn('data-report="contracts"', "Contracts overview")}${btn('data-report="earnings"', "Earnings report")}${btn('data-report="bonuses"', "Bonuses report")}${btn('data-report="deadlines"', "Deadlines report")}<hr><h4>By industry</h4>${groupBy(contracts, (c) => c.industry).slice(0, 6).map((g) => btn(`data-report="industry:${esc(g.key)}"`, g.key)).join("")}<hr>${btn('data-go="reports"', "All reports")}`;
+    if (kind === "reports") return `<h4>Reports</h4>${btn('data-report="contracts"', "Contracts overview")}${btn('data-report="earnings"', "Earnings report")}${btn('data-report="bonuses"', "Bonuses report")}${btn('data-report="deadlines"', "Deadlines report")}<hr><h4>By industry</h4>${groupBy(contracts, (c) => c.industry).slice(0, 6).map((g) => btn(`data-report="industry:${esc(g.key)}"`, g.key)).join("")}<hr>${btn('data-go="obligations"', "Obligations (both sides)")}${btn('data-go="reports"', "All reports")}`;
     return "";
   }
   let menuEl = null;
@@ -614,19 +834,15 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     menuEl.style.top = r.bottom + 2 + "px"; menuEl.style.left = Math.max(8, Math.min(r.left, innerWidth - menuEl.offsetWidth - 8)) + "px";
     menuEl.querySelector("button")?.focus();
   }
-  const todoKey = (d) => d.c.id + "|" + d.date + "|" + d.label;
-  function todoItems() { return allDeadlines().filter((d) => daysTo(d.date) >= -14 && daysTo(d.date) <= 90); }
   function renderChrome() {
-    const n30 = allDeadlines().filter((d) => { const x = daysTo(d.date); return x >= 0 && x <= 30; }).length;
-    $("bellN").textContent = n30; $("bellN").hidden = !n30;
-    const items = todoItems(), open = items.filter((d) => !todoDone[todoKey(d)]);
+    const all = allObligations(), overdue = all.filter((o) => o.state === "overdue").length, mySoon = all.filter((o) => o.side === "mine" && o.state === "soon").length;
+    const n = overdue + mySoon;
+    $("bellN").textContent = n; $("bellN").hidden = !n;
+    $("bellBtn").title = `${overdue} overdue obligation${overdue === 1 ? "" : "s"}, ${mySoon} of yours due in 30 days`;
+    const items = all.filter((o) => o.side === "mine" && (o.state === "overdue" || o.state === "soon" || (o.state === "later" && daysTo(o.due) <= 90) || (o.state === "done" && o.due && daysTo(o.due) >= -30)));
+    const open = items.filter((o) => o.state !== "done");
     $("todoN").textContent = open.length; $("todoN").hidden = !open.length;
-    $("todoList").innerHTML = items.length ? items.map((d) => { const k = todoKey(d), done = !!todoDone[k]; return `<li class="${done ? "done" : ""}"><input type="checkbox" data-todo="${esc(k)}" ${done ? "checked" : ""} aria-label="Mark done: ${esc(d.c.org)} ${esc(d.label)}"><span class="t"><b>${esc(d.c.org)}</b> ${esc(d.label)}<span>${fmtD(d.date)} · ${dueTxt(daysTo(d.date))}</span></span></li>`; }).join("") : '<li><span></span><span class="muted">Nothing due in the next 90 days.</span></li>';
-  }
-  async function toggleTodo(k, on) {
-    todoDone = { ...todoDone, [k]: on }; if (!on) delete todoDone[k];
-    renderChrome();
-    if (ledgerDoc) { try { await ledgerDoc.set({ todoDone }); } catch { toast("Couldn't save the to-do change."); } }
+    $("todoList").innerHTML = items.length ? items.map((o) => `<li class="${o.done ? "done" : ""}"><input type="checkbox" data-ob="${esc(o.c.id)}|${esc(o.id)}" ${o.done ? "checked" : ""} aria-label="Mark done: ${esc(o.text)}"><span class="t"><b>${esc(o.c.org)}</b> ${esc(o.text)}<span style="${o.state === "overdue" ? "color:var(--red);font-weight:700" : ""}">${fmtD(o.due)} · ${o.state === "overdue" ? -daysTo(o.due) + "d overdue" : dueTxt(daysTo(o.due))}</span></span></li>`).join("") : '<li><span></span><span class="muted">None of your obligations are due in the next 90 days.</span></li>';
   }
   function openTodo(open) { $("todo").hidden = !open; $("uTodo").setAttribute("aria-pressed", String(open)); if (open) openAsst(false); }
 
@@ -825,7 +1041,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     const datesHtml = dates.length ? `<ul class="mini">${dates.map((d) => { const x = daysTo(d.date); return `<li style="cursor:default;${x < 0 ? "opacity:.55" : ""}"><span class="num">${fmtD(d.date)}</span><span class="t"><b>${esc(d.label)}</b></span><span class="due ${dueCls(x)}">${dueTxt(x)}</span></li>`; }).join("")}</ul>` : `<div class="empty"><p>No dates on this contract.</p></div>`;
     const acts = [...(c.activity || [])].reverse();
     const actHtml = `<div class="pad">${acts.length ? `<ul class="act">${acts.map((a) => `<li class="${a.ai ? "ai" : ""}"><span>${esc(a.text)}</span><time>${new Date(a.at).toLocaleString()}</time></li>`).join("")}</ul>` : '<p class="muted">No activity yet.</p>'}</div>`;
-    const tabBody = { details, dates: datesHtml, activity: actHtml }[recTab];
+    const tabBody = { obligations: recObligations(c), details, dates: datesHtml, activity: actHtml }[recTab];
     const ins = c.insights;
     const insHtml = `<section class="card ai-card"><header><h2><span class="ico x" aria-hidden="true">✦</span>AI insights</h2><button class="btn ai sm" data-act="analyze" ${sample ? "" : "disabled"}>${ins ? "Re-analyze" : "Analyze"}</button></header>
       <div class="pad" id="insights" style="display:grid;gap:12px">
@@ -840,10 +1056,10 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     return `<div class="crumb"><button class="link" data-go="contracts">Contracts</button><span>›</span><span>${esc(c.org)}</span></div>
       <section class="card hl"><div class="hl-top"><div><span class="label">Contract${c.example ? " · Example" : ""}</span><h1>${esc(c.org || "Untitled")}</h1><span class="muted">${esc(c.contractType || "")}${c.counterparty ? " with " + esc(c.counterparty) : ""}</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">${editMode ? `<button class="btn" data-act="cancelEdit">Cancel</button><button class="btn primary" data-act="saveEdit">Save</button>` : `<button class="btn" data-act="edit">Edit</button><span id="delZone"><button class="btn danger" data-act="del">Delete</button></span>`}</div></div>
-        <div class="hl-fields"><div><span class="label">Industry</span><span class="v">${esc(c.industry || "—")}</span></div><div><span class="label">Year-1 earnings</span><span class="v num">${money(c.annualValue, c.currency)}</span></div><div><span class="label">Max bonus</span><span class="v num">${money(c.maxBonus, c.currency)}</span></div><div><span class="label">Term ends</span><span class="v">${fmtD(c.endDate)}</span></div><div><span class="label">Next deadline</span><span class="v">${nd ? fmtD(nd.date) : "—"}</span></div></div>
+        <div class="hl-fields"><div><span class="label">I owe</span><span class="v">${(() => { const k = obCounts(obligationsOf(c).filter((o) => o.side === "mine")); return k.open + " open" + (k.overdue ? ` · <b style="color:var(--red)">${k.overdue} overdue</b>` : ""); })()}</span></div><div><span class="label">Owed to me</span><span class="v">${(() => { const k = obCounts(obligationsOf(c).filter((o) => o.side === "theirs")); return k.open + " open" + (k.overdue ? ` · <b style="color:var(--red)">${k.overdue} overdue</b>` : ""); })()}</span></div><div><span class="label">Year-1 earnings</span><span class="v num">${money(c.annualValue, c.currency)}</span></div><div hidden><span class="label">Max bonus</span><span class="v num">${money(c.maxBonus, c.currency)}</span></div><div><span class="label">Term ends</span><span class="v">${fmtD(c.endDate)}</span></div><div><span class="label">Next deadline</span><span class="v">${nd ? fmtD(nd.date) : "—"}</span></div></div>
         ${path}</section>
       <div class="rec-grid">
-        <section class="card"><div class="subtabs" role="tablist">${[["details", "Details"], ["dates", "Key dates"], ["activity", "Activity"]].map(([k, l]) => `<button role="tab" data-rtab="${k}" aria-selected="${recTab === k}">${l}</button>`).join("")}</div>${tabBody}</section>
+        <section class="card"><div class="subtabs" role="tablist">${[["obligations", "Obligations"], ["details", "Details"], ["dates", "Key dates"], ["activity", "Activity"]].map(([k, l]) => `<button role="tab" data-rtab="${k}" aria-selected="${recTab === k}">${l}</button>`).join("")}</div>${tabBody}</section>
         <div class="stack">${insHtml}<section class="card"><header><h2>Source</h2></header><div class="pad"><span class="label">File</span><div style="overflow-wrap:anywhere">${esc(c.fileName || "—")}</div><div class="foot" style="margin-top:6px">Added ${c.addedAt ? new Date(c.addedAt).toLocaleDateString() : "—"}</div></div></section></div>
       </div>`;
   }
@@ -880,7 +1096,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   };
   const errCopy = (e) => SAMPLE_ERRORS[e?.code] || e?.message || "Something went wrong. Try again.";
   const num = (v) => (v === null || v === undefined || v === "" || isNaN(Number(v)) ? null : Number(v));
-  const record = (c) => ({ id: c.id, org: c.org, counterparty: c.counterparty, industry: c.industry, contractType: c.contractType, status: status(c), startDate: c.startDate, endDate: c.endDate, autoRenew: c.autoRenew, renewalNoticeDays: c.renewalNoticeDays, currency: c.currency, earnings: c.earnings, annualValue: c.annualValue, totalValue: c.totalValue, bonuses: c.bonuses, maxBonus: c.maxBonus, riskLevel: c.riskLevel || null, risks: c.risks, summary: c.summary, example: !!c.example, deadlines: deadlinesOf(c).map(({ date, label }) => ({ date, label })) });
+  const record = (c) => ({ id: c.id, org: c.org, counterparty: c.counterparty, industry: c.industry, contractType: c.contractType, status: status(c), startDate: c.startDate, endDate: c.endDate, autoRenew: c.autoRenew, renewalNoticeDays: c.renewalNoticeDays, currency: c.currency, earnings: c.earnings, annualValue: c.annualValue, totalValue: c.totalValue, bonuses: c.bonuses, maxBonus: c.maxBonus, riskLevel: c.riskLevel || null, risks: c.risks, summary: c.summary, example: !!c.example, deadlines: deadlinesOf(c).map(({ date, label }) => ({ date, label })), obligations: obligationsOf(c).map((o) => ({ side: o.side === "mine" ? "user owes" : "other party owes", text: o.text, due: o.due, recurrence: o.recurrence, amount: o.amount, status: OB_STATE_LABEL[o.state], ref: o.ref })) });
 
   // ---------- file intake ----------
   async function readText(file) {
@@ -902,8 +1118,9 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   function extractionPrompt(fileName, text) {
     return `You extract structured data from a business contract for a contract management system. Today is ${todayISO}.
 Return ONLY one JSON object with exactly these keys:
-- "org": the client or customer organization (the party receiving the service, product or employment). If unclear, the main counterparty that is not the drafting company.
-- "counterparty": the other party.
+${myCompany ? `The user works for "${myCompany}". Read the contract from their side.` : "The user's organization is not known; assume the user is the party providing the service or product."}
+- "org": the OTHER party to the contract (not the user's organization).
+- "counterparty": the user's organization as named in the contract.
 - "industry": the org's industry, short (e.g. "Healthcare - Urgent care", "Retail", "Construction").
 - "contractType": short type (e.g. "SaaS subscription", "Services agreement", "Employment", "Lease").
 - "startDate", "endDate": "YYYY-MM-DD" or null. endDate is the end of the initial or current term.
@@ -921,6 +1138,7 @@ Return ONLY one JSON object with exactly these keys:
 - "riskLevel": "Low", "Medium" or "High" for the business tracking this contract (early termination fees, auto-renewal traps, penalties, minimums, short notice windows, revenue at risk).
 - "riskReasons": 2-4 short reasons for the risk level.
 - "nextActions": 2-4 short, concrete recommended next steps with dates where relevant.
+- ${OB_PROMPT_SPEC(myCompany)}
 Apply any amendments in the file. Use null when not stated. Never invent amounts.
 
 <contract file="${fileName.replace(/"/g, "")}">
@@ -930,7 +1148,9 @@ ${text}
   async function processFiles(files) {
     if (!files.length) return;
     if (!sample) { toast("AI reading isn't available here. Open this page signed in to claude.ai."); return; }
-    const maxBytes = maxPrompt - 7000;
+    const maxBytes = maxPrompt - 9000;
+    const meIn = $("myOrg")?.value.trim() || "";
+    if (meIn && meIn !== myCompany) await saveMe(meIn);
     for (const file of files) {
       const li = document.createElement("li");
       li.innerHTML = `<span class="fn"></span><span class="pill unknown">Reading…</span>`;
@@ -958,6 +1178,7 @@ ${text}
           risks: String(out.risks || "").slice(0, 1000), summary: String(out.summary || "").slice(0, 500),
           riskLevel: ["Low", "Medium", "High"].includes(out.riskLevel) ? out.riskLevel : null,
           insights: { reasons: strs(out.riskReasons, 4), actions: strs(out.nextActions, 4), at: new Date().toISOString() },
+          obligations: normalizeObs(out.obligations), sourceText: text.slice(0, 120000),
           fileName: file.name, addedAt: new Date().toISOString(), example: false,
           activity: [{ at: new Date().toISOString(), text: `Record created by AI from ${file.name}${truncated ? " (long file, partly read)" : ""}`, ai: true }],
         };
@@ -977,7 +1198,7 @@ ${text}
     if (!sample || !contracts.length) return;
     briefCtl?.abort(); briefCtl = new AbortController();
     const el = $("briefing"); el.classList.add("dim"); el.innerHTML = '<span class="thinking">Preparing your briefing</span>';
-    const prompt = `You are an AI assistant inside a contract management system. Today is ${todayISO}. Write a short morning briefing for the business owner based on these contract records. Plain text, no markdown headings or asterisks. Use 3 short sections with these exact labels on their own line: "Needs attention", "Opportunities", "Coming up". Under each, 1-3 lines starting with "• ", naming the organization, date and amount. Keep it under 140 words. Records with example:true are sample data; still use them.\n\n${JSON.stringify(contracts.map(record))}`;
+    const prompt = `You are an AI assistant inside a contract management system. Today is ${todayISO}. The user works for ${meName()}. Write a short briefing focused on obligations: what the user owes and what the other parties owe the user. Plain text, no markdown headings or asterisks. Use 3 short sections with these exact labels on their own line: "I need to do", "I need to chase", "Coming up". Overdue items first. Under each, 1-3 lines starting with "• ", naming the organization, date and amount. Keep it under 140 words. Records with example:true are sample data; still use them.\n\n${JSON.stringify(contracts.map(record))}`;
     try {
       const { text } = await sample(prompt, { signal: briefCtl.signal, cache: false, onText: ({ text }) => { if ($("briefing")) { $("briefing").classList.remove("dim"); $("briefing").textContent = text; } } });
       state.briefing = text; if (route.name === "home") render();
@@ -1002,7 +1223,7 @@ ${text}
     const c = route.name === "record" ? byId(route.id) : null;
     $("asstCtx").textContent = c ? "Looking at: " + c.org : "Looking at: all contracts";
     const sugg = c ? [`Summarize the ${c.org} contract`, `What are the risks with ${c.org}?`, `Draft a renewal reminder email to ${c.org}`]
-      : contracts.length ? ["What needs my attention this month?", "Which contracts renew automatically and when must I give notice?", "Which bonuses can I still earn?", "Compare earnings by industry"]
+      : contracts.length ? ["What do I owe in the next 30 days?", "What is overdue from the other side?", "Who should I chase this week?", "Which contracts renew automatically and when must I give notice?"]
       : ["How do I add contracts?"];
     $("sugg").innerHTML = turns.length > 4 ? "" : sugg.map((s) => `<button class="chip" data-ask="${esc(s)}">${esc(s)}</button>`).join("");
   }
@@ -1017,6 +1238,8 @@ ${text}
       execute: (i) => { step("Searched contracts"); const q = String(i.query || "").toLowerCase(); return contracts.filter((c) => (!q || [c.org, c.industry, c.contractType, c.earnings, c.bonuses, c.summary, c.risks, c.counterparty].join(" ").toLowerCase().includes(q)) && (!i.status || status(c) === i.status) && (i.hasBonus === undefined || (Number(c.maxBonus) > 0) === !!i.hasBonus) && (!i.riskLevel || riskOf(c) === i.riskLevel)).slice(0, 25).map(record); } },
     { name: "list_deadlines", description: "List contract deadlines (notice dates, term ends, key dates) between today and N days from now, sorted by date.", inputSchema: { type: "object", properties: { days: { type: "number", description: "Look-ahead window in days, default 90" } } },
       execute: (i) => { const n = Number(i.days) || 90; step(`Checked deadlines (${n} days)`); return allDeadlines().filter((d) => { const x = daysTo(d.date); return x >= 0 && x <= n; }).slice(0, 40).map((d) => ({ date: d.date, daysAway: daysTo(d.date), org: d.c.org, contractId: d.c.id, label: d.label })); } },
+    { name: "list_obligations", description: "List contract obligations. side: 'mine' (the user owes) or 'theirs' (the other party owes); status: overdue, soon (due within 30 days), later, ongoing, done, or open (all not done). Returns up to 60 items with account, text, due date, amount and status.", inputSchema: { type: "object", properties: { side: { type: "string", enum: ["mine", "theirs"] }, status: { type: "string", enum: ["overdue", "soon", "later", "ongoing", "done", "open"] }, account: { type: "string" } } },
+      execute: (i) => { step("Checked obligations"); return allObligations().filter((o) => (!i.side || o.side === i.side) && (!i.status || (i.status === "open" ? o.state !== "done" : o.state === i.status)) && (!i.account || String(o.c.org).toLowerCase().includes(String(i.account).toLowerCase()))).slice(0, 60).map((o) => ({ owedBy: o.side === "mine" ? "user" : o.c.org, account: o.c.org, contractId: o.c.id, text: o.text, due: o.due, daysAway: o.due ? daysTo(o.due) : null, recurrence: o.recurrence, amount: o.amount, status: OB_STATE_LABEL[o.state], ref: o.ref })); } },
     { name: "portfolio_summary", description: "Totals across all contracts: count, year-1 and initial-term earnings, max bonuses, and breakdowns by industry, status and risk.", inputSchema: { type: "object", properties: {} },
       execute: () => { step("Calculated portfolio totals"); const g = (f) => contracts.reduce((m, c) => { const k = f(c) || "Unspecified"; (m[k] ||= { contracts: 0, year1: 0 }); m[k].contracts++; m[k].year1 += Number(c.annualValue) || 0; return m; }, {}); return { contracts: contracts.length, year1Earnings: contracts.reduce((s, c) => s + (Number(c.annualValue) || 0), 0), initialTermEarnings: contracts.reduce((s, c) => s + (Number(c.totalValue) || 0), 0), maxBonuses: contracts.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0), byIndustry: g((c) => c.industry), byStatus: g(status), byRisk: g(riskOf) }; } },
   ];
@@ -1029,9 +1252,9 @@ ${text}
     turns.push({ role: "user", content: text });
     const reply = { role: "assistant", content: "", steps: [] }; turns.push(reply); curSteps = reply.steps;
     const c = route.name === "record" ? byId(route.id) : null;
-    const rules = `You are Ledger Assistant, the AI inside a contract management app (like a CRM AI assistant). Today is ${todayISO}. Help the user understand and act on their contracts: answer questions, flag risks and deadlines, compare accounts, and draft emails or notes. Be concise and specific: name organizations, dates and amounts. Use plain text with short lines; "• " for lists; no markdown headings or asterisks. Only use facts from the user's contract data; if something isn't there, say so. Records with example:true are sample data.
+    const rules = `You are Ledger Assistant, the AI inside a contract management app (like a CRM AI assistant). Today is ${todayISO}. The user works for ${meName()}; in each record, obligations are split into what the user owes and what the other party owes. Help the user understand and act on their contracts, above all who owes what and when: answer questions, flag risks and deadlines, compare accounts, and draft emails or notes. Be concise and specific: name organizations, dates and amounts. Use plain text with short lines; "• " for lists; no markdown headings or asterisks. Only use facts from the user's contract data; if something isn't there, say so. Records with example:true are sample data.
 ${c ? `The user is currently viewing this contract: ${JSON.stringify(record(c))}` : "The user is on the main workspace."}
-${toolsOK ? "Use the tools to look up contracts, deadlines and totals before answering." : `All contract records: ${JSON.stringify(contracts.map(record)).slice(0, maxPrompt - 20000)}`}`;
+${toolsOK ? "Use the tools to look up obligations, contracts, deadlines and totals before answering." : `All contract records: ${JSON.stringify(contracts.map(record)).slice(0, maxPrompt - 20000)}`}`;
     const input = [{ role: "user", content: rules }, { role: "assistant", content: "Understood. I'll answer from the contract data." }, ...turns.slice(0, -1).filter((t) => !t.err && t.content).slice(-12).map((t) => ({ role: t.role, content: t.content }))].reduce((acc, m) => { const last = acc[acc.length - 1]; if (last && last.role === m.role) last.content += "\n\n" + m.content; else acc.push({ ...m }); return acc; }, []);
     asstCtl = new AbortController(); renderThread();
     try {
@@ -1082,7 +1305,7 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
     const ex = contracts.filter((c) => c.example);
     try {
       if (ex.length) { for (const c of ex) await removeContract(c.id); toast("Examples removed"); }
-      else { for (const e of EXAMPLES) await addContract({ ...e, example: true, addedAt: new Date().toISOString(), activity: [{ at: new Date().toISOString(), text: "Example record loaded", ai: false }] }); toast("Example contracts added"); closeModal(); }
+      else { if (!myCompany) await saveMe("MediLink Systems, Inc."); for (const e of EXAMPLES) await addContract({ ...e, obligations: exObligations(e.org), example: true, addedAt: new Date().toISOString(), activity: [{ at: new Date().toISOString(), text: "Example record loaded", ai: false }] }); toast("Example contracts added"); closeModal(); }
     } catch (e) { toast("Couldn't update examples: " + (e?.message || e?.code || "try again")); }
   }
 
@@ -1150,8 +1373,10 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
       X.utils.book_append_sheet(wb, ws3, "Chart Data");
     }
 
-    // Deadlines
     const ids = new Set(r.list.map((c) => c.id));
+    const obl = allObligations().filter((o) => ids.has(o.c.id));
+    if (obl.length) X.utils.book_append_sheet(wb, obSheet(X, obl), "Obligations");
+    // Deadlines
     const dls = r.deadlines || allDeadlines().filter((d) => ids.has(d.c.id) && d.date >= todayISO);
     if (dls.length) {
       const ws4 = X.utils.aoa_to_sheet([["Date", "Days Away", "Org Name", "What Happens"], ...dls.map((d) => [dt(d.date), daysTo(d.date), d.c.org || "", d.label])], { cellDates: true });
@@ -1168,16 +1393,19 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
   }
 
   // ---------- modal ----------
-  function openModal() { $("modal").hidden = false; $("scrim").hidden = false; $("chooseBtn").focus(); $("sampleBtn").textContent = contracts.some((c) => c.example) ? "Remove examples" : "Load example contracts"; }
+  function openModal() { $("myOrg").value = myCompany; $("modal").hidden = false; $("scrim").hidden = false; $("chooseBtn").focus(); $("sampleBtn").textContent = contracts.some((c) => c.example) ? "Remove examples" : "Load example contracts"; }
   function closeModal() { $("modal").hidden = true; $("scrim").hidden = true; }
 
   // ---------- events ----------
   document.addEventListener("click", (e) => {
     if (!e.target.closest("[data-menu]")) closeMenu();
-    const t = e.target.closest("[data-menu],[data-view],[data-report],[data-go],[data-open],[data-acct],[data-act],[data-sort],[data-mode],[data-stage],[data-rtab],[data-ask],[data-rm]");
+    if (e.target.matches("input[data-ob]")) return;
+    const t = e.target.closest("[data-obf],[data-obdel],[data-menu],[data-view],[data-report],[data-go],[data-open],[data-acct],[data-act],[data-sort],[data-mode],[data-stage],[data-rtab],[data-ask],[data-rm]");
     if (!t) return;
     if (t.tagName === "A") e.preventDefault();
     if (t.dataset.menu) { if (menuEl && menuEl.dataset.kind === t.dataset.menu) return closeMenu(); openMenu(t.dataset.menu, t); menuEl.dataset.kind = t.dataset.menu; return; }
+    if (t.dataset.obf) { const [sd, stt] = t.dataset.obf.split(":"); obSide = sd; obStatus = stt; obAccount = ""; obCat = ""; obQuery = ""; return go("obligations"); }
+    if (t.dataset.obdel) { const c0 = byId(route.id); return c0 && removeOb(c0, t.dataset.obdel); }
     if (t.dataset.view) { listView = t.dataset.view; accountFilter = ""; listQuery = ""; return go("contracts"); }
     if (t.dataset.report) return go("report", t.dataset.report);
     if (t.dataset.go) return go(t.dataset.go);
@@ -1194,6 +1422,14 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
       case "add": return openModal();
       case "examples": return toggleExamples();
       case "export": return exportCsv();
+      case "toggleDone": showDone = !showDone; return render();
+      case "addOb": return c && addOb(c);
+      case "findObs": return c && findObs(c);
+      case "editMe": editingMe = true; render(); $("meInput")?.focus(); return;
+      case "cancelMe": editingMe = false; return render();
+      case "saveMe": return saveMe($("meInput").value);
+      case "exportObXlsx": return exportObligations(obFiltered(), "xlsx");
+      case "exportObCsv": return exportObligations(obFiltered(), "csv");
       case "exportXlsx": return exportXlsx({ title: "Contracts - " + (VIEWS[listView] || "Status: " + listView), sub: accountFilter ? "Account: " + accountFilter : "Contract list view", list: filtered(), kpis: [], charts: [] });
       case "exportReportXlsx": { const r = buildReport(route.id); return r && exportXlsx(r); }
       case "exportReport": { const r = buildReport(route.id); return r && exportCsv(r.list, r.title); }
@@ -1218,13 +1454,20 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
     try { await saveContract(c.id, { ...stripId(c), ...patch, activity: withAct(c, "Details edited") }); editMode = false; render(); toast("Saved"); }
     catch (e) { toast("Couldn't save: " + (e?.message || e?.code || "try again")); }
   }
-  document.addEventListener("change", (e) => { if (e.target.dataset?.todo) toggleTodo(e.target.dataset.todo, e.target.checked); });
+  document.addEventListener("change", (e) => {
+    if (e.target.dataset?.ob) { const [cid, oid] = e.target.dataset.ob.split("|"); return toggleOb(cid, oid, e.target.checked); }
+    const id = e.target.id;
+    if (id === "obSide") { obSide = e.target.value; render(); } else if (id === "obStatus") { obStatus = e.target.value; render(); } else if (id === "obAccount") { obAccount = e.target.value; render(); } else if (id === "obCat") { obCat = e.target.value; render(); }
+  });
   document.addEventListener("input", (e) => {
     const i = e.target.dataset?.i; if (i !== undefined) { kdDraft[Number(i)][e.target.dataset.k] = e.target.value; return; }
     if (e.target.id === "lq") { listQuery = e.target.value; const pos = e.target.selectionStart; render(); const el = $("lq"); el.focus(); el.setSelectionRange(pos, pos); }
     if (e.target.id === "lv") { listView = e.target.value; render(); }
+    if (e.target.id === "obQ") { obQuery = e.target.value; const pos = e.target.selectionStart; render(); const el = $("obQ"); el.focus(); el.setSelectionRange(pos, pos); }
   });
   document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.id === "meInput") saveMe(e.target.value);
+    if (e.key === "Enter" && e.target.id === "nobText") { const c0 = byId(route.id); if (c0) addOb(c0); }
     if (e.key === "Escape") { if (menuEl) closeMenu(); else if (!$("modal").hidden) closeModal(); }
     if (e.key === "Enter" && e.target.matches("[data-open],[data-acct],[data-report]") && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") e.target.click();
   });
@@ -1258,7 +1501,7 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
   $("uAsst").addEventListener("click", () => openAsst($("asst").hidden));
   $("uTodo").addEventListener("click", () => openTodo($("todo").hidden));
   $("closeTodo").addEventListener("click", () => openTodo(false));
-  $("bellBtn").addEventListener("click", () => go("report", "deadlines"));
+  $("bellBtn").addEventListener("click", () => { obSide = "all"; obStatus = "open"; go("obligations"); });
   $("avatar").addEventListener("click", () => toast(userName ? "Signed in as " + userName : "Contracts are saved to your account"));
   addEventListener("resize", closeMenu);
   render(); renderThread(); updateAsstContext();
@@ -1274,12 +1517,12 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
     if (userName) { $("avatar").textContent = userName.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase(); $("avatar").title = userName; }
     if (db && uid) {
       ledgerDoc = db.doc("data/users/" + uid + "/ledger");
-      ledgerDoc.onSnapshot((snap) => { todoDone = (snap.exists && snap.data()?.todoDone) || {}; renderChrome(); }, () => {});
+      ledgerDoc.onSnapshot((snap) => { const d = (snap.exists && snap.data()) || {}; todoDone = d.todoDone || {}; if (!editingMe && typeof d.myCompany === "string" && d.myCompany !== myCompany) { myCompany = d.myCompany; if (route.name !== "record" || !editMode) render(); } renderChrome(); }, () => {});
       store = ledgerDoc.collection("contracts");
       store.onSnapshot((snap) => {
         contracts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         const active = document.activeElement;
-        if (!(editMode && route.name === "record") && !(active && ["lq", "prompt"].includes(active.id))) render();
+        if (!(editMode && route.name === "record") && !(active && ["lq", "prompt", "obQ", "nobText", "meInput"].includes(active.id))) render(); else renderChrome();
         updateAsstContext();
       }, (e) => { state.banner = "Your saved contracts couldn't be loaded (" + (e?.code || "error") + "). Reload the page to try again."; render(); });
     } else if (!state.banner) state.banner = "Sign in to claude.ai to save your contracts. Until then, anything you add disappears when you close the page.";
