@@ -961,10 +961,9 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const S = SIDE[side], k = sideSummary(side), rep = side === "mine" ? "commitments:30" : "entitlements:30";
     const segs = [{ v: k.overdue.length, color: "red", text: `${k.overdue.length} Overdue`, attr: `data-obf="${side}:overdue"` }, { v: k.soon.length, color: "blue", text: `${k.soon.length} Due in 30 Days`, attr: `data-obf="${side}:30"` }, { v: k.later.length, color: "teal", text: `${k.later.length} Later & Ongoing`, attr: `data-obf="${side}:open"` }];
     const next = k.items.slice(0, 4);
-    return `<section class="hcard span2 obcard ${side}"><div class="hd"><div><h2><span class="sidetag ${side}">${S.tag}</span>${S.label}</h2><p>${S.sub} · next 30 days${k.cond ? ` · plus ${money(k.cond)} conditional` : ""}</p></div></div>
-      <div class="bd"><div class="obwrap"><div class="ringbox"><button class="ring" data-report="${rep}" title="Open the ${S.label} report" aria-label="${money(k.fixed)} ${S.label.toLowerCase()} due in 30 days: open report">${ringSvg(segs)}<span class="c"><b>${compact(k.fixed)}</b><span>Due in 30 days</span></span></button><ul class="legend">${segs.map((s) => `<li><span class="dot ${s.color}"></span><button class="lp ${s.color}" ${s.attr}>${esc(s.text)}</button></li>`).join("")}</ul></div>
-      <div class="obnext"><span class="label">Next up</span>${next.length ? `<ul class="oblist compact">${next.map((o) => obItem(o)).join("")}</ul>` : '<p class="muted" style="margin:4px 0">Nothing due in the next 30 days.</p>'}</div></div></div>
-      <div class="ft"><button class="btn outline" data-report="${rep}">View ${S.label} Report</button></div></section>`;
+    return `<section class="hcard obcard ${side}"><div class="hd"><div><h2><span class="sidetag ${side}">${S.tag}</span>${S.label}</h2><p>${S.sub}, next 30 days${k.cond ? ` · +${money(k.cond)} conditional` : ""}</p></div></div>
+      <div class="bd"><div class="ringbox"><button class="ring" data-report="${rep}" title="Open the ${S.label} report" aria-label="${money(k.fixed)} ${S.label.toLowerCase()} due in 30 days: open report">${ringSvg(segs)}<span class="c"><b>${compact(k.fixed)}</b><span>Due in 30 days</span></span></button><ul class="legend">${segs.map((s) => `<li><span class="dot ${s.color}"></span><button class="lp ${s.color}" ${s.attr}>${esc(s.text)}</button></li>`).join("")}</ul></div></div>
+      <div class="ft"><button class="btn outline" data-report="${rep}">View ${S.label}</button></div></section>`;
   }
   function pageHome() {
     const title = `<div class="home-title"><h1>Home</h1><p>Good ${greet()}${userName ? ", " + esc(userName.split(" ")[0]) : ""}. Here are your commitments and entitlements.</p><span class="persp">Your side: <b>${esc(L.myCompany || "not set")}</b> ${viewer().role === "admin" ? '<button class="link" data-go="admin">Change</button>' : ""}</span></div>`;
@@ -991,7 +990,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       segs: [{ v: bon.filter((o) => o.side === "theirs").length, color: "teal", text: `${bon.filter((o) => o.side === "theirs").length} Entitlements`, attr: 'data-report="bonuses"' }, { v: bon.filter((o) => o.side === "mine").length, color: "blue", text: `${bon.filter((o) => o.side === "mine").length} Commitments`, attr: 'data-report="bonuses"' }],
       foot: `<button class="btn outline" data-report="bonuses">View Bonuses</button>` });
     const counts = Object.fromEntries(STAGES.map((s) => [s, vis.filter((c) => status(c) === s).length]));
-    const pipeCard = hcard({ title: "Renewal Pipeline", sub: "", cls: "span3", body: `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-report="inventory">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>` });
+    const pipeCard = hcard({ title: "Renewal Pipeline", sub: "", cls: "span2", body: `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-report="inventory">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>` });
     return title + `<div class="home-grid">${sideRingCard("mine")}${sideRingCard("theirs")}${valueCard}${dlCard}${rvCard}${bonusCard}${pipeCard}</div>`;
   }
   function barChart(rows, fmt = (v) => String(v)) {
