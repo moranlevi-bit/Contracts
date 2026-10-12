@@ -153,6 +153,18 @@ button.st:hover { filter: brightness(.96); }
 .bar { height: 14px; background: var(--series-1); border-radius: 0 4px 4px 0; min-width: 2px; }
 .bar-row:hover .bar { filter: brightness(1.1); }
 .bar-row .val { font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+button.kpi { text-align: left; font: inherit; color: inherit; cursor: pointer; }
+button.kpi:hover, .rep-card:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
+.kpi .go, .rep-card .go { font-size: 12px; color: var(--accent); font-weight: 700; }
+.bar-row.clk { cursor: pointer; border-radius: 6px; }
+.bar-row.clk:hover .nm, .bar-row.clk:focus-visible .nm { color: var(--accent); text-decoration: underline; }
+.rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; align-items: start; }
+.rep-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1000px) { .rep-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .rep-cards { grid-template-columns: 1fr; } }
+.rep-card { text-align: left; font: inherit; color: inherit; cursor: pointer; padding: 16px; display: grid; gap: 6px; align-content: start; }
+.rep-card h2 { font-size: 16px; }
+.rep-card .v { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .tip { position: fixed; z-index: 40; background: var(--head); color: var(--head-fg); padding: 8px 10px; border-radius: 8px; font-size: 12px; pointer-events: none; box-shadow: var(--shadow-lg); max-width: 240px; }
 .tip b { display: block; font-size: 13px; }
 
@@ -303,6 +315,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     <button data-go="contracts">Contracts</button>
     <button data-go="accounts">Accounts</button>
     <button data-go="deadlines">Deadlines</button>
+    <button data-go="reports">Reports</button>
   </nav>
   <div class="body">
     <main id="main"><div class="page" id="page"></div></main>
@@ -399,13 +412,13 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   function go(name, id) {
     route = { name, id }; editMode = false;
     if (name === "record") recTab = "details";
-    document.querySelectorAll(".nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.go === (name === "record" ? "contracts" : name) ? "page" : "false"));
+    document.querySelectorAll(".nav button").forEach((b) => b.setAttribute("aria-current", b.dataset.go === ({ record: "contracts", report: "reports" }[name] || name) ? "page" : "false"));
     render(); $("main").scrollTop = 0; updateAsstContext();
   }
   function render() {
     const p = $("page");
     if (route.name === "record" && !byId(route.id)) route = { name: "contracts" };
-    p.innerHTML = ({ home: pageHome, contracts: pageContracts, accounts: pageAccounts, deadlines: pageDeadlines, record: pageRecord })[route.name]();
+    p.innerHTML = ({ home: pageHome, contracts: pageContracts, accounts: pageAccounts, deadlines: pageDeadlines, record: pageRecord, reports: pageReports, report: pageReport })[route.name]();
     if (route.name === "record") renderKd();
   }
 
@@ -424,23 +437,18 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     const due = allDeadlines().filter((d) => { const x = daysTo(d.date); return x >= 0 && x <= 90; });
     const high = contracts.filter((c) => riskOf(c) === "High").length;
     const kpis = `<div class="kpis">
-      <div class="card kpi"><span class="label">Contracts</span><span class="v">${n}</span><span class="s">${new Set(contracts.map((c) => c.org)).size} accounts</span></div>
-      <div class="card kpi"><span class="label">Year-1 earnings</span><span class="v">${compact(yv)}</span><span class="s">${money(yv)} committed</span></div>
-      <div class="card kpi"><span class="label">Bonuses at stake</span><span class="v">${compact(bonus)}</span><span class="s">${contracts.filter((c) => Number(c.maxBonus) > 0).length} contract(s) with a bonus</span></div>
-      <div class="card kpi"><span class="label">Due in 90 days</span><span class="v">${due.length}</span><span class="s">${high ? high + " high-risk contract(s)" : due.length ? "next " + fmtD(due[0].date) : "nothing due"}</span></div>
+      <button class="card kpi" data-report="contracts"><span class="label">Contracts</span><span class="v">${n}</span><span class="s">${new Set(contracts.map((c) => c.org)).size} accounts</span><span class="go">View report →</span></button>
+      <button class="card kpi" data-report="earnings"><span class="label">Year-1 earnings</span><span class="v">${compact(yv)}</span><span class="s">${money(yv)} committed</span><span class="go">View report →</span></button>
+      <button class="card kpi" data-report="bonuses"><span class="label">Bonuses at stake</span><span class="v">${compact(bonus)}</span><span class="s">${contracts.filter((c) => Number(c.maxBonus) > 0).length} contract(s) with a bonus</span><span class="go">View report →</span></button>
+      <button class="card kpi" data-report="deadlines"><span class="label">Due in 90 days</span><span class="v">${due.length}</span><span class="s">${high ? high + " high-risk contract(s)" : due.length ? "next " + fmtD(due[0].date) : "nothing due"}</span><span class="go">View report →</span></button>
     </div>`;
     if (!n) return bannerHtml() + `<div class="page-head"><h1>Good ${greet()}</h1></div>` + kpis + emptyAll();
 
     // pipeline
     const counts = Object.fromEntries(STAGES.map((s) => [s, contracts.filter((c) => status(c) === s).length]));
-    const path = `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-stage="${s}">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>`;
+    const path = `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-report="status:${esc(s)}">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>`;
 
-    // chart: year-1 earnings by industry
-    const byInd = {};
-    for (const c of contracts) { const k = c.industry || "Unspecified"; (byInd[k] ||= { v: 0, n: 0 }); byInd[k].v += Number(c.annualValue) || 0; byInd[k].n++; }
-    const rows = Object.entries(byInd).sort((a, b) => b[1].v - a[1].v).slice(0, 8);
-    const max = Math.max(1, ...rows.map((r) => r[1].v));
-    const chart = `<div class="bars" id="chart">${rows.map(([k, r]) => `<div class="bar-row" data-tip="${esc(k)}|${money(r.v)}|${r.n} contract${r.n > 1 ? "s" : ""}"><span class="nm" title="${esc(k)}">${esc(k)}</span><span class="bar-track"><span class="bar" style="width:${Math.max(1, (r.v / max) * 82)}%"></span><span class="val">${compact(r.v)}</span></span></div>`).join("")}</div>`;
+    const chart = barChart(groupBy(contracts, (c) => c.industry).map((g) => ({ label: g.key, value: g.year1, tip: `${money(g.year1)} year-1 · ${g.list.length} contract${g.list.length > 1 ? "s" : ""}`, report: "industry:" + g.key })), compact);
 
     const upcoming = allDeadlines().filter((d) => d.date >= todayISO).slice(0, 6);
     const dl = upcoming.length ? `<ul class="mini">${upcoming.map((d) => { const x = daysTo(d.date); return `<li data-open="${esc(d.c.id)}" tabindex="0"><span class="num">${fmtD(d.date)}</span><span class="t"><b>${esc(d.c.org)}</b><span>${esc(d.label)}</span></span><span class="due ${dueCls(x)}">${dueTxt(x)}</span></li>`; }).join("")}</ul>` : `<div class="empty"><p>No upcoming deadlines.</p></div>`;
@@ -454,11 +462,11 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
         <div class="stack">
           <section class="card ai-card"><header><h2><span class="ico x" aria-hidden="true">✦</span>AI briefing</h2><button class="btn ai sm" data-act="briefing" ${sample ? "" : "disabled"}>${state.briefing ? "Refresh" : "Generate briefing"}</button></header>
             <div class="pad ai-out ${state.briefing ? "" : "dim"}" id="briefing">${esc(state.briefing || "Get a short AI summary of what needs your attention: upcoming deadlines, contracts at risk, renewals and bonus opportunities.")}</div></section>
-          <section class="card"><header><h2>Renewal pipeline</h2><span class="foot">Click a stage to see its contracts</span></header><div class="pad">${path}</div></section>
-          <section class="card"><header><h2>Year-1 earnings by industry</h2><span class="foot">Committed fees, first 12 months</span></header><div class="pad">${chart}</div></section>
+          <section class="card"><header><h2>Renewal pipeline</h2><button class="link" data-report="contracts">Full report</button></header><div class="pad">${path}</div></section>
+          <section class="card"><header><h2>Year-1 earnings by industry</h2><button class="link" data-report="earnings">Full report</button></header><div class="pad">${chart}</div></section>
         </div>
         <div class="stack">
-          <section class="card"><header><h2><span class="ico d" aria-hidden="true">D</span>Upcoming deadlines</h2><button class="link" data-go="deadlines">View all</button></header>${dl}</section>
+          <section class="card"><header><h2><span class="ico d" aria-hidden="true">D</span>Upcoming deadlines</h2><button class="link" data-report="deadlines">Full report</button></header>${dl}</section>
           <section class="card"><header><h2><span class="ico c" aria-hidden="true">C</span>Recently added</h2><button class="link" data-go="contracts">View all</button></header>${rec}</section>
         </div>
       </div>`;
@@ -513,7 +521,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     const rows = Object.values(acc).map((a) => ({ ...a, v: a.list.reduce((s, c) => s + (Number(c.annualValue) || 0), 0), t: a.list.reduce((s, c) => s + (Number(c.totalValue) || 0), 0), b: a.list.reduce((s, c) => s + (Number(c.maxBonus) || 0), 0), nd: a.list.map(nextDeadline).filter(Boolean).sort((x, y) => x.date.localeCompare(y.date))[0], hi: a.list.some((c) => riskOf(c) === "High") })).sort((a, b) => b.v - a.v);
     return bannerHtml() + `<div class="page-head"><h1><span class="ico a">A</span>Accounts</h1><span class="muted">${rows.length} organizations</span></div>
       <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Account</th><th>Industry</th><th class="r">Contracts</th><th class="r">Year-1 earnings</th><th class="r">Initial-term earnings</th><th class="r">Max bonus</th><th>Next deadline</th></tr></thead><tbody>
-      ${rows.map((a) => `<tr data-acct="${esc(a.org)}" tabindex="0"><td><a href="#" data-acct="${esc(a.org)}">${esc(a.org)}</a>${a.hi ? ' <span class="pill high">▲ High risk</span>' : ""}</td><td>${esc(a.industry || "—")}</td><td class="r num">${a.list.length}</td><td class="r num">${money(a.v)}</td><td class="r num">${money(a.t)}</td><td class="r num">${money(a.b)}</td><td>${a.nd ? `<span class="num">${fmtD(a.nd.date)}</span><div class="sub">${esc(a.nd.label)}</div>` : "—"}</td></tr>`).join("")}
+      ${rows.map((a) => `<tr data-report="account:${esc(a.org)}" tabindex="0"><td><a href="#" data-report="account:${esc(a.org)}">${esc(a.org)}</a>${a.hi ? ' <span class="pill high">▲ High risk</span>' : ""}</td><td>${esc(a.industry || "—")}</td><td class="r num">${a.list.length}</td><td class="r num">${money(a.v)}</td><td class="r num">${money(a.t)}</td><td class="r num">${money(a.b)}</td><td>${a.nd ? `<span class="num">${fmtD(a.nd.date)}</span><div class="sub">${esc(a.nd.label)}</div>` : "—"}</td></tr>`).join("")}
       </tbody></table></div></section>`;
   }
 
@@ -521,6 +529,116 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     const list = allDeadlines().filter((d) => daysTo(d.date) >= -30);
     const body = list.length ? `<ul class="mini">${list.map((d) => { const x = daysTo(d.date); return `<li data-open="${esc(d.c.id)}" tabindex="0" style="${x < 0 ? "opacity:.55" : ""}"><span class="num">${fmtD(d.date)}</span><span class="t"><b>${esc(d.c.org)}</b><span>${esc(d.label)}</span></span><span class="due ${dueCls(x)}">${dueTxt(x)}</span></li>`; }).join("")}</ul>` : `<div class="empty"><h3>No deadlines</h3><p>Notice dates, term ends and key dates from your contracts appear here.</p></div>`;
     return bannerHtml() + `<div class="page-head"><h1><span class="ico d">D</span>Deadlines</h1><span class="muted">Red: within 30 days · Amber: within 90 days</span></div><section class="card">${body}</section>`;
+  }
+
+
+  // ---------- reports ----------
+  function groupBy(list, f) {
+    const m = {};
+    for (const c of list) { const k = f(c) || "Unspecified"; (m[k] ||= { key: k, list: [], year1: 0, total: 0, bonus: 0 }); const g = m[k]; g.list.push(c); g.year1 += Number(c.annualValue) || 0; g.total += Number(c.totalValue) || 0; g.bonus += Number(c.maxBonus) || 0; }
+    return Object.values(m).sort((a, b) => b.year1 - a.year1 || b.list.length - a.list.length);
+  }
+  function barChart(rows, fmt = (v) => String(v), limit = 10) {
+    rows = rows.filter((r) => r.value > 0 || rows.length <= 6).slice(0, limit);
+    if (!rows.length) return '<p class="muted" style="margin:0">Nothing to show yet.</p>';
+    const max = Math.max(1, ...rows.map((r) => r.value));
+    return `<div class="bars">${rows.map((r) => `<div class="bar-row${r.report ? " clk" : ""}"${r.report ? ` data-report="${esc(r.report)}" tabindex="0" role="link"` : ""} data-tip="${esc(r.label)}|${esc(r.tip || fmt(r.value))}"><span class="nm" title="${esc(r.label)}">${esc(r.label)}</span><span class="bar-track"><span class="bar" style="width:${r.value > 0 ? Math.max(1, (r.value / max) * 80) : 0}%"></span><span class="val">${esc(fmt(r.value))}</span></span></div>`).join("")}</div>`;
+  }
+  const sum = (list, k) => list.reduce((s, c) => s + (Number(c[k]) || 0), 0);
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  const count = (n) => String(n);
+  const yr1Chart = (list, f, prefix, title) => ({ title, html: barChart(groupBy(list, f).map((g) => ({ label: g.key, value: g.year1, tip: `${money(g.year1)} year-1 · ${plural(g.list.length, "contract")}`, report: prefix ? prefix + g.key : null })), compact) });
+  const countChart = (list, f, prefix, title, order) => {
+    let gs = groupBy(list, f); if (order) gs = order.map((k) => gs.find((g) => g.key === k) || { key: k, list: [], year1: 0 });
+    return { title, html: barChart(gs.map((g) => ({ label: g.key, value: g.list.length, tip: `${plural(g.list.length, "contract")} · ${money(g.year1)} year-1`, report: prefix && g.list.length ? prefix + g.key : null })), count) };
+  };
+  const BONUS_RE = /bonus|incentive|measure/i;
+
+  function buildReport(key) {
+    if (!key) return null;
+    const [kind, ...rest] = key.split(":"); const arg = rest.join(":");
+    const all = contracts, y = sum(all, "annualValue");
+    const nd = (list) => list.map(nextDeadline).filter(Boolean).sort((a, b) => a.date.localeCompare(b.date))[0];
+    const scoped = (title, sub, list, extraCharts, askWhat) => ({
+      title, sub, list,
+      kpis: [{ l: "Contracts", v: list.length, s: plural(new Set(list.map((c) => c.org)).size, "account") }, { l: "Year-1 earnings", v: compact(sum(list, "annualValue")), s: y ? Math.round((sum(list, "annualValue") / y) * 100) + "% of all earnings" : "" }, { l: "Initial-term earnings", v: compact(sum(list, "totalValue")), s: money(sum(list, "totalValue")) }, { l: "Next deadline", v: nd(list) ? fmtD(nd(list).date) : "—", s: nd(list) ? nd(list).c.org + ": " + nd(list).label : "none upcoming" }],
+      charts: extraCharts, ask: askWhat,
+    });
+    switch (kind) {
+      case "contracts": return {
+        title: "Contracts overview", sub: "Every contract by status, industry and AI risk.", list: [...all],
+        kpis: [{ l: "Contracts", v: all.length, s: plural(new Set(all.map((c) => c.org)).size, "account") }, { l: "Active", v: all.filter((c) => status(c) === "Active").length, s: "currently running" }, { l: "Expiring or renewing", v: all.filter((c) => ["Expiring", "Renewing"].includes(status(c))).length, s: "term ends within 90 days" }, { l: "Auto-renewing", v: all.filter((c) => c.autoRenew).length, s: "renew unless notice is given" }],
+        charts: [countChart(all, status, "status:", "Contracts by status", STAGES), countChart(all, (c) => c.industry, "industry:", "Contracts by industry"), countChart(all, (c) => riskOf(c) || "Not analyzed", "risk:", "Contracts by AI risk", ["High", "Medium", "Low", "Not analyzed"])],
+        ask: "Give me an overview of my contract portfolio: status mix, industries and what stands out.",
+      };
+      case "earnings": {
+        const list = [...all].sort((a, b) => (Number(b.annualValue) || 0) - (Number(a.annualValue) || 0));
+        const top = list[0];
+        return {
+          title: "Earnings report", sub: "Committed fees from your contracts. Usage-based extras and bonuses are not included.", list,
+          kpis: [{ l: "Year-1 earnings", v: compact(y), s: money(y) }, { l: "Initial-term earnings", v: compact(sum(all, "totalValue")), s: money(sum(all, "totalValue")) }, { l: "Average per contract", v: compact(all.length ? y / all.length : 0), s: "year-1" }, { l: "Largest contract", v: top ? compact(top.annualValue) : "—", s: top ? `${top.org} · ${y ? Math.round(((Number(top.annualValue) || 0) / y) * 100) : 0}% of total` : "" }],
+          charts: [yr1Chart(all, (c) => c.industry, "industry:", "Year-1 earnings by industry"), yr1Chart(all, (c) => c.org, "account:", "Year-1 earnings by account"), yr1Chart(all, status, "status:", "Year-1 earnings by status")],
+          ask: "Analyze my earnings: where the money comes from, concentration risk, and how to grow it.",
+        };
+      }
+      case "bonuses": {
+        const list = all.filter((c) => Number(c.maxBonus) > 0).sort((a, b) => b.maxBonus - a.maxBonus);
+        const bdates = list.flatMap((c) => (c.keyDates || []).filter((k) => BONUS_RE.test(k.label || "") && k.date >= todayISO).map((k) => ({ ...k, c }))).sort((a, b) => a.date.localeCompare(b.date));
+        return {
+          title: "Bonuses report", sub: "Bonus and incentive payments your contracts allow, and when they're decided.", list, showBonus: true,
+          kpis: [{ l: "Max bonuses", v: compact(sum(list, "maxBonus")), s: money(sum(list, "maxBonus")) }, { l: "Contracts with a bonus", v: list.length, s: `of ${all.length} contracts` }, { l: "Next bonus date", v: bdates[0] ? fmtD(bdates[0].date) : "—", s: bdates[0] ? `${bdates[0].c.org}: ${bdates[0].label}` : "none upcoming" }, { l: "Bonus vs year-1", v: y ? ((sum(list, "maxBonus") / y) * 100).toFixed(1) + "%" : "—", s: "extra upside on committed fees" }],
+          charts: [{ title: "Max bonus by account", html: barChart(list.map((c) => ({ label: c.org, value: Number(c.maxBonus) || 0, tip: `${money(c.maxBonus)} max bonus`, report: "account:" + c.org })), compact) }],
+          ask: "Which bonuses can I still earn, what do I need to do to earn each one, and by when?",
+        };
+      }
+      case "deadlines": {
+        const ds = allDeadlines().filter((d) => d.date >= todayISO);
+        const in30 = ds.filter((d) => daysTo(d.date) <= 30), in90 = ds.filter((d) => daysTo(d.date) <= 90), in365 = ds.filter((d) => daysTo(d.date) <= 365);
+        const months = []; for (let i = 0; i < 12; i++) { const d = new Date(today.getFullYear(), today.getMonth() + i, 1); const k = iso(d).slice(0, 7); months.push({ k, label: d.toLocaleDateString(undefined, { month: "short", year: "numeric" }), n: ds.filter((x) => x.date.startsWith(k)).length }); }
+        const notices = ds.filter((d) => /notice/i.test(d.label) && daysTo(d.date) <= 120);
+        return {
+          title: "Deadlines report", sub: "Notice dates, term ends and key dates across all contracts.", list: [...new Set(in365.map((d) => d.c))], deadlines: in365,
+          kpis: [{ l: "Next 30 days", v: in30.length, s: in30[0] ? "first: " + fmtD(in30[0].date) : "nothing due" }, { l: "Next 90 days", v: in90.length, s: plural(new Set(in90.map((d) => d.c.org)).size, "account") }, { l: "Next 12 months", v: in365.length, s: "all upcoming dates" }, { l: "Notice deadlines, 120 days", v: notices.length, s: notices[0] ? `${notices[0].c.org} by ${fmtD(notices[0].date)}` : "none" }],
+          charts: [{ title: "Deadlines per month, next 12 months", html: barChart(months.map((m) => ({ label: m.label, value: m.n, tip: plural(m.n, "deadline") })), count, 12) }],
+          ask: "List my deadlines for the next 90 days in date order and tell me what I must do for each.",
+        };
+      }
+      case "status": return scoped(`Status: ${arg}`, `Contracts whose status is ${arg}.`, all.filter((c) => status(c) === arg), [yr1Chart(all.filter((c) => status(c) === arg), (c) => c.org, "account:", "Year-1 earnings by account")], `Tell me about my ${arg.toLowerCase()} contracts and what I should do about them.`);
+      case "industry": { const list = all.filter((c) => (c.industry || "Unspecified") === arg); return scoped(arg, "Industry report.", list, [yr1Chart(list, (c) => c.org, "account:", "Year-1 earnings by account"), countChart(list, status, "status:", "Contracts by status", STAGES)], `Analyze my contracts in the ${arg} industry.`); }
+      case "account": { const list = all.filter((c) => (c.org || "Untitled") === arg); return scoped(arg, "Account report: every contract with this organization.", list, [{ title: "Year-1 earnings by contract", html: barChart(list.map((c) => ({ label: c.contractType || c.fileName || "Contract", value: Number(c.annualValue) || 0, tip: money(c.annualValue) }))) }], `Give me an account summary for ${arg}: money, deadlines, risks and next steps.`); }
+      case "risk": { const list = all.filter((c) => (riskOf(c) || "Not analyzed") === arg); return scoped(`AI risk: ${arg}`, `Contracts the AI rated ${arg.toLowerCase()}${arg === "Not analyzed" ? "" : " risk"}.`, list, [yr1Chart(list, (c) => c.org, "account:", "Year-1 earnings by account")], `Explain the ${arg.toLowerCase()}-risk contracts and what to do about them.`); }
+    }
+    return null;
+  }
+
+  function pageReports() {
+    if (!contracts.length) return bannerHtml() + `<div class="page-head"><h1><span class="ico x">R</span>Reports</h1></div>` + emptyAll();
+    const cards = ["contracts", "earnings", "bonuses", "deadlines"].map((k) => { const r = buildReport(k); return `<button class="card rep-card" data-report="${k}"><span class="label">${esc(r.kpis[0].l)}</span><span class="v">${esc(r.kpis[0].v)}</span><h2>${esc(r.title)}</h2><span class="muted">${esc(r.sub)}</span><span class="go">Open report →</span></button>`; }).join("");
+    const inds = groupBy(contracts, (c) => c.industry), accs = groupBy(contracts, (c) => c.org);
+    const listCard = (title, gs, prefix) => `<section class="card"><header><h2>${title}</h2></header><ul class="mini">${gs.map((g) => `<li data-report="${esc(prefix + g.key)}" tabindex="0" style="grid-template-columns:minmax(0,1fr) auto auto"><span class="t"><b>${esc(g.key)}</b><span>${plural(g.list.length, "contract")}</span></span><span class="num">${compact(g.year1)}</span><span class="go" style="color:var(--accent);font-weight:700">→</span></li>`).join("")}</ul></section>`;
+    return bannerHtml() + `<div class="page-head"><h1><span class="ico x">R</span>Reports</h1><span class="muted">Click any report, bar or number to drill in</span></div>
+      <div class="rep-cards">${cards}</div>
+      <div class="rep-grid">${listCard("Industry reports", inds, "industry:")}${listCard("Account reports", accs, "account:")}</div>`;
+  }
+
+  function pageReport() {
+    const r = buildReport(route.id);
+    if (!r) return `<div class="card"><div class="empty"><h3>Report not found</h3><button class="btn" data-go="reports">All reports</button></div></div>`;
+    const kpis = `<div class="kpis">${r.kpis.map((k) => `<div class="card kpi"><span class="label">${esc(k.l)}</span><span class="v">${esc(k.v)}</span><span class="s">${esc(k.s)}</span></div>`).join("")}</div>`;
+    const charts = `<div class="rep-grid">${r.charts.map((c) => `<section class="card"><header><h2>${esc(c.title)}</h2></header><div class="pad">${c.html}</div></section>`).join("")}</div>`;
+    let table;
+    if (r.deadlines) {
+      table = r.deadlines.length ? `<ul class="mini">${r.deadlines.map((d) => { const x = daysTo(d.date); return `<li data-open="${esc(d.c.id)}" tabindex="0"><span class="num">${fmtD(d.date)}</span><span class="t"><b>${esc(d.c.org)}</b><span>${esc(d.label)}</span></span><span class="due ${dueCls(x)}">${dueTxt(x)}</span></li>`; }).join("")}</ul>` : `<div class="empty"><p>No upcoming deadlines.</p></div>`;
+    } else {
+      const tot = sum(r.list, "annualValue") || 1;
+      table = r.list.length ? `<div class="tbl-wrap"><table><thead><tr><th>Org name</th><th>Industry</th><th>Status</th><th>AI risk</th>${r.showBonus ? "<th>Bonus terms</th>" : ""}<th class="r">Year-1 earnings</th><th class="r">Share</th><th class="r">Initial-term</th><th class="r">Max bonus</th><th>Next deadline</th></tr></thead><tbody>${r.list.map((c) => { const n = nextDeadline(c); return `<tr data-open="${esc(c.id)}" tabindex="0"><td><a href="#" data-open="${esc(c.id)}">${esc(c.org)}</a></td><td>${esc(c.industry || "—")}</td><td>${statusPill(c)}</td><td>${riskPill(c)}</td>${r.showBonus ? `<td class="clip"><div class="sub">${esc(c.bonuses || "")}</div></td>` : ""}<td class="r num">${money(c.annualValue, c.currency)}</td><td class="r num">${Math.round(((Number(c.annualValue) || 0) / tot) * 100)}%</td><td class="r num">${money(c.totalValue, c.currency)}</td><td class="r num">${money(c.maxBonus, c.currency)}</td><td>${n ? `<span class="num">${fmtD(n.date)}</span><div class="sub">${esc(n.label)}</div>` : "—"}</td></tr>`; }).join("")}</tbody>
+        <tfoot><tr><td colspan="${r.showBonus ? 5 : 4}">${plural(r.list.length, "contract")}</td><td class="r num">${money(sum(r.list, "annualValue"))}</td><td class="r num">100%</td><td class="r num">${money(sum(r.list, "totalValue"))}</td><td class="r num">${money(sum(r.list, "maxBonus"))}</td><td></td></tr></tfoot></table></div>` : `<div class="empty"><p>No contracts in this report.</p></div>`;
+    }
+    return bannerHtml() + `<div class="crumb"><button class="link" data-go="reports">Reports</button><span>›</span><span>${esc(r.title)}</span></div>
+      <div class="page-head"><div><h1><span class="ico x">R</span>${esc(r.title)}</h1><span class="muted">${esc(r.sub)}</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ai" data-act="askReport" ${sample ? "" : "disabled"}>✦ Explain with AI</button>${downloads && r.list.length ? '<button class="btn" data-act="exportReport">Export CSV</button>' : ""}</div></div>
+      ${kpis}${charts}
+      <section class="card"><header><h2>${r.deadlines ? "Upcoming dates" : "Contracts in this report"}</h2><span class="foot">Click a row to open the contract</span></header>${table}</section>`;
   }
 
   function pageRecord() {
@@ -809,11 +927,11 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
   }
 
   // ---------- export ----------
-  async function exportCsv() {
+  async function exportCsv(list = filtered(), name = "contracts") {
     const cols = [["org", "Org Name"], ["industry", "Industry"], ["counterparty", "Other Party"], ["contractType", "Type"], ["status", "Status"], ["riskLevel", "AI Risk"], ["startDate", "Start"], ["endDate", "Term End"], ["autoRenew", "Auto-renew"], ["renewalNoticeDays", "Notice Days"], ["earnings", "Earnings"], ["annualValue", "Year-1 Earnings"], ["totalValue", "Initial-Term Earnings"], ["bonuses", "Bonuses"], ["maxBonus", "Max Bonus"], ["next", "Next Deadline"], ["fileName", "File"]];
     const cell = (v) => { const s = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-    const lines = [cols.map((c) => c[1]).join(",")].concat(filtered().map((c) => cols.map(([k]) => k === "status" ? cell(status(c)) : k === "next" ? cell((nextDeadline(c) || {}).date ? nextDeadline(c).date + " " + nextDeadline(c).label : "") : cell(c[k])).join(",")));
-    try { await downloads.save({ filename: "contracts-" + todayISO + ".csv", data: new Blob(["﻿" + lines.join("\n")], { type: "text/csv" }) }); }
+    const lines = [cols.map((c) => c[1]).join(",")].concat(list.map((c) => cols.map(([k]) => k === "status" ? cell(status(c)) : k === "next" ? cell((nextDeadline(c) || {}).date ? nextDeadline(c).date + " " + nextDeadline(c).label : "") : cell(c[k])).join(",")));
+    try { await downloads.save({ filename: name.replace(/[^a-z0-9]+/gi, "-").toLowerCase() + "-" + todayISO + ".csv", data: new Blob(["﻿" + lines.join("\n")], { type: "text/csv" }) }); }
     catch (e) { if (!["cancelled", "declined"].includes(e?.code)) toast("Export didn't finish."); }
   }
 
@@ -823,9 +941,10 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
 
   // ---------- events ----------
   document.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-go],[data-open],[data-acct],[data-act],[data-sort],[data-mode],[data-stage],[data-rtab],[data-ask],[data-rm]");
+    const t = e.target.closest("[data-report],[data-go],[data-open],[data-acct],[data-act],[data-sort],[data-mode],[data-stage],[data-rtab],[data-ask],[data-rm]");
     if (!t) return;
     if (t.tagName === "A") e.preventDefault();
+    if (t.dataset.report) return go("report", t.dataset.report);
     if (t.dataset.go) return go(t.dataset.go);
     if (t.dataset.open) { closeModal(); return go("record", t.dataset.open); }
     if (t.dataset.acct) { accountFilter = t.dataset.acct; listView = "all"; return go("contracts"); }
@@ -840,6 +959,8 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
       case "add": return openModal();
       case "examples": return toggleExamples();
       case "export": return exportCsv();
+      case "exportReport": { const r = buildReport(route.id); return r && exportCsv(r.list, r.title); }
+      case "askReport": { const r = buildReport(route.id); if (r) { openAsst(true); send(r.ask); } return; }
       case "briefing": return briefing();
       case "clearAcct": accountFilter = ""; return render();
       case "analyze": return c && analyze(c);
@@ -867,7 +988,7 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") { if (!$("modal").hidden) closeModal(); }
-    if (e.key === "Enter" && e.target.matches("[data-open],[data-acct]") && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") e.target.click();
+    if (e.key === "Enter" && e.target.matches("[data-open],[data-acct],[data-report]") && e.target.tagName !== "BUTTON" && e.target.tagName !== "A") e.target.click();
   });
   $("gq").addEventListener("keydown", (e) => { if (e.key === "Enter") { listQuery = e.target.value; listView = "all"; accountFilter = ""; go("contracts"); } });
   $("addBtn").addEventListener("click", openModal);
@@ -890,8 +1011,8 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
   document.addEventListener("mousemove", (e) => {
     const r = e.target.closest?.(".bar-row"); const tip = $("tip");
     if (!r) { tip.hidden = true; return; }
-    const [k, v, n] = r.dataset.tip.split("|");
-    tip.innerHTML = `<b>${esc(k)}</b>${esc(v)} year-1 · ${esc(n)}`; tip.hidden = false;
+    const [k, v] = r.dataset.tip.split("|");
+    tip.innerHTML = `<b>${esc(k)}</b>${esc(v)}${r.dataset.report ? "<br>Click for report" : ""}`; tip.hidden = false;
     tip.style.left = Math.min(e.clientX + 14, innerWidth - 250) + "px"; tip.style.top = e.clientY + 14 + "px";
   });
 
