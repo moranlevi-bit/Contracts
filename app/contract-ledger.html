@@ -2,6 +2,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* Layout: enterprise CRM shell. White global header (logo, centered search, utility icons), app bar with tab dropdowns, grey workspace of large rounded cards in a 3-column grid, and a utility bar pinned to the bottom with docked pop-up panels. */
 :root {
@@ -662,7 +663,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
         <td>${nd ? `<span class="num">${fmtD(nd.date)}</span><div class="sub">${esc(nd.label)}</div>` : '<span class="sub">—</span>'}</td></tr>`; }).join("")}</tbody>
         <tfoot><tr><td colspan="5">${rows.length} contract${rows.length > 1 ? "s" : ""}</td><td class="r num">${money(tv)}</td><td></td><td class="r num">${money(tb)}</td><td></td></tr></tfoot></table></div>`;
     }
-    return bannerHtml() + `<div class="page-head"><h1><span class="ico c">C</span>Contracts</h1><div style="display:flex;gap:8px;flex-wrap:wrap">${downloads ? '<button class="btn" data-act="export">Export CSV</button>' : ""}<button class="btn primary" data-act="add">Add contracts</button></div></div>
+    return bannerHtml() + `<div class="page-head"><h1><span class="ico c">C</span>Contracts</h1><div style="display:flex;gap:8px;flex-wrap:wrap">${downloads ? '<button class="btn" data-act="exportXlsx">Export Excel</button><button class="btn" data-act="export">Export CSV</button>' : ""}<button class="btn primary" data-act="add">Add contracts</button></div></div>
       <section class="card"><header><div class="toolbar" style="flex:1"><select id="lv" aria-label="List view">${opts}</select><input type="search" id="lq" placeholder="Search this list…" value="${esc(listQuery)}" aria-label="Search this list">${accountFilter ? `<span class="pill aip">Account: ${esc(accountFilter)} <button class="btn ghost sm" data-act="clearAcct" aria-label="Clear account filter" style="padding:0 2px">×</button></span>` : ""}</div>
         <div class="seg" role="group" aria-label="Layout"><button data-mode="table" aria-pressed="${listMode === "table"}">Table</button><button data-mode="board" aria-pressed="${listMode === "board"}">Board</button></div></header>${body}</section>`;
   }
@@ -700,10 +701,11 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
   const sum = (list, k) => list.reduce((s, c) => s + (Number(c[k]) || 0), 0);
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
   const count = (n) => String(n);
-  const yr1Chart = (list, f, prefix, title) => ({ title, html: barChart(groupBy(list, f).map((g) => ({ label: g.key, value: g.year1, tip: `${money(g.year1)} year-1 · ${plural(g.list.length, "contract")}`, report: prefix ? prefix + g.key : null })), compact) });
+  const mkChart = (title, rows, fmt, unit, limit) => ({ title, rows, unit, html: barChart(rows, fmt, limit) });
+  const yr1Chart = (list, f, prefix, title) => mkChart(title, groupBy(list, f).map((g) => ({ label: g.key, value: g.year1, n: g.list.length, tip: `${money(g.year1)} year-1 · ${plural(g.list.length, "contract")}`, report: prefix ? prefix + g.key : null })), compact, "$");
   const countChart = (list, f, prefix, title, order) => {
     let gs = groupBy(list, f); if (order) gs = order.map((k) => gs.find((g) => g.key === k) || { key: k, list: [], year1: 0 });
-    return { title, html: barChart(gs.map((g) => ({ label: g.key, value: g.list.length, tip: `${plural(g.list.length, "contract")} · ${money(g.year1)} year-1`, report: prefix && g.list.length ? prefix + g.key : null })), count) };
+    return mkChart(title, gs.map((g) => ({ label: g.key, value: g.list.length, y1: g.year1, tip: `${plural(g.list.length, "contract")} · ${money(g.year1)} year-1`, report: prefix && g.list.length ? prefix + g.key : null })), count, "count");
   };
   const BONUS_RE = /bonus|incentive|measure/i;
 
@@ -740,7 +742,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
         return {
           title: "Bonuses report", sub: "Bonus and incentive payments your contracts allow, and when they're decided.", list, showBonus: true,
           kpis: [{ l: "Max bonuses", v: compact(sum(list, "maxBonus")), s: money(sum(list, "maxBonus")) }, { l: "Contracts with a bonus", v: list.length, s: `of ${all.length} contracts` }, { l: "Next bonus date", v: bdates[0] ? fmtD(bdates[0].date) : "—", s: bdates[0] ? `${bdates[0].c.org}: ${bdates[0].label}` : "none upcoming" }, { l: "Bonus vs year-1", v: y ? ((sum(list, "maxBonus") / y) * 100).toFixed(1) + "%" : "—", s: "extra upside on committed fees" }],
-          charts: [{ title: "Max bonus by account", html: barChart(list.map((c) => ({ label: c.org, value: Number(c.maxBonus) || 0, tip: `${money(c.maxBonus)} max bonus`, report: "account:" + c.org })), compact) }],
+          charts: [mkChart("Max bonus by account", list.map((c) => ({ label: c.org, value: Number(c.maxBonus) || 0, tip: `${money(c.maxBonus)} max bonus`, report: "account:" + c.org })), compact, "$")],
           ask: "Which bonuses can I still earn, what do I need to do to earn each one, and by when?",
         };
       }
@@ -752,13 +754,13 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
         return {
           title: "Deadlines report", sub: "Notice dates, term ends and key dates across all contracts.", list: [...new Set(in365.map((d) => d.c))], deadlines: in365,
           kpis: [{ l: "Next 30 days", v: in30.length, s: in30[0] ? "first: " + fmtD(in30[0].date) : "nothing due" }, { l: "Next 90 days", v: in90.length, s: plural(new Set(in90.map((d) => d.c.org)).size, "account") }, { l: "Next 12 months", v: in365.length, s: "all upcoming dates" }, { l: "Notice deadlines, 120 days", v: notices.length, s: notices[0] ? `${notices[0].c.org} by ${fmtD(notices[0].date)}` : "none" }],
-          charts: [{ title: "Deadlines per month, next 12 months", html: barChart(months.map((m) => ({ label: m.label, value: m.n, tip: plural(m.n, "deadline") })), count, 12) }],
+          charts: [mkChart("Deadlines per month, next 12 months", months.map((m) => ({ label: m.label, value: m.n, tip: plural(m.n, "deadline") })), count, "count", 12)],
           ask: "List my deadlines for the next 90 days in date order and tell me what I must do for each.",
         };
       }
       case "status": return scoped(`Status: ${arg}`, `Contracts whose status is ${arg}.`, all.filter((c) => status(c) === arg), [yr1Chart(all.filter((c) => status(c) === arg), (c) => c.org, "account:", "Year-1 earnings by account")], `Tell me about my ${arg.toLowerCase()} contracts and what I should do about them.`);
       case "industry": { const list = all.filter((c) => (c.industry || "Unspecified") === arg); return scoped(arg, "Industry report.", list, [yr1Chart(list, (c) => c.org, "account:", "Year-1 earnings by account"), countChart(list, status, "status:", "Contracts by status", STAGES)], `Analyze my contracts in the ${arg} industry.`); }
-      case "account": { const list = all.filter((c) => (c.org || "Untitled") === arg); return scoped(arg, "Account report: every contract with this organization.", list, [{ title: "Year-1 earnings by contract", html: barChart(list.map((c) => ({ label: c.contractType || c.fileName || "Contract", value: Number(c.annualValue) || 0, tip: money(c.annualValue) }))) }], `Give me an account summary for ${arg}: money, deadlines, risks and next steps.`); }
+      case "account": { const list = all.filter((c) => (c.org || "Untitled") === arg); return scoped(arg, "Account report: every contract with this organization.", list, [mkChart("Year-1 earnings by contract", list.map((c) => ({ label: c.contractType || c.fileName || "Contract", value: Number(c.annualValue) || 0, tip: money(c.annualValue) })), compact, "$")], `Give me an account summary for ${arg}: money, deadlines, risks and next steps.`); }
       case "risk": { const list = all.filter((c) => (riskOf(c) || "Not analyzed") === arg); return scoped(`AI risk: ${arg}`, `Contracts the AI rated ${arg.toLowerCase()}${arg === "Not analyzed" ? "" : " risk"}.`, list, [yr1Chart(list, (c) => c.org, "account:", "Year-1 earnings by account")], `Explain the ${arg.toLowerCase()}-risk contracts and what to do about them.`); }
     }
     return null;
@@ -789,7 +791,7 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
     }
     return bannerHtml() + `<div class="crumb"><button class="link" data-go="reports">Reports</button><span>›</span><span>${esc(r.title)}</span></div>
       <div class="page-head"><div><h1><span class="ico x">R</span>${esc(r.title)}</h1><span class="muted">${esc(r.sub)}</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ai" data-act="askReport" ${sample ? "" : "disabled"}>✦ Explain with AI</button>${downloads && r.list.length ? '<button class="btn" data-act="exportReport">Export CSV</button>' : ""}</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ai" data-act="askReport" ${sample ? "" : "disabled"}>✦ Explain with AI</button>${downloads && r.list.length ? '<button class="btn" data-act="exportReportXlsx">Export Excel</button><button class="btn" data-act="exportReport">Export CSV</button>' : ""}</div></div>
       ${kpis}${charts}
       <section class="card"><header><h2>${r.deadlines ? "Upcoming dates" : "Contracts in this report"}</h2><span class="foot">Click a row to open the contract</span></header>${table}</section>`;
   }
@@ -1088,6 +1090,78 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
     catch (e) { if (!["cancelled", "declined"].includes(e?.code)) toast("Export didn't finish."); }
   }
 
+
+  async function exportXlsx(r) {
+    const X = window.XLSX;
+    if (!X) { toast("The Excel exporter didn't load. Reload the page, or use Export CSV."); return; }
+    const dt = (s) => (parseD(s) ? parseD(s) : null);
+    const M = '"$"#,##0', D = "mmm d, yyyy";
+    const wb = X.utils.book_new();
+
+    // Summary
+    const sum1 = [[r.title], [r.sub || ""], ["Exported " + today.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) + " from Contract Ledger"], []];
+    if (r.kpis?.length) { sum1.push(["Metric", "Value", "Detail"]); for (const k of r.kpis) sum1.push([k.l, String(k.v), k.s || ""]); }
+    const tv = sum(r.list, "annualValue"), tt = sum(r.list, "totalValue"), tb = sum(r.list, "maxBonus");
+    sum1.push([], ["Totals for contracts in this report"], ["Contracts", r.list.length], ["Year-1 earnings", tv], ["Initial-term earnings", tt], ["Max bonuses", tb]);
+    const ws1 = X.utils.aoa_to_sheet(sum1);
+    for (let i = sum1.length - 3; i < sum1.length; i++) { const c = ws1[X.utils.encode_cell({ r: i, c: 1 })]; if (c) c.z = M; }
+    ws1["!cols"] = [{ wch: 34 }, { wch: 22 }, { wch: 60 }];
+    X.utils.book_append_sheet(wb, ws1, "Summary");
+
+    // Contracts
+    const head = ["Org Name", "Industry", "Other Party", "Contract Type", "Status", "AI Risk", "Start Date", "Term End", "Auto-renew", "Notice Days", "Year-1 Earnings", "Initial-Term Earnings", "Max Bonus", "Next Deadline", "Next Deadline Detail", "Earnings Terms", "Bonus Terms", "Terms to Watch", "Source File"];
+    const rows = r.list.map((c) => { const n = nextDeadline(c); return [c.org || "", c.industry || "", c.counterparty || "", c.contractType || "", status(c), riskOf(c) || "Not analyzed", dt(c.startDate), dt(c.endDate), c.autoRenew ? "Yes" : "No", num(c.renewalNoticeDays), num(c.annualValue), num(c.totalValue), num(c.maxBonus) || 0, n ? dt(n.date) : null, n ? n.label : "", c.earnings || "", c.bonuses || "", c.risks || "", c.fileName || ""]; });
+    const ws2 = X.utils.aoa_to_sheet([head, ...rows], { cellDates: true });
+    const last = rows.length + 1;
+    if (rows.length) {
+      X.utils.sheet_add_aoa(ws2, [["Total (" + rows.length + ")"]], { origin: { r: last, c: 0 } });
+      for (const col of ["K", "L", "M"]) ws2[col + (last + 1)] = { t: "n", f: `SUM(${col}2:${col}${last})`, v: col === "K" ? tv : col === "L" ? tt : tb, z: M };
+      ws2["!ref"] = X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: last, c: head.length - 1 } });
+    }
+    for (let i = 1; i <= rows.length; i++) {
+      for (const c of [6, 7, 13]) { const a = ws2[X.utils.encode_cell({ r: i, c })]; if (a) a.z = D; }
+      for (const c of [10, 11, 12]) { const a = ws2[X.utils.encode_cell({ r: i, c })]; if (a) a.z = M; }
+    }
+    ws2["!cols"] = [28, 24, 24, 20, 11, 13, 13, 13, 10, 11, 15, 18, 12, 14, 40, 60, 60, 50, 40].map((w) => ({ wch: w }));
+    if (rows.length) ws2["!autofilter"] = { ref: X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: last - 1, c: head.length - 1 } }) };
+    X.utils.book_append_sheet(wb, ws2, "Contracts");
+
+    // Chart data
+    if (r.charts?.length) {
+      const aoa = []; const moneyCells = [];
+      for (const ch of r.charts) {
+        aoa.push([ch.title]); aoa.push(["Label", ch.unit === "$" ? "Amount" : "Count", ...(ch.rows.some((x) => x.n !== undefined) ? ["Contracts"] : []), ...(ch.rows.some((x) => x.y1 !== undefined) ? ["Year-1 Earnings"] : [])]);
+        for (const x of ch.rows) {
+          const row = [x.label, x.value]; if (x.n !== undefined) row.push(x.n); if (x.y1 !== undefined) row.push(x.y1);
+          aoa.push(row);
+          if (ch.unit === "$") moneyCells.push([aoa.length - 1, 1]);
+          if (x.y1 !== undefined) moneyCells.push([aoa.length - 1, row.length - 1]);
+        }
+        aoa.push([]);
+      }
+      const ws3 = X.utils.aoa_to_sheet(aoa);
+      for (const [rr, cc] of moneyCells) { const a = ws3[X.utils.encode_cell({ r: rr, c: cc })]; if (a) a.z = M; }
+      ws3["!cols"] = [{ wch: 40 }, { wch: 16 }, { wch: 12 }, { wch: 16 }];
+      X.utils.book_append_sheet(wb, ws3, "Chart Data");
+    }
+
+    // Deadlines
+    const ids = new Set(r.list.map((c) => c.id));
+    const dls = r.deadlines || allDeadlines().filter((d) => ids.has(d.c.id) && d.date >= todayISO);
+    if (dls.length) {
+      const ws4 = X.utils.aoa_to_sheet([["Date", "Days Away", "Org Name", "What Happens"], ...dls.map((d) => [dt(d.date), daysTo(d.date), d.c.org || "", d.label])], { cellDates: true });
+      for (let i = 1; i <= dls.length; i++) { const a = ws4[X.utils.encode_cell({ r: i, c: 0 })]; if (a) a.z = D; }
+      ws4["!cols"] = [{ wch: 14 }, { wch: 10 }, { wch: 34 }, { wch: 70 }];
+      ws4["!autofilter"] = { ref: "A1:D" + (dls.length + 1) };
+      X.utils.book_append_sheet(wb, ws4, "Deadlines");
+    }
+
+    const out = X.write(wb, { bookType: "xlsx", type: "array", cellDates: true });
+    const fname = String(r.title).replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() + "-" + todayISO + ".xlsx";
+    try { await downloads.save({ filename: fname, data: new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }) }); }
+    catch (e) { if (!["cancelled", "declined"].includes(e?.code)) toast("Export didn't finish."); }
+  }
+
   // ---------- modal ----------
   function openModal() { $("modal").hidden = false; $("scrim").hidden = false; $("chooseBtn").focus(); $("sampleBtn").textContent = contracts.some((c) => c.example) ? "Remove examples" : "Load example contracts"; }
   function closeModal() { $("modal").hidden = true; $("scrim").hidden = true; }
@@ -1115,6 +1189,8 @@ ${toolsOK ? "Use the tools to look up contracts, deadlines and totals before ans
       case "add": return openModal();
       case "examples": return toggleExamples();
       case "export": return exportCsv();
+      case "exportXlsx": return exportXlsx({ title: "Contracts - " + (VIEWS[listView] || "Status: " + listView), sub: accountFilter ? "Account: " + accountFilter : "Contract list view", list: filtered(), kpis: [], charts: [] });
+      case "exportReportXlsx": { const r = buildReport(route.id); return r && exportXlsx(r); }
       case "exportReport": { const r = buildReport(route.id); return r && exportCsv(r.list, r.title); }
       case "askReport": { const r = buildReport(route.id); if (r) { openAsst(true); send(r.ask); } return; }
       case "briefing": return briefing();
