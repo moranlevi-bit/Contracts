@@ -1,4 +1,4 @@
-# Promisely MVP – prototype status
+# Contract.ly MVP – prototype status
 
 The prototype lives in `app/contract-ledger.html` (published as a claude.ai artifact).
 Section numbers refer to "MVP Definition – AI Contract Management" v0.1.
