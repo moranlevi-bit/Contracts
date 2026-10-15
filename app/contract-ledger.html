@@ -553,6 +553,13 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
 .drawer .dlbl { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
 .drawer .dgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .drawer blockquote { margin: 0; padding: 10px 12px; background: var(--sunken); border-radius: 8px; border-left: 3px solid var(--brand); font-size: 13.5px; }
+.drawer input:not([type=checkbox]) { width: 100%; border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; background: var(--surface); font: inherit; color: var(--fg); }
+.cform { display: grid; gap: 12px; }
+.cform label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.cform .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cform .chk { display: flex; gap: 8px; align-items: center; color: var(--fg); font-size: 14px; }
+.rowacts { display: flex; gap: 6px; justify-content: flex-end; white-space: nowrap; }
+.rowacts .confirm { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
 .drawer textarea, .drawer select { width: 100%; border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; background: var(--surface); }
 .drawer textarea { min-height: 70px; resize: vertical; }
 @media (prefers-reduced-motion: no-preference) { .drawer { animation: dslide .18s ease-out; } @keyframes dslide { from { transform: translateX(30px); opacity: .6; } } }
@@ -860,7 +867,6 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
 
   // ---------- routing ----------
   function go(name, id) {
-    if (name === "contracts") name = AREA_KEYS.find((a) => canSeeArea(a)) || "home";
     if (route.name === "record" && name === "record" && route.id === id) { render(); return; }
     route = { name, id }; closeDrawer();
     if (name === "record") { recTab = "obligations"; const c = byId(id); if (c) logEvent("Viewed contract", c.org); }
@@ -870,17 +876,17 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   function renderTabs() {
     const cur = { record: byId(route.id)?.area || "", review: byId(route.id)?.area || "", report: "reports", search: "" }[route.name] ?? route.name;
     const caret = (k) => `<button class="caret" data-menu="${k}" aria-label="${k} menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button>`;
-    const tabs = [["home", "Home", false], ["obligations", "Obligations", true], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label, true]), ["reports", "Reports", true], ...(viewer().role === "admin" ? [["admin", "Admin", false]] : [])];
+    const tabs = [["home", "Home", false], ["contracts", "Contracts", true], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label, true]), ["reports", "Reports", true], ...(viewer().role === "admin" ? [["admin", "Admin", false]] : [])];
     $("tabs").innerHTML = tabs.map(([k, l, c]) => `<div class="tabwrap" data-tab="${k}" aria-current="${cur === k ? "page" : "false"}"><button class="tab" data-go="${k}">${l}</button>${c ? caret(k) : ""}</div>`).join("");
   }
   function render() {
     if (["record", "review"].includes(route.name) && !byId(route.id)) route = { name: "home" };
     if (AREA_KEYS.includes(route.name) && !canSeeArea(route.name)) route = { name: "home" };
     if (route.name === "admin" && viewer().role !== "admin") route = { name: "home" };
-    const pages = { home: pageHome, obligations: pageObligations, record: pageRecord, review: pageReview, reports: pageReports, report: pageReport, admin: pageAdmin, search: pageSearch };
+    const pages = { home: pageHome, contracts: pageContracts, obligations: pageObligations, record: pageRecord, review: pageReview, reports: pageReports, report: pageReport, admin: pageAdmin, search: pageSearch };
     const fn = pages[route.name] || (AREA_KEYS.includes(route.name) ? () => pageArea(route.name) : pageHome);
     $("page").innerHTML = previewBanner() + bannerHtml() + fn();
-    renderTabs(); renderChrome(); if (drawerKey) renderDrawer();
+    renderTabs(); renderChrome(); if (drawerKey && !drawerKey.startsWith("cform:")) renderDrawer();
     if (route.name === "review" && reviewHL) setTimeout(() => document.getElementById("hl")?.scrollIntoView({ block: "center", behavior: "smooth" }), 30);
   }
   const bannerHtml = () => (state.banner ? `<div class="banner">${esc(state.banner)}</div>` : "");
@@ -924,6 +930,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   function openDrawer(key) { drawerKey = key; $("drawer").hidden = false; $("scrim").hidden = false; renderDrawer(); }
   function closeDrawer() { drawerKey = ""; $("drawer").hidden = true; if ($("modal").hidden) $("scrim").hidden = true; }
   function renderDrawer() {
+    if (drawerKey.startsWith("cform:")) return renderCForm(drawerKey.slice(6));
     const { c, o: raw } = findOb(drawerKey); if (!c || !raw) { closeDrawer(); return; }
     const o = { ...raw, c, state: obState(raw) }, can = canEdit(c), S = SIDE[o.side];
     const fact = (k, v) => v ? `<div><div class="dlbl">${k}</div><div>${v}</div></div>` : "";
@@ -1085,6 +1092,90 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       ${rows.length ? `<div class="tbl-wrap"><table><thead><tr>${headRow}</tr></thead><tbody>${bodyRows}</tbody></table></div>` : '<div class="empty"><p>No contracts match.</p></div>'}</section>`;
   }
 
+  // ---------- contracts (all tabs) ----------
+  let ctF = { q: "", area: "", st: "" };
+  const isAdmin = () => viewer().role === "admin";
+  function ctRows() {
+    const q = norm(ctF.q);
+    return V().filter((c) => (!ctF.area || c.area === ctF.area) && (!ctF.st || status(c) === ctF.st) && (!q || norm([c.org, c.contractType, c.summary, AREAS[c.area]?.label].join(" ")).includes(q)))
+      .sort((a, b) => String(a.org).localeCompare(String(b.org)));
+  }
+  function ctExportSections() {
+    return [{ title: "Contracts", columns: ["Counterparty", "Tab", "Contract type", "Status", "Review state", "Start date", "End date", "Auto-renews", "Notice (days)", "Annual value", "Currency"],
+      rows: ctRows().map((c) => [c.org, AREAS[c.area]?.label || c.area, c.contractType || "", status(c), RV_LABEL[reviewState(c)], c.startDate || "", c.endDate || "", c.autoRenew ? "Yes" : "No", c.renewalNoticeDays ?? "", num(c.annualValue) ?? "", c.currency || "USD"]) }];
+  }
+  function pageContracts() {
+    const all = V(), canAdd = AREA_KEYS.some((a) => canUpload(a)), admin = isAdmin();
+    const head = `<div class="page-head"><div><h1>Contracts</h1><span class="muted">${admin ? "Every contract in the system." : "The contracts you have permission to see."} Open one to see its terms and obligations.</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${downloads && all.length ? '<button class="btn" data-act="exportCtXlsx">Export Excel</button><button class="btn" data-act="exportCtCsv">Export CSV</button>' : ""}${canAdd ? '<button class="btn" data-act="add" data-area="auto">Upload document</button><button class="btn primary" data-act="cnew">+ Add contract</button>' : ""}</div></div>`;
+    if (!all.length) return head + emptyState();
+    const rows = ctRows();
+    const sel = (id, val, opts) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${v === val ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    const nd = (c) => { const d = deadlinesOf(c).filter((x) => x.date >= todayISO)[0]; return d ? `${fmtD(d.date)}<div class="sub">${esc(d.label)}</div>` : "—"; };
+    const acts = (c) => `<div class="rowacts" id="cdz_${esc(c.id)}">${canEdit(c) ? `<button class="btn sm" data-act="cedit" data-id="${esc(c.id)}">Edit</button>` : ""}${admin ? `<button class="btn sm danger" data-act="cdel" data-id="${esc(c.id)}">Delete</button>` : ""}</div>`;
+    const body = rows.map((c) => `<tr data-open="${esc(c.id)}" tabindex="0"><td><a href="#" data-open="${esc(c.id)}">${esc(c.org)}</a>${c.restricted ? ' <span class="lock" title="Restricted">🔒</span>' : ""}<div class="sub">${esc(c.contractType || "")}${c.example ? ' <span class="pill example">Example</span>' : ""}</div></td><td>${areaPill(c.area)}</td><td>${stPill(c)}</td><td class="num" style="white-space:nowrap">${fmtD(c.startDate)}<div class="sub">to ${fmtD(c.endDate)}</div></td><td class="r">${num(c.annualValue) !== null ? money(c.annualValue, c.currency) : "—"}</td><td>${nd(c)}</td><td>${rvPill(c)}</td><td>${acts(c)}</td></tr>`).join("");
+    return head + `<section class="card"><header><div class="toolbar" style="flex:1">${sel("ct_area", ctF.area, [["", "All tabs"], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label])])}${sel("ct_st", ctF.st, [["", "All statuses"], ...STAGES.map((s) => [s, s])])}<input type="search" id="ct_q" placeholder="Search contracts…" value="${esc(ctF.q)}"></div><span class="muted" style="font-size:13px">${plural(rows.length, "contract")}</span></header>
+      ${rows.length ? `<div class="tbl-wrap"><table><thead><tr><th>Contract</th><th>Tab</th><th>Status</th><th>Term</th><th class="r">Annual value</th><th>Next deadline</th><th>Review state</th><th class="r">Actions</th></tr></thead><tbody>${body}</tbody></table></div>` : '<div class="empty"><p>No contracts match.</p></div>'}</section>`;
+  }
+  // add / edit contract details (drawer form)
+  function cfRead() {
+    const g = (k) => ($("cf_" + k)?.value ?? "").trim();
+    return { area: g("area"), org: g("org"), contractType: g("type"), startDate: g("start"), endDate: g("end"), autoRenew: !!$("cf_auto")?.checked, renewalNoticeDays: g("notice"), annualValue: g("value"), currency: g("cur").toUpperCase(), summary: g("summary") };
+  }
+  function renderCForm(id, draft) {
+    const c = id === "new" ? null : byId(id);
+    if (id !== "new" && (!c || !canEdit(c))) { closeDrawer(); return; }
+    const areas = AREA_KEYS.filter((a) => canUpload(a) || a === c?.area);
+    if (!areas.length) { closeDrawer(); return toast("Your role can't add contracts."); }
+    const v = draft || (c ? { area: c.area, org: c.org || "", contractType: c.contractType || "", startDate: c.startDate || "", endDate: c.endDate || "", autoRenew: !!c.autoRenew, renewalNoticeDays: c.renewalNoticeDays ?? "", annualValue: num(c.annualValue) ?? "", currency: c.currency || "USD", summary: c.summary || "" }
+      : { area: areas.includes(route.name) ? route.name : ctF.area && areas.includes(ctF.area) ? ctF.area : areas[0], org: "", contractType: "", startDate: "", endDate: "", autoRenew: false, renewalNoticeDays: "", annualValue: "", currency: "USD", summary: "" });
+    const hr = v.area === "hr";
+    $("drawer").innerHTML = `<header><div><h2>${c ? "Edit contract details" : "Add contract"}</h2><span class="muted" style="font-size:13px">${c ? esc(c.org) : "Enter the details by hand, or use Upload document to let the AI read a file."}</span></div><button class="btn ghost sm" data-act="closeDrawer" aria-label="Close">✕</button></header>
+      <div class="dbody"><div class="cform">
+        <label>Tab<select id="cf_area">${areas.map((a) => `<option value="${a}"${a === v.area ? " selected" : ""}>${AREAS[a].label} (${AREAS[a].sub.toLowerCase()})</option>`).join("")}</select></label>
+        <label>${hr ? "Employee name" : "Counterparty"} *<input id="cf_org" value="${esc(v.org)}" placeholder="${hr ? "e.g. Dana Cohen" : "e.g. Acme Ltd."}"></label>
+        <label>${hr ? "Role or contract type" : "Contract type"}<input id="cf_type" value="${esc(v.contractType)}" placeholder="${hr ? "e.g. Employment agreement" : "e.g. Master services agreement"}"></label>
+        <div class="two"><label>Start date<input id="cf_start" type="date" value="${esc(v.startDate)}"></label><label>End date<input id="cf_end" type="date" value="${esc(v.endDate)}"></label></div>
+        <label class="chk"><input type="checkbox" id="cf_auto" ${v.autoRenew ? "checked" : ""}> Renews automatically</label>
+        <label>Notice needed before the end date (days)<input id="cf_notice" type="number" min="0" value="${esc(v.renewalNoticeDays)}"></label>
+        <div class="two"><label>${hr ? "Annual salary" : v.area === "suppliers" ? "Annual cost" : "Annual value"}<input id="cf_value" type="number" min="0" step="any" value="${esc(v.annualValue)}"></label><label>Currency<input id="cf_cur" maxlength="3" value="${esc(v.currency || "USD")}"></label></div>
+        <label>Summary or notes<textarea id="cf_summary" rows="3">${esc(v.summary)}</textarea></label>
+        ${c ? '<p class="foot" style="margin:0">Changes are saved as confirmed values and recorded in the contract\'s history.</p>' : ""}
+      </div></div>
+      <footer><button class="btn primary" data-act="csave">${c ? "Save changes" : "Add contract"}</button><button class="btn" data-act="closeDrawer">Cancel</button></footer>`;
+  }
+  async function saveCForm(id) {
+    const c = id === "new" ? null : byId(id), v = cfRead();
+    if (c ? !canEdit(c) : !canUpload(v.area)) return toast("You don't have permission to do that.");
+    if (!v.org) { $("cf_org").focus(); return toast("Enter a name first."); }
+    if (v.startDate && v.endDate && v.endDate < v.startDate) return toast("The end date is before the start date.");
+    if (v.currency && !/^[A-Z]{3}$/.test(v.currency)) return toast("Currency should be a 3-letter code, like USD.");
+    const now = new Date().toISOString(), by = actor(), val = num(v.annualValue), nd = num(v.renewalNoticeDays);
+    const top = { area: v.area, org: v.org.slice(0, 200), contractType: v.contractType.slice(0, 160), startDate: v.startDate || null, endDate: v.endDate || null, autoRenew: v.autoRenew, renewalNoticeDays: nd, annualValue: val, currency: v.currency || "USD", summary: v.summary.slice(0, 500) };
+    const byField = { counterpartyName: top.org, workerName: top.org, startDate: top.startDate, endDate: top.endDate, autoRenew: top.autoRenew, renewalNoticeDays: nd, annualValue: val, salaryAmount: val };
+    const fields = { ...(c?.fields || {}) }, changed = [];
+    for (const [k, x] of Object.entries(byField)) {
+      if (!fieldDef(v.area, k)) continue;
+      const old = fields[k] || {}, same = String(old.v ?? "") === String(x ?? "");
+      if (same && c) continue;
+      if (x === null || x === "") { if (old.v !== undefined && old.v !== null) fields[k] = { ...old, v: null, st: "notfound", hist: [...(old.hist || []), { at: now, by, what: "Cleared manually" }] }; continue; }
+      fields[k] = { ...old, v: x, st: "verified", by, at: now, src: same ? old.src : "", page: same ? old.page : null, conf: "high", hist: [...(old.hist || []), { at: now, by, what: c ? "Edited manually" : "Entered manually", v: x }] };
+      if (c) changed.push(fieldDef(v.area, k).l);
+    }
+    if (c) {
+      for (const [k, l] of [["contractType", "Contract type"], ["currency", "Currency"], ["summary", "Summary"]]) if (String(c[k] ?? "") !== String(top[k] ?? "")) changed.push(l);
+      if (c.area !== top.area) changed.push(`Tab (${AREAS[c.area].label} → ${AREAS[top.area].label})`);
+      if (!changed.length) { closeDrawer(); return toast("No changes."); }
+      await saveContract(c.id, { ...stripId(c), ...top, fields, activity: withAct(c, "Details edited: " + changed.join(", ")) });
+      logEvent("Edited contract details", top.org, changed.join(", ")); closeDrawer(); render(); return toast("Saved");
+    }
+    const rec = { ...top, counterparty: L.myCompany || "", fields, obligations: [], keyDates: [], riskLevel: null, insights: null, sourceText: "", documents: [], grants: [], restricted: false, fileName: "", addedAt: now, example: false, manual: true,
+      activity: [{ at: now, text: "Added manually", ai: false, by }] };
+    await addContract(rec); logEvent("Added contract", rec.org, "Entered manually"); closeDrawer();
+    ctF = { q: "", area: "", st: "" }; if (route.name !== "contracts") go("contracts"); else render();
+    return toast("Contract added. Attach the signed document from the contract page when you have it.");
+  }
+
   // ---------- record ----------
   function pageRecord() {
     const c = byId(route.id), si = STAGES.indexOf(status(c)), edit = canEdit(c), mng = canManage(c);
@@ -1122,7 +1213,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const yr12 = addMonths(todayISO, 12), mIn = moneyCalc({ direction: "in", from: todayISO, to: yr12, list: [c] }), mOut = moneyCalc({ direction: "out", from: todayISO, to: yr12, list: [c] });
     return `<div class="crumb"><button class="link" data-go="${c.area}">${AREAS[c.area].label}</button><span>›</span><span>${esc(c.org)}</span></div>
       <section class="card hl"><div class="hl-top"><div><span class="label">${areaPill(c.area)} ${rvPill(c)} ${c.restricted ? '<span class="lock">🔒 Restricted</span>' : ""}${c.example ? ' <span class="pill example">Example</span>' : ""}</span><h1>${esc(c.org || "Untitled")}</h1><span class="muted">${esc(c.contractType || "")}${L.myCompany ? " · your side: " + esc(L.myCompany) : ""}</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">${edit && rs !== "verified" ? `<button class="btn primary" data-review="${esc(c.id)}">Review fields</button>` : edit ? `<button class="btn" data-review="${esc(c.id)}">Review fields</button>` : ""}${edit ? '<button class="btn" data-act="attach">Attach document</button>' : ""}${edit ? `<select id="moveArea" class="btn" aria-label="Move to tab" style="padding:6px 10px">${AREA_KEYS.map((a) => `<option value="${a}"${a === c.area ? " selected" : ""}>Tab: ${AREAS[a].label}</option>`).join("")}</select>` : ""}${mng ? '<span id="delZone"><button class="btn danger" data-act="del">Delete</button></span>' : ""}</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${edit && rs !== "verified" ? `<button class="btn primary" data-review="${esc(c.id)}">Review fields</button>` : edit ? `<button class="btn" data-review="${esc(c.id)}">Review fields</button>` : ""}${edit ? '<button class="btn" data-act="attach">Attach document</button>' : ""}${edit ? `<select id="moveArea" class="btn" aria-label="Move to tab" style="padding:6px 10px">${AREA_KEYS.map((a) => `<option value="${a}"${a === c.area ? " selected" : ""}>Tab: ${AREAS[a].label}</option>`).join("")}</select>` : ""}${edit ? `<button class="btn" data-act="cedit" data-id="${esc(c.id)}">Edit details</button>` : ""}${isAdmin() ? '<span id="delZone"><button class="btn danger" data-act="del">Delete</button></span>' : ""}</div></div>
         <div class="hl-fields"><div><span class="label">Contractual obligations, 12 months</span><span class="v" style="color:var(--teal-ink)"><button class="link" data-report="entitlements:${esc(c.org)}" style="font-size:15px">${money(mIn.fixed)}</button>${mIn.conditional ? ` <span class="foot">+${money(mIn.conditional)} cond.</span>` : ""}</span></div><div><span class="label">Commitments, 12 months</span><span class="v"><button class="link" data-report="commitments:${esc(c.org)}" style="font-size:15px">${money(mOut.fixed)}</button>${mOut.conditional ? ` <span class="foot">+${money(mOut.conditional)} cond.</span>` : ""}</span></div><div><span class="label">${c.area === "hr" ? "Annual salary" : c.area === "suppliers" ? "Annual cost" : "Year-1 value"}</span><span class="v">${money(c.annualValue, c.currency)} ${fst(c, c.area === "hr" ? "salaryAmount" : "annualValue") !== "verified" ? vbadge(fst(c, c.area === "hr" ? "salaryAmount" : "annualValue")) : ""}</span></div><div><span class="label">Term</span><span class="v">${fmtD(c.startDate)} – ${c.endDate ? fmtD(c.endDate) : esc(fv(c, "term") || "open-ended")}</span></div><div><span class="label">Verification</span><span class="v">${k.v}/${k.total} fields</span><div class="prog"><i style="width:${k.total ? (k.v / k.total) * 100 : 0}%"></i></div></div></div>
         ${path}</section>
       <div class="rec-grid"><section class="card"><div class="subtabs" role="tablist">${tabs.map(([kk, l]) => `<button role="tab" data-rtab="${kk}" aria-selected="${recTab === kk}">${l}</button>`).join("")}</div>${body}</section>${side}</div>`;
@@ -1330,6 +1421,8 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       return `<h4>Commitments</h4>${btn('data-obf="mine:overdue"', "Overdue", n("mine", "overdue"))}${btn('data-obf="mine:30"', "Next 30 days")}${btn('data-obf="mine:open"', "All open", n("mine", "open"))}<hr><h4>Contractual obligations</h4>${btn('data-obf="theirs:overdue"', "Overdue", n("theirs", "overdue"))}${btn('data-obf="theirs:30"', "Next 30 days")}${btn('data-obf="theirs:open"', "All open", n("theirs", "open"))}<hr>${btn('data-obf="both:calendar"', "Calendar view")}`; }
     if (AREA_KEYS.includes(kind)) { const l = V().filter((c) => c.area === kind).slice(0, 6);
       return `<h4>${AREAS[kind].label}</h4>${l.map((c) => btn(`data-open="${esc(c.id)}"`, c.org)).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr>${btn(`data-go="${kind}"`, "All " + AREAS[kind].label + " contracts")}${canUpload(kind) ? btn(`data-act="add" data-area="${kind}"`, "+ Upload to " + AREAS[kind].label) : ""}`; }
+    if (kind === "contracts") { const l = V().slice(0, 6);
+      return `<h4>Contracts</h4>${l.map((c) => btn(`data-open="${esc(c.id)}"`, c.org, AREAS[c.area]?.label || "")).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr>${btn('data-go="contracts"', "All contracts")}${AREA_KEYS.some((a) => canUpload(a)) ? btn('data-act="cnew"', "+ Add contract") : ""}`; }
     if (kind === "reports") return `<h4>Standard reports</h4>${REPORTS.filter(([k]) => canReport(k)).map(([k, t]) => btn(`data-report="${k}"`, t)).join("")}<hr>${btn('data-go="reports"', "All reports")}`;
     if (kind === "me") return `<h4>${esc(me().name)}</h4><p class="foot" style="padding:0 14px 4px">Administrator · your organization: ${esc(L.myCompany || "not set")}</p><hr><h4>Preview as</h4>${btn('data-preview=""', "Myself (Administrator)", previewId ? "" : "✓")}${L.users.map((u) => btn(`data-preview="${esc(u.id)}"`, u.name, (previewId === u.id ? "✓ " : "") + ROLES[u.role])).join("")}${L.users.length ? "" : '<p class="foot" style="padding:4px 14px">Add people in Admin to preview their view.</p>'}<hr>${btn('data-go="admin"', "Admin settings")}`;
     return "";
@@ -1810,6 +1903,14 @@ ${ctx}`;
     const c = route.name === "record" || route.name === "review" ? byId(route.id) : null;
     switch (d.act) {
       case "closeDrawer": return closeDrawer();
+      case "cnew": closeMenu(); return openDrawer("cform:new");
+      case "cedit": { const x = byId(d.id); if (x && canEdit(x)) openDrawer("cform:" + x.id); return; }
+      case "csave": return saveCForm(drawerKey.slice(6));
+      case "cdel": { if (!isAdmin()) return; const z = document.getElementById("cdz_" + d.id); if (z) z.innerHTML = `<span class="confirm">Delete? <button class="btn danger sm" data-act="cdelYes" data-id="${esc(d.id)}">Delete</button><button class="btn sm" data-act="cdelNo">Keep</button></span>`; return; }
+      case "cdelNo": return render();
+      case "cdelYes": { const x = byId(d.id); if (!x || !isAdmin()) return; await removeContract(x.id); logEvent("Deleted contract", x.org); render(); return toast("Deleted"); }
+      case "exportCtXlsx": return exportSections("Contracts", { filters: ctF, unverified: true }, ctExportSections(), "xlsx");
+      case "exportCtCsv": return exportSections("Contracts", { filters: ctF, unverified: true }, ctExportSections(), "csv");
       case "add": return openModal({ kind: "new" }, d.area);
       case "examples": return toggleExamples();
       case "attach": return c && openModal({ kind: "attach", id: c.id });
@@ -1822,7 +1923,7 @@ ${ctx}`;
       case "confirmHigh": return c && confirmHigh(c);
       case "del": $("delZone").innerHTML = `<span class="confirm">Delete this contract and its documents? <button class="btn danger sm" data-act="delYes">Delete</button><button class="btn sm" data-act="delNo">Keep</button></span>`; return;
       case "delNo": return render();
-      case "delYes": { const id = c.id, org = c.org; go(c.area); await removeContract(id); logEvent("Deleted contract", org); return toast("Deleted"); }
+      case "delYes": { if (!c || !isAdmin()) return; const id = c.id, org = c.org; go(c.area); await removeContract(id); logEvent("Deleted contract", org); return toast("Deleted"); }
       case "grant": { if (!c || !canManage(c)) return; const who = $("grantWho").value, level = $("grantLvl").value; const grants = (c.grants || []).filter((g) => g.who !== who).concat({ who, level }); await saveContract(c.id, { ...stripId(c), grants, activity: withAct(c, `Shared with ${who} (${level})`) }); logEvent("Sharing changed: access granted", c.org, `${L.users.find((u) => u.id === who)?.name || who} — ${level}`); return toast("Shared"); }
       case "exportObXlsx": return exportSections("Obligations", { filters: obF, unverified: obFiltered().some((o) => reviewState(o.c) !== "verified") }, obExportSections(obFiltered()), "xlsx");
       case "exportObCsv": return exportSections("Obligations", { filters: obF, unverified: obFiltered().some((o) => reviewState(o.c) !== "verified") }, obExportSections(obFiltered()), "csv");
@@ -1848,6 +1949,8 @@ ${ctx}`;
     if (id === "moveArea") { const c = byId(route.id); if (c && canEdit(c) && t.value !== c.area) { const from = c.area; await saveContract(c.id, mirror({ ...stripId(c), area: t.value, activity: withAct(c, `Moved from ${AREAS[from].label} to ${AREAS[t.value].label}`) })); logEvent("Moved contract", c.org, `${AREAS[from].label} → ${AREAS[t.value].label}`); toast("Moved. Review the fields for the new tab."); } return; }
     const ofMap = { of_side: "side", of_st: "st", of_area: "area", of_cp: "cp", of_cat: "cat", of_owner: "owner", of_from: "from", of_to: "to" };
     if (ofMap[id]) { obF[ofMap[id]] = t.value; return render(); }
+    if (id === "ct_area") { ctF.area = t.value; return render(); } if (id === "ct_st") { ctF.st = t.value; return render(); }
+    if (id === "cf_area") { const v = cfRead(); return renderCForm(drawerKey.slice(6), v); }
     if (id === "lf_st") { listF.st = t.value; return render(); } if (id === "lf_rv") { listF.rv = t.value; return render(); }
     const rfMap = { rf_area: "area", rf_cp: "cp", rf_from: "from", rf_to: "to", rf_status: "status", rf_party: "party" };
     if (rfMap[id]) { rf[rfMap[id]] = t.value; if (id === "rf_cp") rf._cpSet = route.id?.split(":")[1] || ""; return render(); }
@@ -1856,7 +1959,7 @@ ${ctx}`;
   document.addEventListener("input", (e) => {
     const id = e.target.id;
     const keep = (k, obj) => { obj[k] = e.target.value; const pos = e.target.selectionStart; render(); const el = $(id); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch {} } };
-    if (id === "of_q") keep("q", obF); else if (id === "lf_q") keep("q", listF);
+    if (id === "of_q") keep("q", obF); else if (id === "lf_q") keep("q", listF); else if (id === "ct_q") keep("q", ctF);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") { if (menuEl) closeMenu(); else if (drawerKey) closeDrawer(); else if (!$("modal").hidden) closeModal(); }
@@ -1918,7 +2021,7 @@ ${ctx}`;
   })();
   function safeRender() {
     const a = document.activeElement;
-    if (a && ["of_q", "lf_q", "prompt", "nobText", "areaAsk", "gq", "nu_name", "nu_email", "nu_group", "ad_org", "ad_nd", "ad_pd"].includes(a.id)) { renderChrome(); renderTabs(); return; }
+    if (a && ["of_q", "lf_q", "ct_q", "prompt", "nobText", "areaAsk", "gq", "nu_name", "nu_email", "nu_group", "ad_org", "ad_nd", "ad_pd"].includes(a.id)) { renderChrome(); renderTabs(); return; }
     if (a && (a.matches?.("[data-fin]") || a.matches?.("[data-obnote]") || a.matches?.("[data-ugroup]"))) { renderChrome(); return; }
     render();
   }
