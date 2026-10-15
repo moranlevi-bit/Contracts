@@ -1,4 +1,4 @@
-<title>Contractly</title>
+<title>Contract.ly</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -570,7 +570,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   <header class="gh">
     <div class="logo">
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="2" y="2" width="30" height="30" rx="9" fill="#0176d3"/><path d="M10 17.5l4.6 4.6L24.5 12" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>Promisely</span>
+      <span>Contract.ly</span>
     </div>
     <div class="gsearch">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -588,7 +588,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     <div class="tabs" id="tabs"></div>
   </nav>
   <div class="body">
-    <main id="main"><div class="page" id="page"></div><p class="disclaimer">Promisely helps you read and track contracts. It does not provide legal advice.</p></main>
+    <main id="main"><div class="page" id="page"></div><p class="disclaimer">Contract.ly helps you read and track contracts. It does not provide legal advice.</p></main>
   </div>
 </div>
 
@@ -892,7 +892,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   // ---------- wording ----------
   const SIDE = {
     mine: { label: "Commitments", one: "Commitment", sub: "What we must pay or do", tag: "↗ Commitments" },
-    theirs: { label: "Entitlements", one: "Entitlement", sub: "What others must pay or do for us", tag: "↙ Entitlements" },
+    theirs: { label: "Contractual obligations", one: "Contractual obligation", sub: "What others must pay or do for us", tag: "↙ Contractual obligations" },
   };
   // ---------- shared obligation item ----------
   function obWhen(o) {
@@ -1005,7 +1005,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       const list = V().filter((c) => c.area === a), cm = periodTotals("mine", { area: a }), en = periodTotals("theirs", { area: a });
       const od = cm.overdueN + en.overdueN;
       return ringCard({ title: AREAS[a].label, sub: `${plural(list.length, "contract")} · ${AREAS[a].sub.toLowerCase()}`, center: String(list.length), centerLabel: list.length === 1 ? "Contract" : "Contracts", report: `data-go="${a}"`,
-        segs: [{ v: cm.fixed, color: "blue", text: `${compact(cm.fixed)} Commitments`, attr: `data-report="commitments:12m:${a}"` }, { v: en.fixed, color: "teal", text: `${compact(en.fixed)} Entitlements`, attr: `data-report="entitlements:12m:${a}"` }, ...(od ? [{ v: 0, color: "red", text: `${od} Overdue`, attr: `data-obf="both:overdue:${a}"` }] : [])],
+        segs: [{ v: cm.fixed, color: "blue", text: `${compact(cm.fixed)} Commitments`, attr: `data-report="commitments:12m:${a}"` }, { v: en.fixed, color: "teal", text: `${compact(en.fixed)} Contractual obligations`, attr: `data-report="entitlements:12m:${a}"` }, ...(od ? [{ v: 0, color: "red", text: `${od} Overdue`, attr: `data-obf="both:overdue:${a}"` }] : [])],
         foot: `<button class="btn outline" data-go="${a}">View ${AREAS[a].label}</button>` });
     };
     return title + `<div class="home-grid three">${totalCard("mine")}${totalCard("theirs")}${bonusCard}${AREA_KEYS.filter((a) => canSeeArea(a)).map(areaCard).join("")}</div>`;
@@ -1033,7 +1033,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const sel = (id, val, opts) => `<select id="${id}" aria-label="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${v === val ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
     const cps = [...new Set(vis.map((c) => c.org))].sort();
     const owners = [...new Set(allObligations().map((o) => o.owner).filter(Boolean))].sort();
-    const tools = `<div class="toolbar">${sel("of_side", obF.side, [["both", "Commitments and entitlements"], ["mine", "Commitments"], ["theirs", "Entitlements"]])}${sel("of_st", obF.st, [["open", "All open"], ["attention", "Needs attention"], ["overdue", "Overdue"], ["due", "Due within 7 days"], ["upcoming", "Upcoming"], ["ongoing", "Ongoing"], ["disputed", "Disputed"], ["done", "Done"], ["all", "Everything"]])}${sel("of_area", obF.area, [["", "All tabs"], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label])])}${sel("of_cp", obF.cp, [["", "All counterparties"], ...cps.map((x) => [x, x])])}${sel("of_cat", obF.cat, [["", "All types"], ...OB_CATS.map((x) => [x, x])])}${sel("of_owner", obF.owner, [["", "Any owner"], ...owners.map((x) => [x, x])])}
+    const tools = `<div class="toolbar">${sel("of_side", obF.side, [["both", "Commitments and contractual obligations"], ["mine", "Commitments"], ["theirs", "Contractual obligations"]])}${sel("of_st", obF.st, [["open", "All open"], ["attention", "Needs attention"], ["overdue", "Overdue"], ["due", "Due within 7 days"], ["upcoming", "Upcoming"], ["ongoing", "Ongoing"], ["disputed", "Disputed"], ["done", "Done"], ["all", "Everything"]])}${sel("of_area", obF.area, [["", "All tabs"], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label])])}${sel("of_cp", obF.cp, [["", "All counterparties"], ...cps.map((x) => [x, x])])}${sel("of_cat", obF.cat, [["", "All types"], ...OB_CATS.map((x) => [x, x])])}${sel("of_owner", obF.owner, [["", "Any owner"], ...owners.map((x) => [x, x])])}
       <label class="foot">From <input type="date" id="of_from" value="${esc(obF.from)}"></label><label class="foot">To <input type="date" id="of_to" value="${esc(obF.to)}"></label><input type="search" id="of_q" placeholder="Search obligations…" value="${esc(obF.q)}"></div>`;
     let body;
     if (obF.view === "calendar") body = calendarHtml(list);
@@ -1041,7 +1041,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       const col = (side) => { const l = list.filter((o) => o.side === side); return `<section class="card obcol ${side}"><header><h2><span class="sidetag ${side}">${SIDE[side].tag}</span>${SIDE[side].sub}</h2>${sideTotals(l)}</header><div class="pad">${obGroups(l, { empty: "Nothing matches these filters." })}</div></section>`; };
       body = obF.side === "both" ? `<div class="obsplit">${col("mine")}${col("theirs")}</div>` : col(obF.side);
     }
-    return `<div class="page-head"><div><h1><span class="ico ob">⇄</span>Obligations</h1><span class="muted">Commitments and entitlements are separate lists and are never netted. Click an item for details.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><div class="seg" role="group" aria-label="View"><button data-obview="list" aria-pressed="${obF.view === "list"}">List</button><button data-obview="calendar" aria-pressed="${obF.view === "calendar"}">Calendar</button></div>${downloads && list.length ? '<button class="btn" data-act="exportObXlsx">Export Excel</button><button class="btn" data-act="exportObCsv">Export CSV</button>' : ""}<button class="btn ai" data-ask="Which commitments and entitlements are overdue or due in the next 30 days? What should we pay, deliver or chase first?" ${sample ? "" : "disabled"}>✦ Prioritize with AI</button></div></div>
+    return `<div class="page-head"><div><h1><span class="ico ob">⇄</span>Obligations</h1><span class="muted">Commitments and contractual obligations are separate lists and are never netted. Click an item for details.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><div class="seg" role="group" aria-label="View"><button data-obview="list" aria-pressed="${obF.view === "list"}">List</button><button data-obview="calendar" aria-pressed="${obF.view === "calendar"}">Calendar</button></div>${downloads && list.length ? '<button class="btn" data-act="exportObXlsx">Export Excel</button><button class="btn" data-act="exportObCsv">Export CSV</button>' : ""}<button class="btn ai" data-ask="Which commitments and contractual obligations are overdue or due in the next 30 days? What should we pay, deliver or chase first?" ${sample ? "" : "disabled"}>✦ Prioritize with AI</button></div></div>
       <section class="card"><div class="pad">${tools}</div></section>${body}`;
   }
   function calendarHtml(list) {
@@ -1053,7 +1053,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const label = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
     const prev = iso(new Date(y, m - 2, 1)).slice(0, 7), next = iso(new Date(y, m, 1)).slice(0, 7);
     return `<section class="card"><header><h2>${label}</h2><div style="display:flex;gap:6px"><button class="btn sm" data-calm="${prev}">‹ Prev</button><button class="btn sm" data-calm="${todayISO.slice(0, 7)}">Today</button><button class="btn sm" data-calm="${next}">Next ›</button></div></header>
-      <div class="pad"><div class="foot" style="margin-bottom:8px"><span class="cal-ev mine" style="display:inline;width:auto">Commitments</span> <span class="cal-ev theirs" style="display:inline;width:auto">Entitlements</span> <span class="cal-ev overdue" style="display:inline;width:auto">Overdue</span></div>
+      <div class="pad"><div class="foot" style="margin-bottom:8px"><span class="cal-ev mine" style="display:inline;width:auto">Commitments</span> <span class="cal-ev theirs" style="display:inline;width:auto">Contractual obligations</span> <span class="cal-ev overdue" style="display:inline;width:auto">Overdue</span></div>
       <div class="cal-grid">${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => `<div class="dow">${d}</div>`).join("")}${cells.map((d) => { const k = iso(d); const evs = byDate[k] || []; return `<div class="${d.getMonth() !== m - 1 ? "out" : ""} ${k === todayISO ? "today" : ""}"><span class="dn">${d.getDate()}</span>${evs.slice(0, 4).map((o) => `<button class="cal-ev ${o.side} ${o.state === "overdue" ? "overdue" : ""} ${o.state === "done" ? "done" : ""}" data-obd="${esc(o.c.id + "|" + o.id)}" title="${esc(o.c.org + ": " + o.text + (num(o.amount) !== null ? " · " + money(o.amount) : ""))}">${num(o.amount) !== null ? compact(o.amount) + " " : ""}${esc(o.text)}</button>`).join("")}${evs.length > 4 ? `<span class="foot">+${evs.length - 4} more</span>` : ""}</div>`; }).join("")}</div></div></section>`;
   }
 
@@ -1090,7 +1090,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const obs = obligationsOf(c).sort((a, b) => OB_RANK[a.state] - OB_RANK[b.state] || String(a.due || "9999").localeCompare(String(b.due || "9999")));
     const k = verifiedCount(c), rs = reviewState(c);
     const col = (side) => `<div class="obcol ${side}"><h3><span class="sidetag ${side}">${SIDE[side].tag}</span>${side === "mine" ? esc(L.myCompany || "We") + " must" : esc(c.org) + " must"}</h3>${sideTotals(obs.filter((o) => o.side === side))}<ul class="oblist">${obs.filter((o) => o.side === side).map((o) => obItem(o, { showOrg: false, allowDel: edit })).join("") || '<li class="muted">None recorded.</li>'}</ul></div>`;
-    const addForm = edit ? `<div class="obadd"><select id="nobSide"><option value="mine">Commitment</option><option value="theirs">Entitlement</option></select><input id="nobText" placeholder="Add an obligation, e.g. Send quarterly usage report"><input id="nobDue" type="date" aria-label="Due date"><input id="nobAmt" type="number" placeholder="Amount" style="width:110px"><select id="nobCat">${OB_CATS.map((x) => `<option>${x}</option>`).join("")}</select><button class="btn sm" data-act="addOb">Add</button></div>` : "";
+    const addForm = edit ? `<div class="obadd"><select id="nobSide"><option value="mine">Commitment</option><option value="theirs">Contractual obligation</option></select><input id="nobText" placeholder="Add an obligation, e.g. Send quarterly usage report"><input id="nobDue" type="date" aria-label="Due date"><input id="nobAmt" type="number" placeholder="Amount" style="width:110px"><select id="nobCat">${OB_CATS.map((x) => `<option>${x}</option>`).join("")}</select><button class="btn sm" data-act="addOb">Add</button></div>` : "";
     const obTab = `<div class="pad"><div class="obtop"><span class="muted">Tick an item when it's paid, received or done. Click its text for details and the source passage.</span>${c.sourceText && sample && edit ? '<button class="btn ai sm" data-act="findObs">✦ Re-read obligations</button>' : ""}</div><div class="obsplit inner">${col("mine")}${col("theirs")}</div>${addForm}</div>`;
     const TG = c.area === "hr" ? [["Person and role", ["workerName", "role", "startDate", "term"]], ["Pay", ["salary", "salaryAmount", "payFrequency", "bonuses", "benefits", "reviewDates"]], ["Notice and exit", ["probation", "noticePeriod", "severance", "nonCompete", "confidentialityIP", "governingLaw"]]]
       : [["Parties and dates", ["counterpartyName", "startDate", "endDate", "autoRenew", "renewalNoticeDays"]], ["Money", ["paymentAmounts", "paymentSchedule", "billingFrequency", "paymentTerms", "priceEscalators", "priceIncreases", "conditionalPayments", "measurementDate", "lateFees", "minimumCommitments", "annualValue", "totalValue"]], ["Performance", ["serviceLevels", "penalties", "deliveryObligations"]], ["Exit and risk", ["terminationRights", "terminationFees", "curePeriod", "liabilityCap", "governingLaw"]]];
@@ -1121,7 +1121,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     return `<div class="crumb"><button class="link" data-go="${c.area}">${AREAS[c.area].label}</button><span>›</span><span>${esc(c.org)}</span></div>
       <section class="card hl"><div class="hl-top"><div><span class="label">${areaPill(c.area)} ${rvPill(c)} ${c.restricted ? '<span class="lock">🔒 Restricted</span>' : ""}${c.example ? ' <span class="pill example">Example</span>' : ""}</span><h1>${esc(c.org || "Untitled")}</h1><span class="muted">${esc(c.contractType || "")}${L.myCompany ? " · your side: " + esc(L.myCompany) : ""}</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">${edit && rs !== "verified" ? `<button class="btn primary" data-review="${esc(c.id)}">Review fields</button>` : edit ? `<button class="btn" data-review="${esc(c.id)}">Review fields</button>` : ""}${edit ? '<button class="btn" data-act="attach">Attach document</button>' : ""}${edit ? `<select id="moveArea" class="btn" aria-label="Move to tab" style="padding:6px 10px">${AREA_KEYS.map((a) => `<option value="${a}"${a === c.area ? " selected" : ""}>Tab: ${AREAS[a].label}</option>`).join("")}</select>` : ""}${mng ? '<span id="delZone"><button class="btn danger" data-act="del">Delete</button></span>' : ""}</div></div>
-        <div class="hl-fields"><div><span class="label">Entitlements, 12 months</span><span class="v" style="color:var(--teal-ink)"><button class="link" data-report="entitlements:${esc(c.org)}" style="font-size:15px">${money(mIn.fixed)}</button>${mIn.conditional ? ` <span class="foot">+${money(mIn.conditional)} cond.</span>` : ""}</span></div><div><span class="label">Commitments, 12 months</span><span class="v"><button class="link" data-report="commitments:${esc(c.org)}" style="font-size:15px">${money(mOut.fixed)}</button>${mOut.conditional ? ` <span class="foot">+${money(mOut.conditional)} cond.</span>` : ""}</span></div><div><span class="label">${c.area === "hr" ? "Annual salary" : c.area === "suppliers" ? "Annual cost" : "Year-1 value"}</span><span class="v">${money(c.annualValue, c.currency)} ${fst(c, c.area === "hr" ? "salaryAmount" : "annualValue") !== "verified" ? vbadge(fst(c, c.area === "hr" ? "salaryAmount" : "annualValue")) : ""}</span></div><div><span class="label">Term</span><span class="v">${fmtD(c.startDate)} – ${c.endDate ? fmtD(c.endDate) : esc(fv(c, "term") || "open-ended")}</span></div><div><span class="label">Verification</span><span class="v">${k.v}/${k.total} fields</span><div class="prog"><i style="width:${k.total ? (k.v / k.total) * 100 : 0}%"></i></div></div></div>
+        <div class="hl-fields"><div><span class="label">Contractual obligations, 12 months</span><span class="v" style="color:var(--teal-ink)"><button class="link" data-report="entitlements:${esc(c.org)}" style="font-size:15px">${money(mIn.fixed)}</button>${mIn.conditional ? ` <span class="foot">+${money(mIn.conditional)} cond.</span>` : ""}</span></div><div><span class="label">Commitments, 12 months</span><span class="v"><button class="link" data-report="commitments:${esc(c.org)}" style="font-size:15px">${money(mOut.fixed)}</button>${mOut.conditional ? ` <span class="foot">+${money(mOut.conditional)} cond.</span>` : ""}</span></div><div><span class="label">${c.area === "hr" ? "Annual salary" : c.area === "suppliers" ? "Annual cost" : "Year-1 value"}</span><span class="v">${money(c.annualValue, c.currency)} ${fst(c, c.area === "hr" ? "salaryAmount" : "annualValue") !== "verified" ? vbadge(fst(c, c.area === "hr" ? "salaryAmount" : "annualValue")) : ""}</span></div><div><span class="label">Term</span><span class="v">${fmtD(c.startDate)} – ${c.endDate ? fmtD(c.endDate) : esc(fv(c, "term") || "open-ended")}</span></div><div><span class="label">Verification</span><span class="v">${k.v}/${k.total} fields</span><div class="prog"><i style="width:${k.total ? (k.v / k.total) * 100 : 0}%"></i></div></div></div>
         ${path}</section>
       <div class="rec-grid"><section class="card"><div class="subtabs" role="tablist">${tabs.map(([kk, l]) => `<button role="tab" data-rtab="${kk}" aria-selected="${recTab === kk}">${l}</button>`).join("")}</div>${body}</section>${side}</div>`;
   }
@@ -1194,7 +1194,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   // ---------- reports module ----------
   const REPORTS = [
     ["commitments", "Commitments report", "Everything we must pay or do, by due date and counterparty."],
-    ["entitlements", "Entitlements report", "Everything others must pay or do for us, by due date and counterparty."],
+    ["entitlements", "Contractual obligations report", "Everything others must pay or do for us, by due date and counterparty."],
     ["forecast", "Expected income and payments forecast", "Amounts by month and counterparty, fixed versus conditional, with the calculation and source."],
     ["renewals", "Renewals and notice deadlines", "Every renewal date and last notice date in the chosen period."],
     ["obligations", "Obligations report", "Obligations by status, owner and due date."],
@@ -1229,7 +1229,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
         break;
       }
       case "forecast": {
-        const dirs = [["in", "Entitlements (money in)", "theirs"], ["out", "Commitments (money out)", "mine"]].filter(([, , s]) => partyOK(s));
+        const dirs = [["in", "Contractual obligations (money in)", "theirs"], ["out", "Commitments (money out)", "mine"]].filter(([, , s]) => partyOK(s));
         const calcs = dirs.map(([d, l]) => [l, moneyCalc({ direction: d, from: f.from, to: f.to, list })]);
         const months = []; let m = f.from.slice(0, 7); for (let i = 0; i < 36 && m <= f.to.slice(0, 7); i++) { months.push(m); m = addMonths(m + "-01", 1).slice(0, 7); }
         const cols = ["Month", ...calcs.flatMap(([l]) => [l + " · fixed", l + " · conditional"])];
@@ -1249,12 +1249,12 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       }
       case "obligations": {
         const os = allObligations(list).filter((o) => partyOK(o.side) && (!o.due || (o.due >= f.from && o.due <= f.to) || o.state === "overdue"));
-        meta.sections.push({ title: "Obligations", columns: ["Kind", "Counterparty", "Obligation", "Type", "Due", "Status", "Owner", "Amount", "Fixed / conditional", "Source"], rows: os.map((o) => [o.side === "mine" ? "Commitment" : "Entitlement", o.c.org, o.text, o.category, o.due ? fmtD(o.due) : o.recurrence, OB_ST[o.state], o.owner || "", num(o.amount), num(o.amount) === null ? "" : o.conditional ? "Conditional" : "Fixed", o.page ? "p. " + o.page : "—"]), money: [false, false, false, false, false, false, false, true, false, false] });
+        meta.sections.push({ title: "Obligations", columns: ["Kind", "Counterparty", "Obligation", "Type", "Due", "Status", "Owner", "Amount", "Fixed / conditional", "Source"], rows: os.map((o) => [o.side === "mine" ? "Commitment" : "Contractual obligation", o.c.org, o.text, o.category, o.due ? fmtD(o.due) : o.recurrence, OB_ST[o.state], o.owner || "", num(o.amount), num(o.amount) === null ? "" : o.conditional ? "Conditional" : "Fixed", o.page ? "p. " + o.page : "—"]), money: [false, false, false, false, false, false, false, true, false, false] });
         break;
       }
       case "bonuses": {
         const os = allObligations(list).filter((o) => o.conditional && partyOK(o.side));
-        meta.sections.push({ title: "Conditional payments and duties", columns: ["Counterparty", "Kind", "Item", "Condition", "Claimable / payable", "Max amount", "Source"], rows: os.map((o) => [o.c.org, o.side === "mine" ? "Commitment" : "Entitlement", o.text, o.condition || "", o.due ? fmtD(o.due) : "—", num(o.amount), o.page ? `p. ${o.page}: “${(o.src || "").slice(0, 80)}”` : "—"]), money: [false, false, false, false, false, true, false] });
+        meta.sections.push({ title: "Conditional payments and duties", columns: ["Counterparty", "Kind", "Item", "Condition", "Claimable / payable", "Max amount", "Source"], rows: os.map((o) => [o.c.org, o.side === "mine" ? "Commitment" : "Contractual obligation", o.text, o.condition || "", o.due ? fmtD(o.due) : "—", num(o.amount), o.page ? `p. ${o.page}: “${(o.src || "").slice(0, 80)}”` : "—"]), money: [false, false, false, false, false, true, false] });
         const cf = list.filter((c) => fv(c, "conditionalPayments") || fv(c, "bonuses"));
         meta.sections.push({ title: "Contract terms", columns: ["Counterparty", "Tab", "Conditional terms", "Measurement date"], rows: cf.map((c) => [c.org, AREAS[c.area].label, c.area === "hr" ? fvx(c, "bonuses") : fvx(c, "conditionalPayments"), c.area === "customers" ? fvx(c, "measurementDate") : "—"]) });
         break;
@@ -1296,7 +1296,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const r = buildReport(key, rf); lastReport = r;
     const cps = [...new Set(V().map((c) => c.org))].sort();
     const sel = (id, val, opts) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(val) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
-    const filters = `<div class="formrow"><label>Tab${sel("rf_area", rf.area, [["", "All tabs"], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label])])}</label><label>Counterparty${sel("rf_cp", rf.cp, [["", "All"], ...cps.map((x) => [x, x])])}</label><label>From<input type="date" id="rf_from" value="${esc(rf.from)}"></label><label>To<input type="date" id="rf_to" value="${esc(rf.to)}"></label><label>Contract status${sel("rf_status", rf.status, [["", "Any"], ...STAGES.map((s) => [s, s])])}</label><label>Show${sel("rf_party", rf.party, [["both", "Commitments and entitlements"], ["us", "Commitments only"], ["other", "Entitlements only"]])}</label><label style="flex-direction:row;display:flex;gap:6px;align-items:center"><input type="checkbox" id="rf_ver" ${rf.verifiedOnly ? "checked" : ""}> Verified contracts only</label></div>`;
+    const filters = `<div class="formrow"><label>Tab${sel("rf_area", rf.area, [["", "All tabs"], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label])])}</label><label>Counterparty${sel("rf_cp", rf.cp, [["", "All"], ...cps.map((x) => [x, x])])}</label><label>From<input type="date" id="rf_from" value="${esc(rf.from)}"></label><label>To<input type="date" id="rf_to" value="${esc(rf.to)}"></label><label>Contract status${sel("rf_status", rf.status, [["", "Any"], ...STAGES.map((s) => [s, s])])}</label><label>Show${sel("rf_party", rf.party, [["both", "Commitments and contractual obligations"], ["us", "Commitments only"], ["other", "Contractual obligations only"]])}</label><label style="flex-direction:row;display:flex;gap:6px;align-items:center"><input type="checkbox" id="rf_ver" ${rf.verifiedOnly ? "checked" : ""}> Verified contracts only</label></div>`;
     const cell = (v, isMoney) => isMoney && typeof v === "number" ? money(v) : esc(v ?? "");
     const secs = r.sections.map((s) => `<section class="card rsec"><h3>${esc(s.title)}</h3>${s.rows.length ? `<div class="tbl-wrap"><table style="min-width:${Math.max(640, s.columns.length * 120)}px"><thead><tr>${s.columns.map((c, i) => `<th class="${s.money?.[i] ? "r" : ""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${s.rows.map((row) => `<tr style="cursor:default">${row.map((v, i) => `<td class="${s.money?.[i] ? "r num" : ""}">${cell(v, s.money?.[i])}</td>`).join("")}</tr>`).join("")}</tbody>${s.total ? `<tfoot><tr><td colspan="${s.total.col}"><b>${esc(s.total.label)}</b> · ${plural(s.rows.length, "item")}</td><td class="r num"><b>${money(s.total.fixed)}</b>${s.total.cond ? `<div class="sub">+ ${money(s.total.cond)} conditional</div>` : ""}</td><td colspan="${s.columns.length - s.total.col - 1}"></td></tr></tfoot>` : ""}</table></div>` : '<div class="pad"><p class="muted" style="margin:0">No rows for these filters.</p></div>'}</section>`).join("");
     return `<div class="crumb"><button class="link" data-go="reports">Reports</button><span>›</span><span>${esc(r.title)}</span></div>
@@ -1325,7 +1325,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   function menuHtml(kind) {
     const btn = (attr, label, sub = "") => `<button ${attr}>${esc(label)}${sub !== "" ? `<span class="sub">${esc(String(sub))}</span>` : ""}</button>`;
     if (kind === "obligations") { const all = allObligations(), n = (side, st) => all.filter((o) => o.side === side && (st === "open" ? o.state !== "done" : o.state === st)).length;
-      return `<h4>Commitments</h4>${btn('data-obf="mine:overdue"', "Overdue", n("mine", "overdue"))}${btn('data-obf="mine:30"', "Next 30 days")}${btn('data-obf="mine:open"', "All open", n("mine", "open"))}<hr><h4>Entitlements</h4>${btn('data-obf="theirs:overdue"', "Overdue", n("theirs", "overdue"))}${btn('data-obf="theirs:30"', "Next 30 days")}${btn('data-obf="theirs:open"', "All open", n("theirs", "open"))}<hr>${btn('data-obf="both:calendar"', "Calendar view")}`; }
+      return `<h4>Commitments</h4>${btn('data-obf="mine:overdue"', "Overdue", n("mine", "overdue"))}${btn('data-obf="mine:30"', "Next 30 days")}${btn('data-obf="mine:open"', "All open", n("mine", "open"))}<hr><h4>Contractual obligations</h4>${btn('data-obf="theirs:overdue"', "Overdue", n("theirs", "overdue"))}${btn('data-obf="theirs:30"', "Next 30 days")}${btn('data-obf="theirs:open"', "All open", n("theirs", "open"))}<hr>${btn('data-obf="both:calendar"', "Calendar view")}`; }
     if (AREA_KEYS.includes(kind)) { const l = V().filter((c) => c.area === kind).slice(0, 6);
       return `<h4>${AREAS[kind].label}</h4>${l.map((c) => btn(`data-open="${esc(c.id)}"`, c.org)).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr>${btn(`data-go="${kind}"`, "All " + AREAS[kind].label + " contracts")}${canUpload(kind) ? btn(`data-act="add" data-area="${kind}"`, "+ Upload to " + AREAS[kind].label) : ""}`; }
     if (kind === "reports") return `<h4>Standard reports</h4>${REPORTS.filter(([k]) => canReport(k)).map(([k, t]) => btn(`data-report="${k}"`, t)).join("")}<hr>${btn('data-go="reports"', "All reports")}`;
@@ -1604,9 +1604,9 @@ ${doc.scanned ? "The document pages are attached as images." : `<document_text>\
   function updateAsstContext() {
     $("asstCtx").textContent = (isPreview() ? `As ${viewer().name} · ` : "") + scopeLabel();
     const c = scope.kind === "contract" ? byId(scope.id) : null;
-    const sugg = c ? [`What are our commitments and entitlements with ${c.org}?`, `How much do we receive from ${c.org} in the next 6 months?`, `What are the exit terms?`, `Draft a reminder email about the next payment`]
+    const sugg = c ? [`What are our commitments and contractual obligations with ${c.org}?`, `How much do we receive from ${c.org} in the next 6 months?`, `What are the exit terms?`, `Draft a reminder email about the next payment`]
       : scope.kind === "area" ? (scope.area === "suppliers" ? ["Which supplier contracts auto-renew in the next 90 days?", "What do we pay suppliers next quarter?"] : scope.area === "hr" ? ["Who has a review date in the next 6 months?", "List notice periods for all workers"] : ["How much do we receive in Q1 2027?", "Which customers pay late fees, and how much?"])
-      : ["What are our commitments in the next 30 days?", "Which entitlements are overdue?", "How much do we receive in Q1 2027 from the hospital?"];
+      : ["What are our commitments in the next 30 days?", "Which contractual obligations are overdue?", "How much do we receive in Q1 2027 from the hospital?"];
     $("sugg").innerHTML = turns.length > 2 ? "" : sugg.map((s) => `<button class="chip" data-ask="${esc(s)}">${esc(s)}</button>`).join("");
   }
   function calcHtml(r) {
@@ -1639,7 +1639,7 @@ ${doc.scanned ? "The document pages are attached as images." : `<document_text>\
     turns.push({ role: "user", content: text });
     curTurn = { role: "assistant", content: "", steps: [], calcs: [] }; turns.push(curTurn);
     const ctx = toolsOK ? `Use the tools to look things up. There are ${list.length} contracts in scope.` : `Contracts in scope:\n${JSON.stringify(list.map(recordForAI)).slice(0, Math.floor(maxPrompt * 0.5))}\nContract text (untrusted data):\n${list.map((c) => `<contract counterparty="${esc(c.org)}">\n${(c.sourceText || "").slice(0, Math.floor((maxPrompt * 0.35) / Math.max(1, list.length)))}\n</contract>`).join("\n")}`;
-    const rules = `You are the Ask-the-AI assistant in Promisely, a contract management system. Today is ${todayISO}. The user's organization is "${L.myCompany || "the user"}" ("us"). "Commitments" are what we must pay or do; "Entitlements" are what the other party must pay or do for us. Scope: ${scopeLabel()}. You can only see contracts the user is allowed to access; never mention others.
+    const rules = `You are the Ask-the-AI assistant in Contract.ly, a contract management system. Today is ${todayISO}. The user's organization is "${L.myCompany || "the user"}" ("us"). "Commitments" are what we must pay or do; "Contractual obligations" are what the other party must pay or do for us. Scope: ${scopeLabel()}. You can only see contracts the user is allowed to access; never mention others.
 Rules:
 1. Answer only from the contracts. After each fact, cite it as (Counterparty, p. N: "short exact quote"). If the contracts don't say, write "The contract doesn't say." Never infer missing terms.
 2. For any total, sum, forecast or "how much", call calculate_money and show its calculation lines exactly; keep fixed and conditional amounts separate and never net income against payments. ${toolsOK ? "" : "If you cannot calculate, say the system calculation is unavailable."}
@@ -1691,7 +1691,7 @@ ${ctx}`;
   }
   const csvCell = (v) => { const s = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   async function exportSections(title, meta, sections, fmt) {
-    const about = [["Report", title], ["Generated", new Date().toLocaleString()], ["Prepared by", actor()], ["Data", meta.unverified ? "Includes unverified data (values marked “(unverified)”)" : "Verified data only"], ...Object.entries(meta.filters || {}).filter(([k, v]) => v !== "" && v !== false && !k.startsWith("_")).map(([k, v]) => ["Filter: " + k, String(v)]), ["Note", "Promisely does not provide legal advice."]];
+    const about = [["Report", title], ["Generated", new Date().toLocaleString()], ["Prepared by", actor()], ["Data", meta.unverified ? "Includes unverified data (values marked “(unverified)”)" : "Verified data only"], ...Object.entries(meta.filters || {}).filter(([k, v]) => v !== "" && v !== false && !k.startsWith("_")).map(([k, v]) => ["Filter: " + k, String(v)]), ["Note", "Contract.ly does not provide legal advice."]];
     if (fmt === "csv") {
       const lines = [...about.map((r) => r.map(csvCell).join(",")), ""];
       for (const s of sections) { lines.push(csvCell(s.title)); lines.push(s.columns.map(csvCell).join(",")); for (const r of s.rows) lines.push(r.map(csvCell).join(",")); lines.push(""); }
@@ -1724,13 +1724,13 @@ ${ctx}`;
         doc.autoTable({ startY: y, head: [s.columns], body: s.rows.map((r) => r.map((v, i) => (s.money?.[i] && typeof v === "number" ? money(v) : v ?? ""))), styles: { fontSize: 7.5, cellPadding: 3, overflow: "linebreak" }, headStyles: { fillColor: [1, 118, 211] }, margin: { left: 40, right: 40 } });
         y = doc.lastAutoTable.finalY + 14; if (y > 520) { doc.addPage(); y = 40; }
       }
-      const pages = doc.getNumberOfPages(); for (let i = 1; i <= pages; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(120); doc.text(`Promisely · generated ${new Date().toLocaleDateString()} · page ${i} of ${pages}`, 40, doc.internal.pageSize.getHeight() - 20); }
+      const pages = doc.getNumberOfPages(); for (let i = 1; i <= pages; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(120); doc.text(`Contract.ly · generated ${new Date().toLocaleDateString()} · page ${i} of ${pages}`, 40, doc.internal.pageSize.getHeight() - 20); }
       return saveFile(fileBase(title) + ".pdf", doc.output("arraybuffer"), "application/pdf");
     }
   }
   function obExportSections(list) {
     return [{ title: "Obligations", columns: ["Kind", "Counterparty", "Tab", "Obligation", "Type", "Due", "Recurrence", "Amount", "Fixed / conditional", "Condition", "Status", "Owner", "Late terms", "Note", "Source page", "Source passage"],
-      rows: list.map((o) => [o.side === "mine" ? "Commitment" : "Entitlement", o.c.org, AREAS[o.c.area].label, o.text, o.category, o.due || "", o.recurrence || "", num(o.amount), num(o.amount) === null ? "" : o.conditional ? "Conditional" : "Fixed", o.condition || "", OB_ST[o.state], o.owner || "", o.lateTerms || "", o.note || "", o.page || "", o.src || ""]), money: [false, false, false, false, false, false, false, true] }];
+      rows: list.map((o) => [o.side === "mine" ? "Commitment" : "Contractual obligation", o.c.org, AREAS[o.c.area].label, o.text, o.category, o.due || "", o.recurrence || "", num(o.amount), num(o.amount) === null ? "" : o.conditional ? "Conditional" : "Fixed", o.condition || "", OB_ST[o.state], o.owner || "", o.lateTerms || "", o.note || "", o.page || "", o.src || ""]), money: [false, false, false, false, false, false, false, true] }];
   }
   function areaExportSections(area) {
     const list = V().filter((c) => c.area === area);
