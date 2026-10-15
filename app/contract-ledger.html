@@ -1008,7 +1008,9 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
         segs: [{ v: cm.fixed, color: "blue", text: `${compact(cm.fixed)} Commitments`, attr: `data-report="commitments:12m:${a}"` }, { v: en.fixed, color: "teal", text: `${compact(en.fixed)} Contractual obligations`, attr: `data-report="entitlements:12m:${a}"` }, ...(od ? [{ v: 0, color: "red", text: `${od} Overdue`, attr: `data-obf="both:overdue:${a}"` }] : [])],
         foot: `<button class="btn outline" data-go="${a}">View ${AREAS[a].label}</button>` });
     };
-    return title + `<div class="home-grid three">${totalCard("mine")}${totalCard("theirs")}${bonusCard}${AREA_KEYS.filter((a) => canSeeArea(a)).map(areaCard).join("")}</div>`;
+    const counts = Object.fromEntries(STAGES.map((s) => [s, V().filter((c) => status(c) === s).length]));
+    const pipeCard = hcard({ title: "Renewal Pipeline", sub: "", cls: "span3", body: `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-report="inventory">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>` });
+    return title + `<div class="home-grid three">${totalCard("mine")}${totalCard("theirs")}${bonusCard}${AREA_KEYS.filter((a) => canSeeArea(a)).map(areaCard).join("")}${pipeCard}</div>`;
   }
   function barChart(rows, fmt = (v) => String(v)) {
     rows = rows.filter((r) => r.value > 0).slice(0, 10);
