@@ -1,4 +1,4 @@
-<title>Promisely</title>
+<title>Contractly</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -119,6 +119,10 @@ main { height: 100%; overflow-y: auto; padding-inline: 16px; padding-block: 12px
 .home-title p { margin: 0; color: var(--muted); font-size: 14px; }
 .home-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
 .home-grid .span2 { grid-column: span 2; }
+.home-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rsec td:first-child { white-space: nowrap; }
+@media (max-width: 1000px) { .home-grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .home-grid.three { grid-template-columns: 1fr; } }
 .home-grid .span3 { grid-column: 1 / -1; }
 @media (max-width: 1250px) { .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-grid .span2 { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .home-grid { grid-template-columns: 1fr; } .home-grid .span2 { grid-column: auto; } .home-title h1 { font-size: 24px; } }
@@ -965,33 +969,46 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       <div class="bd"><div class="ringbox"><button class="ring" data-report="${rep}" title="Open the ${S.label} report" aria-label="${money(k.fixed)} ${S.label.toLowerCase()} due in 30 days: open report">${ringSvg(segs)}<span class="c"><b>${compact(k.fixed)}</b><span>Due in 30 days</span></span></button><ul class="legend">${segs.map((s) => `<li><span class="dot ${s.color}"></span><button class="lp ${s.color}" ${s.attr}>${esc(s.text)}</button></li>`).join("")}</ul></div></div>
       <div class="ft"><button class="btn outline" data-report="${rep}">View ${S.label}</button></div></section>`;
   }
+  // money owed per side within a period: overdue items count once, recurring items count every occurrence
+  function periodTotals(side, { from = todayISO, to = addMonths(todayISO, 12), area = "", list = V() } = {}) {
+    const rows = [];
+    for (const o of allObligations(list)) {
+      if (o.side !== side || (area && o.c.area !== area) || num(o.amount) === null || ["done", "ongoing"].includes(o.state)) continue;
+      const times = o.state === "overdue" || o.state === "disputed" ? 1 : occurrences(o, from, to).length;
+      if (!times) continue;
+      rows.push({ o, times, total: Number(o.amount) * times });
+    }
+    const sum = (f) => rows.filter(f).reduce((s, r) => s + r.total, 0);
+    return { rows, fixed: sum((r) => !r.o.conditional), cond: sum((r) => r.o.conditional),
+      overdue: sum((r) => !r.o.conditional && ["overdue", "disputed"].includes(r.o.state)),
+      soon: rows.filter((r) => !r.o.conditional && !["overdue", "disputed"].includes(r.o.state)).reduce((s, r) => s + occurrences(r.o, from, addDays(todayISO, 30)).length * Number(r.o.amount), 0),
+      overdueN: rows.filter((r) => ["overdue", "disputed"].includes(r.o.state)).length };
+  }
   function pageHome() {
-    const title = `<div class="home-title"><h1>Home</h1><p>Good ${greet()}${userName ? ", " + esc(userName.split(" ")[0]) : ""}. Here are your commitments and entitlements.</p><span class="persp">Your side: <b>${esc(L.myCompany || "not set")}</b> ${viewer().role === "admin" ? '<button class="link" data-go="admin">Change</button>' : ""}</span></div>`;
-    const vis = V();
-    if (!vis.length) return title + emptyState();
-    const y = vis.reduce((s, c) => s + (Number(c.annualValue) || 0), 0);
-    const yr = addMonths(todayISO, 12);
-    const inn = moneyCalc({ direction: "in", from: todayISO, to: yr }), out = moneyCalc({ direction: "out", from: todayISO, to: yr });
-    const valueCard = ringCard({ title: "Money, Next 12 Months", sub: "Calculated from contract terms", center: compact(inn.fixed), centerLabel: "Coming in", report: `data-forecast="${todayISO}|${yr}"`,
-      segs: [{ v: inn.fixed, color: "teal", text: `${compact(inn.fixed)} Entitlements`, attr: `data-report="entitlements"` }, { v: out.fixed, color: "blue", text: `${compact(out.fixed)} Commitments`, attr: `data-report="commitments"` }, { v: inn.conditional + out.conditional, color: "amber", text: `${compact(inn.conditional + out.conditional)} Conditional`, attr: `data-report="bonuses"` }],
-      foot: `<button class="btn outline" data-forecast="${todayISO}|${yr}">View Forecast</button>` });
-    const ds = allDeadlines().filter((d) => d.date >= todayISO && daysTo(d.date) <= 365);
-    const d30 = ds.filter((d) => daysTo(d.date) <= 30).length, d90 = ds.filter((d) => daysTo(d.date) > 30 && daysTo(d.date) <= 90).length;
-    const dlCard = ringCard({ title: "Key Dates", sub: "Renewals, notices and milestones", center: String(ds.length), centerLabel: "Next 12 months", report: 'data-report="renewals"',
-      segs: [{ v: d30, color: "red", text: `${d30} In Next 30 Days`, attr: 'data-report="renewals"' }, { v: d90, color: "blue", text: `${d90} In 31–90 Days`, attr: 'data-report="renewals"' }, { v: ds.length - d30 - d90, color: "teal", text: `${ds.length - d30 - d90} Later`, attr: 'data-report="renewals"' }],
-      foot: `<button class="btn outline" data-report="renewals">View Dates</button>` });
-    const rv = vis.filter((c) => reviewState(c) === "review").length, cf = vis.filter((c) => reviewState(c) === "conflict").length, ok = vis.length - rv - cf;
-    const firstRv = vis.find((c) => reviewState(c) !== "verified");
-    const rvCard = ringCard({ title: "Contract Review", sub: "AI-extracted terms you confirmed", center: `${ok}/${vis.length}`, centerLabel: "Verified", report: 'data-report="inventory"',
-      segs: [{ v: ok, color: "teal", text: `${ok} Verified`, attr: 'data-report="inventory"' }, { v: rv, color: "blue", text: `${rv} Ready for Review`, attr: firstRv ? `data-review="${esc(firstRv.id)}"` : "" }, { v: cf, color: "red", text: `${cf} Amendment Conflicts`, attr: vis.find((c) => reviewState(c) === "conflict") ? `data-review="${esc(vis.find((c) => reviewState(c) === "conflict").id)}"` : "" }],
-      foot: firstRv ? `<button class="btn outline" data-review="${esc(firstRv.id)}">Start Reviewing</button>` : `<button class="btn outline" data-go="contracts">View Contracts</button>` });
-    const bon = allObligations().filter((o) => o.conditional && o.state !== "done");
-    const bonusCard = ringCard({ title: "Bonuses & Conditions", sub: "Payments that depend on a condition", center: compact(bon.reduce((s, o) => s + (num(o.amount) || 0), 0)), centerLabel: "At stake", report: 'data-report="bonuses"',
-      segs: [{ v: bon.filter((o) => o.side === "theirs").length, color: "teal", text: `${bon.filter((o) => o.side === "theirs").length} Entitlements`, attr: 'data-report="bonuses"' }, { v: bon.filter((o) => o.side === "mine").length, color: "blue", text: `${bon.filter((o) => o.side === "mine").length} Commitments`, attr: 'data-report="bonuses"' }],
+    const title = `<div class="home-title"><h1>Home</h1><p>Good ${greet()}${userName ? ", " + esc(userName.split(" ")[0]) : ""}. Totals cover anything overdue plus the next 12 months.</p><span class="persp">Your side: <b>${esc(L.myCompany || "not set")}</b> ${viewer().role === "admin" ? '<button class="link" data-go="admin">Change</button>' : ""}</span></div>`;
+    if (!V().length) return title + emptyState();
+    const totalCard = (side) => {
+      const S = SIDE[side], t = periodTotals(side), rep = side === "mine" ? "commitments" : "entitlements";
+      const later = Math.max(0, t.fixed - t.overdue - t.soon);
+      return ringCard({ cls: "obcard " + side, title: `<span class="sidetag ${side}">${S.tag}</span>${S.label} Total`, sub: S.sub + (t.cond ? ` · +${money(t.cond)} conditional` : ""), center: compact(t.fixed), centerLabel: "Total", report: `data-report="${rep}:12m"`,
+        segs: [{ v: t.overdue, color: "red", text: `${compact(t.overdue)} Overdue`, attr: `data-obf="${side}:overdue"` }, { v: t.soon, color: "blue", text: `${compact(t.soon)} Next 30 Days`, attr: `data-report="${rep}:30"` }, { v: later, color: "teal", text: `${compact(later)} Later`, attr: `data-report="${rep}:12m"` }],
+        foot: `<button class="btn outline" data-report="${rep}:12m">View ${S.label} Report</button>` });
+    };
+    const bon = allObligations().filter((o) => o.conditional && !["done"].includes(o.state));
+    const bIn = bon.filter((o) => o.side === "theirs"), bOut = bon.filter((o) => o.side === "mine");
+    const amt = (l) => l.reduce((s, o) => s + (num(o.amount) || 0), 0);
+    const nextB = bon.filter((o) => parseD(o.due) && o.due >= todayISO).sort((a, b) => a.due.localeCompare(b.due))[0];
+    const bonusCard = ringCard({ title: "Bonuses to Apply", sub: nextB ? `Next: ${esc(nextB.c.org)}, ${fmtD(nextB.due)}` : "Conditional payments in your contracts", center: compact(amt(bon)), centerLabel: plural(bon.length, "bonus").replace("bonuss", "bonuses"), report: 'data-report="bonuses"',
+      segs: [{ v: amt(bIn), color: "teal", text: `${compact(amt(bIn))} To receive (${bIn.length})`, attr: 'data-report="bonuses"' }, { v: amt(bOut), color: "blue", text: `${compact(amt(bOut))} To pay (${bOut.length})`, attr: 'data-report="bonuses"' }],
       foot: `<button class="btn outline" data-report="bonuses">View Bonuses</button>` });
-    const counts = Object.fromEntries(STAGES.map((s) => [s, vis.filter((c) => status(c) === s).length]));
-    const pipeCard = hcard({ title: "Renewal Pipeline", sub: "", cls: "span2", body: `<div class="path">${STAGES.map((s) => `<button class="st${counts[s] ? " done" : ""}" data-report="inventory">${s}<span class="n">${counts[s]}</span></button>`).join("")}</div>` });
-    return title + `<div class="home-grid">${sideRingCard("mine")}${sideRingCard("theirs")}${valueCard}${dlCard}${rvCard}${bonusCard}${pipeCard}</div>`;
+    const areaCard = (a) => {
+      const list = V().filter((c) => c.area === a), cm = periodTotals("mine", { area: a }), en = periodTotals("theirs", { area: a });
+      const od = cm.overdueN + en.overdueN;
+      return ringCard({ title: AREAS[a].label, sub: `${plural(list.length, "contract")} · ${AREAS[a].sub.toLowerCase()}`, center: String(list.length), centerLabel: list.length === 1 ? "Contract" : "Contracts", report: `data-go="${a}"`,
+        segs: [{ v: cm.fixed, color: "blue", text: `${compact(cm.fixed)} Commitments`, attr: `data-report="commitments:12m:${a}"` }, { v: en.fixed, color: "teal", text: `${compact(en.fixed)} Entitlements`, attr: `data-report="entitlements:12m:${a}"` }, ...(od ? [{ v: 0, color: "red", text: `${od} Overdue`, attr: `data-obf="both:overdue:${a}"` }] : [])],
+        foot: `<button class="btn outline" data-go="${a}">View ${AREAS[a].label}</button>` });
+    };
+    return title + `<div class="home-grid three">${totalCard("mine")}${totalCard("theirs")}${bonusCard}${AREA_KEYS.filter((a) => canSeeArea(a)).map(areaCard).join("")}</div>`;
   }
   function barChart(rows, fmt = (v) => String(v)) {
     rows = rows.filter((r) => r.value > 0).slice(0, 10);
@@ -1199,16 +1216,16 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     switch (key) {
       case "commitments": case "entitlements": {
         const side = key === "commitments" ? "mine" : "theirs", S = SIDE[side];
-        const os = allObligations(list).filter((o) => o.side === side && o.state !== "done" && (o.state === "overdue" || o.state === "disputed" || (o.due && o.due >= f.from && o.due <= f.to)));
+        const t = periodTotals(side, { from: f.from, to: f.to, list });
         meta.title = S.label + " report";
-        meta.sections.push({ title: S.label + " by due date", columns: ["Due date", "Status", "Counterparty", "Tab", S.one, "Type", "Amount", "Fixed / conditional", "Owner", "Source"],
-          rows: os.map((o) => [o.due ? fmtD(o.due) : "—", OB_ST[o.state], o.c.org, AREAS[o.c.area].label, o.text, o.category, num(o.amount), num(o.amount) === null ? "" : o.conditional ? "Conditional" : "Fixed", o.owner || "", o.page ? "p. " + o.page : "—"]),
-          money: [false, false, false, false, false, false, true, false, false, false], total: { label: "Total", col: 6, fixed: os.filter((o) => !o.conditional).reduce((s, o) => s + (num(o.amount) || 0), 0), cond: os.filter((o) => o.conditional).reduce((s, o) => s + (num(o.amount) || 0), 0) } });
-        const by = {}; for (const o of os) { const g = (by[o.c.org] ||= { org: o.c.org, n: 0, fixed: 0, cond: 0, next: "" }); g.n++; g[o.conditional ? "cond" : "fixed"] += num(o.amount) || 0; if (o.due && (!g.next || o.due < g.next)) g.next = o.due; }
-        meta.sections.push({ title: "By counterparty", columns: ["Counterparty", "Items", "Fixed amount", "Conditional amount", "Next due"], rows: Object.values(by).sort((a, b) => b.fixed - a.fixed).map((g) => [g.org, g.n, g.fixed, g.cond, g.next ? fmtD(g.next) : "—"]), money: [false, false, true, true, false] });
-        const ong = allObligations(list).filter((o) => o.side === side && o.state === "ongoing");
-        if (ong.length) meta.sections.push({ title: "Ongoing (no date)", columns: ["Counterparty", S.one, "Type", "Source"], rows: ong.map((o) => [o.c.org, o.text, o.category, o.page ? "p. " + o.page : "—"]) });
-        meta.notes.push(`Includes anything overdue, plus items due ${fmtD(f.from)} – ${fmtD(f.to)}. Conditional amounts are shown separately and never added to the fixed total.`);
+        meta.sections.push({ title: `${S.label}: amounts due`, columns: ["Due date", "Status", "Counterparty", "Tab", S.one, "Amount", "Times in period", "Total in period", "Fixed / conditional", "Owner", "Source"],
+          rows: t.rows.map((r) => [r.o.due ? fmtD(r.o.due) : "—", OB_ST[r.o.state], r.o.c.org, AREAS[r.o.c.area].label, r.o.text, Number(r.o.amount), r.times, r.total, r.o.conditional ? "Conditional" : "Fixed", r.o.owner || "", r.o.page ? "p. " + r.o.page : "—"]),
+          money: [false, false, false, false, false, true, false, true, false, false, false], total: { label: "Total (fixed)", col: 7, fixed: t.fixed, cond: t.cond } });
+        const by = {}; for (const r of t.rows) { const g = (by[r.o.c.org] ||= { org: r.o.c.org, n: 0, fixed: 0, cond: 0, next: "" }); g.n++; g[r.o.conditional ? "cond" : "fixed"] += r.total; if (r.o.due && (!g.next || r.o.due < g.next)) g.next = r.o.due; }
+        meta.sections.push({ title: "By counterparty", columns: ["Counterparty", "Items", "Fixed total", "Conditional total", "Next due"], rows: Object.values(by).sort((a, b) => b.fixed - a.fixed).map((g) => [g.org, g.n, g.fixed, g.cond, g.next ? fmtD(g.next) : "—"]), money: [false, false, true, true, false] });
+        const nonMoney = allObligations(list).filter((o) => o.side === side && num(o.amount) === null && o.state !== "done" && (!o.due || o.state === "overdue" || (o.due >= f.from && o.due <= f.to)));
+        if (nonMoney.length) meta.sections.push({ title: "Other duties (no amount)", columns: ["Due", "Status", "Counterparty", S.one, "Type", "Source"], rows: nonMoney.map((o) => [o.due ? fmtD(o.due) : o.recurrence || "Ongoing", OB_ST[o.state], o.c.org, o.text, o.category, o.page ? "p. " + o.page : "—"]) });
+        meta.notes.push(`Anything overdue, plus every payment due ${fmtD(f.from)} – ${fmtD(f.to)}. Recurring payments count once per occurrence. Conditional amounts are shown separately and never added to the fixed total.`);
         break;
       }
       case "forecast": {
@@ -1273,15 +1290,15 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       <section class="card"><header><h2>Saved reports</h2></header>${saved.length ? `<ul class="mini">${saved.map((s, i) => `<li style="cursor:default;grid-template-columns:minmax(0,1fr) auto auto"><span class="t"><b>${esc(s.name)}</b><span>${esc(REPORTS.find((r) => r[0] === s.key)?.[1] || s.key)} · saved ${new Date(s.savedAt).toLocaleDateString()}</span></span><button class="btn sm" data-runsaved="${i}">Run</button><button class="btn sm danger" data-delsaved="${i}">Delete</button></li>`).join("")}</ul>` : '<div class="pad"><p class="muted" style="margin:0">Save a report with its filters to re-run it later.</p></div>'}</section>`;
   }
   function pageReport() {
-    const [key, cpArg] = String(route.id || "").split(":");
+    const [key, ...rargs] = String(route.id || "").split(":"); const cpArg = rargs.join(":");
     if (!canReport(key)) return `<div class="card"><div class="empty"><h3>You don't have access to this report</h3><button class="btn" data-go="reports">All reports</button></div></div>`;
-    if (cpArg && rf._cpSet !== route.id) { rf._cpSet = route.id; if (cpArg === "30") { rf.from = todayISO; rf.to = addDays(todayISO, 30); } else rf.cp = cpArg; }
+    if (cpArg && rf._cpSet !== route.id) { rf._cpSet = route.id; for (const a of rargs) { if (a === "30") { rf.from = todayISO; rf.to = addDays(todayISO, 30); } else if (a === "12m") { rf.from = todayISO; rf.to = addMonths(todayISO, 12); } else if (AREA_KEYS.includes(a)) rf.area = a; else if (a) rf.cp = a; } }
     const r = buildReport(key, rf); lastReport = r;
     const cps = [...new Set(V().map((c) => c.org))].sort();
     const sel = (id, val, opts) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(val) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
     const filters = `<div class="formrow"><label>Tab${sel("rf_area", rf.area, [["", "All tabs"], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label])])}</label><label>Counterparty${sel("rf_cp", rf.cp, [["", "All"], ...cps.map((x) => [x, x])])}</label><label>From<input type="date" id="rf_from" value="${esc(rf.from)}"></label><label>To<input type="date" id="rf_to" value="${esc(rf.to)}"></label><label>Contract status${sel("rf_status", rf.status, [["", "Any"], ...STAGES.map((s) => [s, s])])}</label><label>Show${sel("rf_party", rf.party, [["both", "Commitments and entitlements"], ["us", "Commitments only"], ["other", "Entitlements only"]])}</label><label style="flex-direction:row;display:flex;gap:6px;align-items:center"><input type="checkbox" id="rf_ver" ${rf.verifiedOnly ? "checked" : ""}> Verified contracts only</label></div>`;
     const cell = (v, isMoney) => isMoney && typeof v === "number" ? money(v) : esc(v ?? "");
-    const secs = r.sections.map((s) => `<section class="card rsec"><h3>${esc(s.title)}</h3>${s.rows.length ? `<div class="tbl-wrap"><table style="min-width:${Math.max(640, s.columns.length * 120)}px"><thead><tr>${s.columns.map((c, i) => `<th class="${s.money?.[i] ? "r" : ""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${s.rows.map((row) => `<tr style="cursor:default">${row.map((v, i) => `<td class="${s.money?.[i] ? "r num" : ""}">${cell(v, s.money?.[i])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<div class="pad"><p class="muted" style="margin:0">No rows for these filters.</p></div>'}</section>`).join("");
+    const secs = r.sections.map((s) => `<section class="card rsec"><h3>${esc(s.title)}</h3>${s.rows.length ? `<div class="tbl-wrap"><table style="min-width:${Math.max(640, s.columns.length * 120)}px"><thead><tr>${s.columns.map((c, i) => `<th class="${s.money?.[i] ? "r" : ""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${s.rows.map((row) => `<tr style="cursor:default">${row.map((v, i) => `<td class="${s.money?.[i] ? "r num" : ""}">${cell(v, s.money?.[i])}</td>`).join("")}</tr>`).join("")}</tbody>${s.total ? `<tfoot><tr><td colspan="${s.total.col}"><b>${esc(s.total.label)}</b> · ${plural(s.rows.length, "item")}</td><td class="r num"><b>${money(s.total.fixed)}</b>${s.total.cond ? `<div class="sub">+ ${money(s.total.cond)} conditional</div>` : ""}</td><td colspan="${s.columns.length - s.total.col - 1}"></td></tr></tfoot>` : ""}</table></div>` : '<div class="pad"><p class="muted" style="margin:0">No rows for these filters.</p></div>'}</section>`).join("");
     return `<div class="crumb"><button class="link" data-go="reports">Reports</button><span>›</span><span>${esc(r.title)}</span></div>
       <div class="page-head"><div><h1><span class="ico rp">R</span>${esc(r.title)}</h1><div class="rmeta"><span>Generated ${new Date(r.generatedAt).toLocaleString()}</span><span>${plural(r.contractCount, "contract")}</span>${r.unverified ? '<span class="warn">Includes unverified data</span>' : '<span>Verified data only</span>'}</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">${downloads ? '<button class="btn" data-act="rPdf">Export PDF</button><button class="btn" data-act="rXlsx">Export Excel</button><button class="btn" data-act="rCsv">Export CSV</button>' : ""}<button class="btn" data-act="rSave">Save report</button><button class="btn" data-act="rSchedule" title="Needs the email service in the production build">Schedule…</button><button class="btn ai" data-act="rAsk" ${sample ? "" : "disabled"}>✦ Explain</button></div></div>
@@ -1762,7 +1779,7 @@ ${ctx}`;
     if (t.tagName === "A") e.preventDefault();
     const d = t.dataset;
     if (d.menu) { if (menuEl && menuEl.dataset.kind === d.menu) return closeMenu(); return openMenu(d.menu, t); }
-    if (d.obf) { const [side, what] = d.obf.split(":"); obF = { ...obF, side, area: "", cp: "", cat: "", owner: "", q: "", from: "", to: "", st: "open", view: "list" };
+    if (d.obf) { const [side, what, ar] = d.obf.split(":"); obF = { ...obF, side, area: ar || "", cp: "", cat: "", owner: "", q: "", from: "", to: "", st: "open", view: "list" };
       if (what === "30") { obF.to = addDays(todayISO, 30); } else if (what === "calendar") obF.view = "calendar"; else obF.st = what; return go("obligations"); }
     if (d.obd) return openDrawer(d.obd);
     if (d.obmark) return markOb(d.obmark, d.on === "1");
