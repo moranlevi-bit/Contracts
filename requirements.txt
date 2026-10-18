@@ -1,0 +1,4 @@
+anthropic>=1.11
+pypdf
+python-docx
+openpyxl
