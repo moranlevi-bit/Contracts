@@ -399,7 +399,6 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
 .msg.a { justify-self: start; background: var(--sunken); border-bottom-left-radius: 4px; }
 .msg.a.err { box-shadow: 0 0 0 1px var(--red); }
 .steps { display: flex; flex-wrap: wrap; gap: 4px; justify-self: start; }
-.sugg { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 14px; padding: 5px 11px; font-size: 12px; text-align: left; color: var(--brand); }
 .chip:hover { background: var(--brand-soft); }
 .composer { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 8px; }
@@ -669,7 +668,6 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   </header>
   <div class="thread" id="thread"></div>
   <div class="composer">
-    <div class="sugg" id="sugg"></div>
     <textarea id="prompt" placeholder="Ask about your contracts. Answers cite the contract passage." aria-label="Message the AI"></textarea>
     <div class="row"><span class="foot">Only contracts you can access are used.</span><span><button class="btn sm" id="stopBtn" hidden>Stop</button> <button class="btn primary sm" id="sendBtn">Send</button></span></div>
   </div>
@@ -1138,7 +1136,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const all = V().filter((c) => c.area === area);
     const subtabs = `<div class="card area-tabs"><div class="subtabs" role="tablist">${[["contracts", "Contracts"], ["dm", "Deliverables &amp; Milestones"]].map(([k, l]) => `<button role="tab" data-atab="${k}" aria-selected="${areaTab === k}">${l}</button>`).join("")}</div></div>`;
     const head = `<div class="page-head"><div><h1><span class="ico ${A.ico}">${A.letter}</span>${A.label} <span class="muted" style="font-weight:400;font-size:14px">${A.sub}</span></h1><span class="muted">${esc(A.desc)}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${downloads && all.length ? (dmView ? '<button class="btn" data-act="dmPdf">Export PDF</button><button class="btn" data-act="dmXlsx">Export Excel</button><button class="btn" data-act="dmCsv">Export CSV</button>' : `<button class="btn" data-act="exportAreaXlsx">Export Excel</button><button class="btn" data-act="exportAreaCsv">Export CSV</button>`) : ""}${canUpload(area) ? `<button class="btn primary" data-act="add" data-area="${area}">Upload</button>` : ""}</div></div>
-      <div class="askbar"><span aria-hidden="true" style="color:var(--ai)">✦</span><input id="areaAsk" data-area="${area}" placeholder="Ask about ${A.label} contracts, e.g. ${area === "suppliers" ? "Which supplier contracts auto-renew in the next 90 days?" : area === "hr" ? "Who has a notice period longer than 30 days?" : "How much do we receive in Q1 2027?"}"><button class="btn primary sm" data-act="areaAsk" data-area="${area}">Ask</button></div>` + subtabs;
+      <div class="askbar"><span aria-hidden="true" style="color:var(--ai)">✦</span><input id="areaAsk" data-area="${area}" placeholder="Ask about ${A.label} contracts"><button class="btn primary sm" data-act="areaAsk" data-area="${area}">Ask</button></div>` + subtabs;
     if (dmView) return head + (all.length ? pageDeliverables(area) : emptyState(area === "hr" ? "No employment contracts yet." : undefined));
     if (!all.length) return head + emptyState(area === "hr" ? "No employment contracts yet." : undefined);
     const q = norm(listF.q);
@@ -1867,11 +1865,6 @@ ${doc.scanned ? "The document pages are attached as images." : `<document_text>\
   async function saveChat() { if (chatCol) { try { await chatCol.doc(scopeKey()).set({ turns: JSON.parse(JSON.stringify(turns.slice(-30))), at: new Date().toISOString() }); } catch {} } }
   function updateAsstContext() {
     $("asstCtx").textContent = (isPreview() ? `As ${viewer().name} · ` : "") + scopeLabel();
-    const c = scope.kind === "contract" ? byId(scope.id) : null;
-    const sugg = c ? [`What are our commitments and contractual obligations with ${c.org}?`, `How much do we receive from ${c.org} in the next 6 months?`, `What are the exit terms?`, `Draft a reminder email about the next payment`]
-      : scope.kind === "area" ? (scope.area === "suppliers" ? ["Which supplier contracts auto-renew in the next 90 days?", "What do we pay suppliers next quarter?"] : scope.area === "hr" ? ["Who has a review date in the next 6 months?", "List notice periods for all workers"] : ["How much do we receive in Q1 2027?", "Which customers pay late fees, and how much?"])
-      : ["What are our commitments in the next 30 days?", "Which contractual obligations are overdue?", "How much do we receive in Q1 2027 from the hospital?"];
-    $("sugg").innerHTML = turns.length > 2 ? "" : sugg.map((s) => `<button class="chip" data-ask="${esc(s)}">${esc(s)}</button>`).join("");
   }
   function calcHtml(r) {
     return `<details class="calcbox" open><summary>Calculated by the system: ${r.direction === "in" ? "money in" : "money out"}, ${fmtD(r.from)} – ${fmtD(r.to)}</summary><table><tbody>${r.groups.map((g) => `<tr><td>${esc(g.org)}: ${esc(g.text)}${g.conditional ? ' <span class="condtag">Conditional</span>' : ""}${g.verified ? "" : ' <span class="vb unverified">Unverified</span>'}</td><td class="r num">${money(g.amount)} × ${g.n}</td><td class="r num"><b>${money(g.total)}</b></td><td>${g.page ? `<button class="src" data-src="${esc(g.cid)}|${esc(g.src || "")}">p. ${g.page}</button>` : ""}</td></tr>`).join("") || '<tr><td colspan="4" class="muted">No dated amounts in this period.</td></tr>'}<tr><td><b>Fixed total</b></td><td></td><td class="r num"><b>${money(r.fixed)}</b></td><td></td></tr><tr><td>Conditional (not included above)</td><td></td><td class="r num">${money(r.conditional)}</td><td></td></tr></tbody></table></details>`;
