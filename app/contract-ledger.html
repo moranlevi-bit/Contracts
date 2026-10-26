@@ -237,48 +237,46 @@ button.st:hover { filter: brightness(.95); }
 .bar-row.clk:hover .nm, .bar-row.clk:focus-visible .nm { color: var(--brand); text-decoration: underline; }
 .tip { position: fixed; z-index: 70; background: #032d60; color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 12px; pointer-events: none; box-shadow: var(--shadow-lg); max-width: 240px; }
 .tip b { display: block; font-size: 13px; }
-/* payments-per-month chart on the Commitments / Contractual obligations reports */
-.gt-card { padding: 16px 18px 14px; }
-.gt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+/* payment timeline (Gantt) on the Commitments / Contractual obligations reports */
+.gt-card { padding: 16px 18px 12px; }
+.gt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .gt-head h2 { font-size: 17px; color: var(--title); font-weight: 600; margin: 0; }
 .gt-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .gt-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; }
-.gt-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
-.gt-legend i.cond { background: var(--surface) !important; border: 1.5px dashed; width: 7px; height: 7px; }
+.gt-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.gt-legend i.hollow { background: var(--surface) !important; border: 2px solid; width: 6px; height: 6px; }
 .gt-legend i.od { background: var(--red); }
-.mc-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.mc { display: grid; grid-template-columns: 52px minmax(0, 1fr); min-width: 620px; }
-.mc-y { position: relative; height: 220px; margin-top: 18px; }
-.mc-y span { position: absolute; right: 8px; transform: translateY(50%); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.mc-plot { position: relative; height: 220px; margin-top: 18px; border-bottom: 1px solid var(--line-strong); }
-.mc-grid { position: absolute; left: 0; right: 0; height: 1px; background: var(--line); }
-.mc-cols { position: absolute; inset: 0; display: flex; gap: 2px; }
-.mc-col { flex: 1 1 0; min-width: 0; position: relative; border: 0; background: none; padding: 0; cursor: pointer; border-radius: 6px 6px 0 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
-.mc-col:hover, .mc-col.sel { background: var(--sunken); }
-.mc-col:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-.mc-col.empty { cursor: default; }
-.mc-col.empty:hover { background: none; }
-.mc-stack { width: min(60%, 34px); display: flex; flex-direction: column-reverse; gap: 2px; }
-.mc-fix { background: var(--mc-c); border-radius: 0; }
-.mc-stack > :last-child { border-top-left-radius: 4px; border-top-right-radius: 4px; }
-.mc-cond { background: transparent; border: 1.5px dashed var(--mc-c); border-bottom-width: 0; box-sizing: border-box; }
-.mc-col.od .mc-fix { background: var(--red); }
-.mc-val { font-size: 11px; color: var(--fg); font-variant-numeric: tabular-nums; margin-bottom: 4px; white-space: nowrap; }
-.mc-col.sel .mc-val { font-weight: 700; }
-.mc-x { grid-column: 2; display: flex; gap: 2px; }
-.mc-x span { flex: 1 1 0; min-width: 0; text-align: center; font-size: 12px; color: var(--muted); padding-top: 6px; white-space: nowrap; }
-.mc-x span.y { color: var(--fg); font-weight: 600; }
-.mc-x span.od { color: var(--red-ink); font-weight: 600; }
-.mc-list { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
-.mc-list h3 { font-size: 14px; margin: 0 0 8px; color: var(--title); font-weight: 600; display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
-.mc-list h3 span { font-weight: 400; color: var(--muted); font-size: 13px; }
-.mc-list table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.mc-list td { padding: 7px 8px; border-top: 1px solid var(--line); }
-.mc-list tr { cursor: pointer; }
-.mc-list tr:hover td { background: var(--sunken); }
-.mc-list td.r { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
-.mc-list td.d { white-space: nowrap; color: var(--fg); }
-@media (max-width: 640px) { .gt-card { padding: 14px 12px 12px; } .mc-list td.hide-sm { display: none; } }
+.gt-legend i.today { width: 2px; height: 12px; border-radius: 1px; background: var(--fg); opacity: .55; }
+.gt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.gt { min-width: 780px; font-size: 13px; }
+.gt-row { display: grid; grid-template-columns: 230px 64px minmax(0, 1fr) 104px; align-items: center; border-top: 1px solid var(--line); min-height: 40px; }
+.gt-row.hd { border-top: 0; min-height: 28px; font-size: 12px; color: var(--muted); }
+.gt-row.ft { min-height: 44px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line-strong); }
+.gt-lbl { position: sticky; left: 0; z-index: 2; background: var(--surface); padding: 4px 10px 4px 0; min-width: 0; }
+.gt-lbl .o { display: block; font-weight: 600; color: var(--title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gt-lbl .x { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: none; border: 0; padding: 0; text-align: left; max-width: 100%; cursor: pointer; }
+.gt-lbl .x:hover { color: var(--brand); text-decoration: underline; }
+.gt-od { position: relative; height: 40px; border-right: 1px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; }
+.gt-tr { position: relative; height: 40px; }
+.gt-row.hd .gt-tr, .gt-row.ft .gt-tr { height: 28px; }
+.gt-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.gt-today { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--fg); opacity: .5; z-index: 1; }
+.gt-mo { position: absolute; top: 50%; transform: translateY(-50%); padding-left: 6px; white-space: nowrap; }
+.gt-mo.y { font-weight: 600; color: var(--fg); }
+.gt-sum { position: absolute; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--fg); }
+.gt-bar { position: absolute; top: 50%; height: 4px; margin-top: -2px; border-radius: 4px; opacity: .3; }
+.gt-dot { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border: 0; padding: 0; background: none; cursor: pointer; z-index: 2; border-radius: 50%; }
+.gt-dot::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--gt-c); box-shadow: 0 0 0 2px var(--surface); }
+.gt-dot.cond::after { background: var(--surface); border: 2px solid var(--gt-c); inset: 6px; box-sizing: border-box; }
+.gt-dot.od { position: relative; margin: 0; }
+.gt-dot.od::after { background: var(--red); inset: 4px; }
+.gt-dot.od::before { content: "!"; position: absolute; inset: 0; z-index: 1; color: #fff; font-weight: 700; font-size: 11px; line-height: 24px; text-align: center; }
+.gt-dot:hover::after, .gt-dot:focus-visible::after { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--gt-c); }
+.gt-dot:focus-visible { outline: none; }
+.gt-tot { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--fg); padding-left: 8px; }
+.gt-tot .c { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
+.gt-more { margin-top: 8px; }
+@media (max-width: 640px) { .gt-card { padding: 14px 12px 10px; } .gt-row { grid-template-columns: 150px 52px minmax(0, 1fr) 90px; } }
 
 .mini { list-style: none; margin: 0; padding: 0; }
 .mini li { display: grid; grid-template-columns: 108px minmax(0, 1fr) auto; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--line); align-items: baseline; cursor: pointer; }
@@ -1435,43 +1433,39 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       <div class="rep-cards">${cards}</div>
       <section class="card"><header><h2>Saved reports</h2></header>${saved.length ? `<ul class="mini">${saved.map((s, i) => `<li style="cursor:default;grid-template-columns:minmax(0,1fr) auto auto"><span class="t"><b>${esc(s.name)}</b><span>${esc(REPORTS.find((r) => r[0] === s.key)?.[1] || s.key)} · saved ${new Date(s.savedAt).toLocaleDateString()}</span></span><button class="btn sm" data-runsaved="${i}">Run</button><button class="btn sm danger" data-delsaved="${i}">Delete</button></li>`).join("")}</ul>` : '<div class="pad"><p class="muted" style="margin:0">Save a report with its filters to re-run it later.</p></div>'}</section>`;
   }
-  let mcSel = "";
+  let ganttAll = false;
   function ganttHtml(g) {
     const S = SIDE[g.side], col = g.side === "mine" ? "var(--brand)" : "var(--teal)";
     const t0 = parseD(g.from), t1 = parseD(g.to);
     if (!t0 || !t1 || t1 <= t0) return "";
-    const head = (sub) => `<div class="gt-head"><div><h2>${esc(S.label)} by month</h2><p>${sub}</p></div>
-      <div class="gt-legend"><span><i style="background:${col}"></i>Fixed</span><span><i class="cond" style="border-color:${col}"></i>Conditional</span>${g.rows.some((r) => r.overdue) ? '<span><i class="od"></i>Overdue</span>' : ""}</div></div>`;
-    // buckets: one per calendar month in the period, plus "overdue" when there is any
-    const buckets = [];
-    const od = g.rows.filter((r) => r.overdue);
-    if (od.length) buckets.push({ k: "od", label: "Overdue", od: true, items: od.map((r) => ({ r, d: r.due })) });
-    for (let m = new Date(t0.getFullYear(), t0.getMonth(), 1); m <= t1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
-      const k = iso(m).slice(0, 7);
-      buckets.push({ k, m, label: m.toLocaleDateString(undefined, { month: "short" }), year: buckets.filter((x) => x.m).length === 0 || m.getMonth() === 0, items: [] });
-    }
-    for (const r of g.rows) for (const d of r.dates) { const bk = buckets.find((x) => x.k === d.slice(0, 7)); if (bk) bk.items.push({ r, d }); }
-    for (const bk of buckets) { bk.items.sort((x, y) => String(x.d || "").localeCompare(String(y.d || "")) || x.r.org.localeCompare(y.r.org)); bk.fixed = bk.items.filter((x) => !x.r.cond).reduce((s, x) => s + x.r.amount, 0); bk.cond = bk.items.filter((x) => x.r.cond).reduce((s, x) => s + x.r.amount, 0); }
-    if (!buckets.some((bk) => bk.items.length)) return `<section class="card gt-card">${head("Nothing with an amount is due in this period.")}</section>`;
-    const max = Math.max(...buckets.map((bk) => bk.fixed + bk.cond), 1);
-    const p10 = 10 ** Math.floor(Math.log10(max / 4)), step = [1, 2, 2.5, 5, 10].map((x) => x * p10).find((x) => x * 4 >= max) || p10 * 10, top = step * Math.ceil((max * 1.1) / step);
-    const ticks = []; for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v);
-    const H = (v) => (v / top) * 100;
-    if (!buckets.some((bk) => bk.k === mcSel && bk.items.length)) mcSel = (buckets.find((bk) => bk.items.length && (bk.od || bk.k >= todayISO.slice(0, 7))) || buckets.find((bk) => bk.items.length)).k;
-    const cols = buckets.map((bk) => {
-      const tot = bk.fixed + bk.cond, name = bk.od ? "Overdue" : bk.m.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-      const tip = `${name}|${money(bk.fixed)} fixed${bk.cond ? ` + ${money(bk.cond)} conditional` : ""} · ${plural(bk.items.length, "payment")}`;
-      return `<button class="mc-col${bk.od ? " od" : ""}${bk.k === mcSel ? " sel" : ""}${bk.items.length ? "" : " empty"}" ${bk.items.length ? `data-mcsel="${bk.k}" data-tip="${esc(tip)}"` : "disabled"} aria-label="${esc(name)}: ${esc(money(bk.fixed))} fixed${bk.cond ? ", " + esc(money(bk.cond)) + " conditional" : ""}, ${bk.items.length} payments"${bk.k === mcSel ? ' aria-pressed="true"' : ""}>
-        ${tot ? `<span class="mc-val">${compact(tot)}</span>` : ""}<span class="mc-stack">${bk.fixed ? `<span class="mc-fix" style="height:${(H(bk.fixed) * 2.2).toFixed(1)}px"></span>` : ""}${bk.cond ? `<span class="mc-cond" style="height:${(H(bk.cond) * 2.2).toFixed(1)}px"></span>` : ""}</span></button>`;
-    }).join("");
-    const plot = `<div class="mc-scroll"><div class="mc" style="--mc-c:${col}"><div class="mc-y">${ticks.map((v) => `<span style="bottom:${H(v)}%">${v ? compact(v) : "0"}</span>`).join("")}</div>
-      <div class="mc-plot">${ticks.map((v) => `<span class="mc-grid" style="bottom:${H(v)}%"></span>`).join("")}<div class="mc-cols">${cols}</div></div>
-      <div class="mc-x">${buckets.map((bk) => `<span class="${bk.od ? "od" : bk.year ? "y" : ""}">${esc(bk.od ? "Overdue" : bk.label + (bk.year ? " " + String(bk.m.getFullYear()).slice(2) : ""))}</span>`).join("")}</div></div></div>`;
-    const sel = buckets.find((bk) => bk.k === mcSel);
-    const selName = sel.od ? "Overdue" : sel.m.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-    const list = `<div class="mc-list"><h3>${esc(selName)}<span>${plural(sel.items.length, "payment")} · ${money(sel.fixed)} fixed${sel.cond ? ` + ${money(sel.cond)} conditional` : ""} · click a payment to open it</span></h3>
-      <table><tbody>${sel.items.map(({ r, d }) => `<tr data-obd="${esc(r.key)}" tabindex="0"><td class="d">${d ? esc(fmtD(d)) : "—"}${sel.od ? ' <span class="pill high">Overdue</span>' : ""}</td><td><b>${esc(r.org)}</b></td><td class="hide-sm">${esc(r.text)}${r.cond ? ' <span class="condtag">Conditional</span>' : ""}</td><td class="r">${money(r.amount, r.cur)}</td></tr>`).join("")}</tbody></table></div>`;
-    return `<section class="card gt-card">${head(`${g.side === "mine" ? "What we must pay" : "What others must pay us"} each month, ${esc(fmtD(g.from))} – ${esc(fmtD(g.to))}. Total: <b>${money(g.fixed)}</b>${g.cond ? ` + ${money(g.cond)} conditional` : ""}. Click a month to see its payments.`)}${plot}${list}</section>`;
+    const span = t1 - t0, pct = (d) => Math.min(100, Math.max(0, ((parseD(d) - t0) / span) * 100));
+    const months = []; for (let m = new Date(t0.getFullYear(), t0.getMonth(), 1); m <= t1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) months.push(m);
+    const mStart = (m) => (m < t0 ? 0 : pct(iso(m))), mEnd = (m) => { const n = new Date(m.getFullYear(), m.getMonth() + 1, 1); return n > t1 ? 100 : pct(iso(n)); };
+    const grid = months.filter((m) => m > t0).map((m) => `<span class="gt-grid" style="left:${pct(iso(m)).toFixed(3)}%"></span>`).join("");
+    const todayL = todayISO >= g.from && todayISO <= g.to ? `<span class="gt-today" style="left:${pct(todayISO).toFixed(3)}%"></span>` : "";
+    const rows = [...g.rows].filter((r) => r.overdue || r.dates.length).sort((a, b) => (b.overdue - a.overdue) || String(a.dates[0] || a.due || "").localeCompare(String(b.dates[0] || b.due || "")) || a.org.localeCompare(b.org));
+    if (!rows.length) return `<section class="card gt-card"><div class="gt-head"><div><h2>${esc(S.label)} over time</h2><p>Nothing with an amount is due in this period.</p></div></div></section>`;
+    const LIMIT = 20, shown = ganttAll ? rows : rows.slice(0, LIMIT);
+    const dot = (r, d) => `<button class="gt-dot${r.cond ? " cond" : ""}" style="left:${pct(d).toFixed(3)}%" data-obd="${esc(r.key)}" data-tip="${esc(fmtD(d))}|${esc(money(r.amount, r.cur))}${r.cond ? " (conditional)" : ""} · ${esc(r.org)}: ${esc(r.text)}" aria-label="${esc(fmtD(d))}: ${esc(money(r.amount, r.cur))}, ${esc(r.org)}, ${esc(r.text)}"></button>`;
+    const odDot = (r) => `<button class="gt-dot od" data-obd="${esc(r.key)}" data-tip="${r.state === "disputed" ? "Disputed" : "Overdue"}${r.due ? " since " + esc(fmtD(r.due)) : ""}|${esc(money(r.amount, r.cur))} · ${esc(r.org)}: ${esc(r.text)}" aria-label="Overdue: ${esc(money(r.amount, r.cur))}, ${esc(r.org)}, ${esc(r.text)}"></button>`;
+    const line = (r) => {
+      const bar = r.dates.length > 1 ? `<span class="gt-bar" style="left:${pct(r.dates[0]).toFixed(3)}%;width:${(pct(r.dates[r.dates.length - 1]) - pct(r.dates[0])).toFixed(3)}%;background:${col}"></span>` : "";
+      return `<div class="gt-row"><div class="gt-lbl"><span class="o" title="${esc(r.org)}">${esc(r.org)}</span><button class="x" data-obd="${esc(r.key)}" title="${esc(r.text)}">${esc(r.text)}</button></div>
+        <div class="gt-od">${r.overdue ? odDot(r) : ""}</div><div class="gt-tr">${grid}${todayL}${bar}${r.dates.map((d) => dot(r, d)).join("")}</div>
+        <div class="gt-tot">${money(r.total, r.cur)}${r.cond ? '<span class="c">conditional</span>' : r.dates.length > 1 ? `<span class="c">${r.dates.length} × ${money(r.amount, r.cur)}</span>` : ""}</div></div>`;
+    };
+    const labeled = months.filter((m) => mEnd(m) - mStart(m) >= 5);
+    const withYear = (m, i) => i === 0 || m.getMonth() === 0;
+    const mLabel = (m, i) => m.toLocaleDateString(undefined, { month: "short" }) + (withYear(m, i) ? " " + String(m.getFullYear()).slice(2) : "");
+    const head = `<div class="gt-row hd"><div class="gt-lbl">Counterparty and item</div><div class="gt-od" style="height:28px">Overdue</div><div class="gt-tr">${labeled.map((m, i) => `<span class="gt-mo${withYear(m, i) ? " y" : ""}" style="left:${mStart(m).toFixed(3)}%">${esc(mLabel(m, i))}</span>`).join("")}</div><div class="gt-tot" style="font-weight:400;color:var(--muted)">In period</div></div>`;
+    const fixedRows = rows.filter((r) => !r.cond);
+    const monthSum = (m) => { const a = iso(m < t0 ? t0 : m), b = iso(new Date(m.getFullYear(), m.getMonth() + 1, 0)); return fixedRows.reduce((s, r) => s + r.dates.filter((d) => d >= a && d <= b).length * r.amount, 0); };
+    const odSum = fixedRows.filter((r) => r.overdue).reduce((s, r) => s + r.amount, 0);
+    const foot = `<div class="gt-row ft"><div class="gt-lbl">Fixed total per month</div><div class="gt-od" style="height:28px;color:var(--red-ink);font-weight:600">${odSum ? compact(odSum) : ""}</div><div class="gt-tr">${months.map((m) => { const v = monthSum(m); return v && mEnd(m) - mStart(m) > 4 ? `<span class="gt-sum" style="left:${((mStart(m) + mEnd(m)) / 2).toFixed(3)}%">${compact(v)}</span>` : ""; }).join("")}</div><div class="gt-tot">${money(g.fixed)}${g.cond ? `<span class="c">+${money(g.cond)} conditional</span>` : ""}</div></div>`;
+    return `<section class="card gt-card" style="--gt-c:${col}"><div class="gt-head"><div><h2>${esc(S.label)} over time</h2><p>${g.side === "mine" ? "What we must pay" : "What others must pay us"}, ${esc(fmtD(g.from))} – ${esc(fmtD(g.to))}. Click any date to open that payment.</p></div>
+      <div class="gt-legend"><span><i style="background:${col}"></i>Payment date</span><span><i class="hollow" style="border-color:${col}"></i>Conditional</span><span><i class="od"></i>Overdue</span><span><i class="today"></i>Today</span></div></div>
+      <div class="gt-scroll"><div class="gt" role="group" aria-label="${esc(S.label)} timeline">${head}${shown.map(line).join("")}${foot}</div></div>
+      ${rows.length > LIMIT ? `<button class="btn sm gt-more" data-act="ganttAll">${ganttAll ? "Show fewer" : `Show all ${rows.length} items`}</button>` : ""}</section>`;
   }
   function pageReport() {
     const [key, ...rargs] = String(route.id || "").split(":"); const cpArg = rargs.join(":");
@@ -1960,14 +1954,13 @@ ${ctx}`;
   // ---------- events ----------
   document.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-menu]") && !e.target.closest(".menu select")) closeMenu();
-    const t = e.target.closest("[data-menu],[data-mcsel],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
+    const t = e.target.closest("[data-menu],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
     if (!t) return;
     if (t.tagName === "A") e.preventDefault();
     const d = t.dataset;
     if (d.menu) { if (menuEl && menuEl.dataset.kind === d.menu) return closeMenu(); return openMenu(d.menu, t); }
     if (d.obf) { const [side, what, ar] = d.obf.split(":"); obF = { ...obF, side, area: ar || "", cp: "", cat: "", owner: "", q: "", from: "", to: "", st: "open", view: "list" };
       if (what === "30") { obF.to = addDays(todayISO, 30); } else if (what === "calendar") obF.view = "calendar"; else obF.st = what; return go("obligations"); }
-    if (d.mcsel) { mcSel = d.mcsel; return render(); }
     if (d.obd) return openDrawer(d.obd);
     if (d.obmark) return markOb(d.obmark, d.on === "1");
     if (d.obdispute) { const { o } = findOb(d.obdispute); return o && patchOb(d.obdispute, (x) => { x.status = x.status === "disputed" ? "open" : "disputed"; return x; }, `${o.text}: ${o.status === "disputed" ? "dispute cleared" : "marked disputed"}`); }
@@ -1995,6 +1988,7 @@ ${ctx}`;
     const c = route.name === "record" || route.name === "review" ? byId(route.id) : null;
     switch (d.act) {
       case "closeDrawer": return closeDrawer();
+      case "ganttAll": ganttAll = !ganttAll; return render();
       case "cnew": closeMenu(); return openDrawer("cform:new");
       case "cedit": { const x = byId(d.id); if (x && canEdit(x)) openDrawer("cform:" + x.id); return; }
       case "csave": return saveCForm(drawerKey.slice(6));
@@ -2057,7 +2051,7 @@ ${ctx}`;
     if (e.key === "Escape") { if (menuEl) closeMenu(); else if (drawerKey) closeDrawer(); else if (!$("modal").hidden) closeModal(); }
     if (e.key === "Enter" && e.target.id === "nobText") { const c = byId(route.id); if (c) addOb(c); }
     if (e.key === "Enter" && e.target.id === "areaAsk") document.querySelector('[data-act="areaAsk"]')?.click();
-    if (e.key === "Enter" && e.target.matches("[data-open],[data-review],[data-report],tr[data-obd]") && !["BUTTON", "A"].includes(e.target.tagName)) e.target.click();
+    if (e.key === "Enter" && e.target.matches("[data-open],[data-review],[data-report]") && !["BUTTON", "A"].includes(e.target.tagName)) e.target.click();
   });
   $("gq").addEventListener("keydown", (e) => { if (e.key === "Enter") { const q = e.target.value.trim(); if (q) { logEvent("Searched", "", q); go("search", q); } } });
   $("addBtn").addEventListener("click", () => openModal({ kind: "new" }, AREA_KEYS.includes(route.name) ? route.name : "auto"));
@@ -2082,9 +2076,9 @@ ${ctx}`;
   $("closeTodo").addEventListener("click", () => openTodo(false));
   addEventListener("resize", closeMenu);
   document.addEventListener("mousemove", (e) => {
-    const r = e.target.closest?.(".bar-row,.mc-col[data-tip]"); const tip = $("tip");
+    const r = e.target.closest?.(".bar-row,.gt-dot"); const tip = $("tip");
     if (!r) { tip.hidden = true; return; }
-    const [k, v] = r.dataset.tip.split("|"); tip.innerHTML = `<b>${esc(k)}</b>${esc(v)}${r.dataset.report ? "<br>Click for report" : r.dataset.mcsel ? "<br>Click to see the payments" : ""}`; tip.hidden = false;
+    const [k, v] = r.dataset.tip.split("|"); tip.innerHTML = `<b>${esc(k)}</b>${esc(v)}${r.dataset.report ? "<br>Click for report" : r.dataset.obd ? "<br>Click to open" : ""}`; tip.hidden = false;
     tip.style.left = Math.min(e.clientX + 14, innerWidth - 250) + "px"; tip.style.top = e.clientY + 14 + "px";
   });
 
