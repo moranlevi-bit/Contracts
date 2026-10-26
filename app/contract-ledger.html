@@ -237,6 +237,46 @@ button.st:hover { filter: brightness(.95); }
 .bar-row.clk:hover .nm, .bar-row.clk:focus-visible .nm { color: var(--brand); text-decoration: underline; }
 .tip { position: fixed; z-index: 70; background: #032d60; color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 12px; pointer-events: none; box-shadow: var(--shadow-lg); max-width: 240px; }
 .tip b { display: block; font-size: 13px; }
+/* payment timeline (Gantt) on the Commitments / Contractual obligations reports */
+.gt-card { padding: 16px 18px 12px; }
+.gt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.gt-head h2 { font-size: 17px; color: var(--title); font-weight: 600; margin: 0; }
+.gt-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.gt-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; }
+.gt-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.gt-legend i.hollow { background: var(--surface) !important; border: 2px solid; width: 6px; height: 6px; }
+.gt-legend i.od { background: var(--red); }
+.gt-legend i.today { width: 2px; height: 12px; border-radius: 1px; background: var(--fg); opacity: .55; }
+.gt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.gt { min-width: 780px; font-size: 13px; }
+.gt-row { display: grid; grid-template-columns: 230px 64px minmax(0, 1fr) 104px; align-items: center; border-top: 1px solid var(--line); min-height: 40px; }
+.gt-row.hd { border-top: 0; min-height: 28px; font-size: 12px; color: var(--muted); }
+.gt-row.ft { min-height: 44px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line-strong); }
+.gt-lbl { position: sticky; left: 0; z-index: 2; background: var(--surface); padding: 4px 10px 4px 0; min-width: 0; }
+.gt-lbl .o { display: block; font-weight: 600; color: var(--title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gt-lbl .x { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: none; border: 0; padding: 0; text-align: left; max-width: 100%; cursor: pointer; }
+.gt-lbl .x:hover { color: var(--brand); text-decoration: underline; }
+.gt-od { position: relative; height: 40px; border-right: 1px dashed var(--line-strong); display: flex; align-items: center; justify-content: center; }
+.gt-tr { position: relative; height: 40px; }
+.gt-row.hd .gt-tr, .gt-row.ft .gt-tr { height: 28px; }
+.gt-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.gt-today { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--fg); opacity: .5; z-index: 1; }
+.gt-mo { position: absolute; top: 50%; transform: translateY(-50%); padding-left: 6px; white-space: nowrap; }
+.gt-mo.y { font-weight: 600; color: var(--fg); }
+.gt-sum { position: absolute; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--fg); }
+.gt-bar { position: absolute; top: 50%; height: 4px; margin-top: -2px; border-radius: 4px; opacity: .3; }
+.gt-dot { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border: 0; padding: 0; background: none; cursor: pointer; z-index: 2; border-radius: 50%; }
+.gt-dot::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--gt-c); box-shadow: 0 0 0 2px var(--surface); }
+.gt-dot.cond::after { background: var(--surface); border: 2px solid var(--gt-c); inset: 6px; box-sizing: border-box; }
+.gt-dot.od { position: relative; margin: 0; }
+.gt-dot.od::after { background: var(--red); inset: 4px; }
+.gt-dot.od::before { content: "!"; position: absolute; inset: 0; z-index: 1; color: #fff; font-weight: 700; font-size: 11px; line-height: 24px; text-align: center; }
+.gt-dot:hover::after, .gt-dot:focus-visible::after { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--gt-c); }
+.gt-dot:focus-visible { outline: none; }
+.gt-tot { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--fg); padding-left: 8px; }
+.gt-tot .c { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
+.gt-more { margin-top: 8px; }
+@media (max-width: 640px) { .gt-card { padding: 14px 12px 10px; } .gt-row { grid-template-columns: 150px 52px minmax(0, 1fr) 90px; } }
 
 .mini { list-style: none; margin: 0; padding: 0; }
 .mini li { display: grid; grid-template-columns: 108px minmax(0, 1fr) auto; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--line); align-items: baseline; cursor: pointer; }
@@ -937,7 +977,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     return `<div class="totline"><span>Fixed: <b>${money(fixed)}</b></span>${cond ? `<span>Conditional: <b>${money(cond)}</b></span>` : ""}<span>${plural(list.filter((o) => o.state !== "done").length, "open item")}</span></div>`;
   }
   // details drawer
-  function openDrawer(key) { drawerKey = key; $("drawer").hidden = false; $("scrim").hidden = false; renderDrawer(); }
+  function openDrawer(key) { $("tip").hidden = true; drawerKey = key; $("drawer").hidden = false; $("scrim").hidden = false; renderDrawer(); }
   function closeDrawer() { drawerKey = ""; $("drawer").hidden = true; if ($("modal").hidden) $("scrim").hidden = true; }
   function renderDrawer() {
     if (drawerKey.startsWith("cform:")) return renderCForm(drawerKey.slice(6));
@@ -1321,6 +1361,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
         const side = key === "commitments" ? "mine" : "theirs", S = SIDE[side];
         const t = periodTotals(side, { from: f.from, to: f.to, list });
         meta.title = S.label + " report";
+        meta.gantt = { side, from: f.from, to: f.to, fixed: t.fixed, cond: t.cond, rows: t.rows.map((r) => ({ key: r.o.c.id + "|" + r.o.id, cid: r.o.c.id, org: r.o.c.org, text: r.o.text, amount: Number(r.o.amount), cur: r.o.c.currency, cond: !!r.o.conditional, overdue: ["overdue", "disputed"].includes(r.o.state), state: r.o.state, due: r.o.due, total: r.total, dates: ["overdue", "disputed"].includes(r.o.state) ? [] : occurrences(r.o, f.from, f.to) })) };
         meta.sections.push({ title: `${S.label}: amounts due`, columns: ["Due date", "Status", "Counterparty", "Tab", S.one, "Amount", "Times in period", "Total in period", "Fixed / conditional", "Owner", "Source"],
           rows: t.rows.map((r) => [r.o.due ? fmtD(r.o.due) : "—", OB_ST[r.o.state], r.o.c.org, AREAS[r.o.c.area].label, r.o.text, Number(r.o.amount), r.times, r.total, r.o.conditional ? "Conditional" : "Fixed", r.o.owner || "", r.o.page ? "p. " + r.o.page : "—"]),
           money: [false, false, false, false, false, true, false, true, false, false, false], total: { label: "Total (fixed)", col: 7, fixed: t.fixed, cond: t.cond } });
@@ -1392,6 +1433,40 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       <div class="rep-cards">${cards}</div>
       <section class="card"><header><h2>Saved reports</h2></header>${saved.length ? `<ul class="mini">${saved.map((s, i) => `<li style="cursor:default;grid-template-columns:minmax(0,1fr) auto auto"><span class="t"><b>${esc(s.name)}</b><span>${esc(REPORTS.find((r) => r[0] === s.key)?.[1] || s.key)} · saved ${new Date(s.savedAt).toLocaleDateString()}</span></span><button class="btn sm" data-runsaved="${i}">Run</button><button class="btn sm danger" data-delsaved="${i}">Delete</button></li>`).join("")}</ul>` : '<div class="pad"><p class="muted" style="margin:0">Save a report with its filters to re-run it later.</p></div>'}</section>`;
   }
+  let ganttAll = false;
+  function ganttHtml(g) {
+    const S = SIDE[g.side], col = g.side === "mine" ? "var(--brand)" : "var(--teal)";
+    const t0 = parseD(g.from), t1 = parseD(g.to);
+    if (!t0 || !t1 || t1 <= t0) return "";
+    const span = t1 - t0, pct = (d) => Math.min(100, Math.max(0, ((parseD(d) - t0) / span) * 100));
+    const months = []; for (let m = new Date(t0.getFullYear(), t0.getMonth(), 1); m <= t1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) months.push(m);
+    const mStart = (m) => (m < t0 ? 0 : pct(iso(m))), mEnd = (m) => { const n = new Date(m.getFullYear(), m.getMonth() + 1, 1); return n > t1 ? 100 : pct(iso(n)); };
+    const grid = months.filter((m) => m > t0).map((m) => `<span class="gt-grid" style="left:${pct(iso(m)).toFixed(3)}%"></span>`).join("");
+    const todayL = todayISO >= g.from && todayISO <= g.to ? `<span class="gt-today" style="left:${pct(todayISO).toFixed(3)}%"></span>` : "";
+    const rows = [...g.rows].filter((r) => r.overdue || r.dates.length).sort((a, b) => (b.overdue - a.overdue) || String(a.dates[0] || a.due || "").localeCompare(String(b.dates[0] || b.due || "")) || a.org.localeCompare(b.org));
+    if (!rows.length) return `<section class="card gt-card"><div class="gt-head"><div><h2>${esc(S.label)} over time</h2><p>Nothing with an amount is due in this period.</p></div></div></section>`;
+    const LIMIT = 20, shown = ganttAll ? rows : rows.slice(0, LIMIT);
+    const dot = (r, d) => `<button class="gt-dot${r.cond ? " cond" : ""}" style="left:${pct(d).toFixed(3)}%" data-obd="${esc(r.key)}" data-tip="${esc(fmtD(d))}|${esc(money(r.amount, r.cur))}${r.cond ? " (conditional)" : ""} · ${esc(r.org)}: ${esc(r.text)}" aria-label="${esc(fmtD(d))}: ${esc(money(r.amount, r.cur))}, ${esc(r.org)}, ${esc(r.text)}"></button>`;
+    const odDot = (r) => `<button class="gt-dot od" data-obd="${esc(r.key)}" data-tip="${r.state === "disputed" ? "Disputed" : "Overdue"}${r.due ? " since " + esc(fmtD(r.due)) : ""}|${esc(money(r.amount, r.cur))} · ${esc(r.org)}: ${esc(r.text)}" aria-label="Overdue: ${esc(money(r.amount, r.cur))}, ${esc(r.org)}, ${esc(r.text)}"></button>`;
+    const line = (r) => {
+      const bar = r.dates.length > 1 ? `<span class="gt-bar" style="left:${pct(r.dates[0]).toFixed(3)}%;width:${(pct(r.dates[r.dates.length - 1]) - pct(r.dates[0])).toFixed(3)}%;background:${col}"></span>` : "";
+      return `<div class="gt-row"><div class="gt-lbl"><span class="o" title="${esc(r.org)}">${esc(r.org)}</span><button class="x" data-obd="${esc(r.key)}" title="${esc(r.text)}">${esc(r.text)}</button></div>
+        <div class="gt-od">${r.overdue ? odDot(r) : ""}</div><div class="gt-tr">${grid}${todayL}${bar}${r.dates.map((d) => dot(r, d)).join("")}</div>
+        <div class="gt-tot">${money(r.total, r.cur)}${r.cond ? '<span class="c">conditional</span>' : r.dates.length > 1 ? `<span class="c">${r.dates.length} × ${money(r.amount, r.cur)}</span>` : ""}</div></div>`;
+    };
+    const labeled = months.filter((m) => mEnd(m) - mStart(m) >= 5);
+    const withYear = (m, i) => i === 0 || m.getMonth() === 0;
+    const mLabel = (m, i) => m.toLocaleDateString(undefined, { month: "short" }) + (withYear(m, i) ? " " + String(m.getFullYear()).slice(2) : "");
+    const head = `<div class="gt-row hd"><div class="gt-lbl">Counterparty and item</div><div class="gt-od" style="height:28px">Overdue</div><div class="gt-tr">${labeled.map((m, i) => `<span class="gt-mo${withYear(m, i) ? " y" : ""}" style="left:${mStart(m).toFixed(3)}%">${esc(mLabel(m, i))}</span>`).join("")}</div><div class="gt-tot" style="font-weight:400;color:var(--muted)">In period</div></div>`;
+    const fixedRows = rows.filter((r) => !r.cond);
+    const monthSum = (m) => { const a = iso(m < t0 ? t0 : m), b = iso(new Date(m.getFullYear(), m.getMonth() + 1, 0)); return fixedRows.reduce((s, r) => s + r.dates.filter((d) => d >= a && d <= b).length * r.amount, 0); };
+    const odSum = fixedRows.filter((r) => r.overdue).reduce((s, r) => s + r.amount, 0);
+    const foot = `<div class="gt-row ft"><div class="gt-lbl">Fixed total per month</div><div class="gt-od" style="height:28px;color:var(--red-ink);font-weight:600">${odSum ? compact(odSum) : ""}</div><div class="gt-tr">${months.map((m) => { const v = monthSum(m); return v && mEnd(m) - mStart(m) > 4 ? `<span class="gt-sum" style="left:${((mStart(m) + mEnd(m)) / 2).toFixed(3)}%">${compact(v)}</span>` : ""; }).join("")}</div><div class="gt-tot">${money(g.fixed)}${g.cond ? `<span class="c">+${money(g.cond)} conditional</span>` : ""}</div></div>`;
+    return `<section class="card gt-card" style="--gt-c:${col}"><div class="gt-head"><div><h2>${esc(S.label)} over time</h2><p>${g.side === "mine" ? "What we must pay" : "What others must pay us"}, ${esc(fmtD(g.from))} – ${esc(fmtD(g.to))}. Click any date to open that payment.</p></div>
+      <div class="gt-legend"><span><i style="background:${col}"></i>Payment date</span><span><i class="hollow" style="border-color:${col}"></i>Conditional</span><span><i class="od"></i>Overdue</span><span><i class="today"></i>Today</span></div></div>
+      <div class="gt-scroll"><div class="gt" role="group" aria-label="${esc(S.label)} timeline">${head}${shown.map(line).join("")}${foot}</div></div>
+      ${rows.length > LIMIT ? `<button class="btn sm gt-more" data-act="ganttAll">${ganttAll ? "Show fewer" : `Show all ${rows.length} items`}</button>` : ""}</section>`;
+  }
   function pageReport() {
     const [key, ...rargs] = String(route.id || "").split(":"); const cpArg = rargs.join(":");
     if (!canReport(key)) return `<div class="card"><div class="empty"><h3>You don't have access to this report</h3><button class="btn" data-go="reports">All reports</button></div></div>`;
@@ -1405,7 +1480,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     return `<div class="crumb"><button class="link" data-go="reports">Reports</button><span>›</span><span>${esc(r.title)}</span></div>
       <div class="page-head"><div><h1><span class="ico rp">R</span>${esc(r.title)}</h1><div class="rmeta"><span>Generated ${new Date(r.generatedAt).toLocaleString()}</span><span>${plural(r.contractCount, "contract")}</span>${r.unverified ? '<span class="warn">Includes unverified data</span>' : '<span>Verified data only</span>'}</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">${downloads ? '<button class="btn" data-act="rPdf">Export PDF</button><button class="btn" data-act="rXlsx">Export Excel</button><button class="btn" data-act="rCsv">Export CSV</button>' : ""}<button class="btn" data-act="rSave">Save report</button><button class="btn" data-act="rSchedule" title="Needs the email service in the production build">Schedule…</button><button class="btn ai" data-act="rAsk" ${sample ? "" : "disabled"}>✦ Explain</button></div></div>
-      <section class="card"><div class="pad">${filters}${r.notes.map((n) => `<p class="foot" style="margin:8px 0 0">${esc(n)}</p>`).join("")}</div></section>${secs}`;
+      ${r.gantt ? ganttHtml(r.gantt) : ""}<section class="card"><div class="pad">${filters}${r.notes.map((n) => `<p class="foot" style="margin:8px 0 0">${esc(n)}</p>`).join("")}</div></section>${secs}`;
   }
 
   // ---------- admin ----------
@@ -1913,6 +1988,7 @@ ${ctx}`;
     const c = route.name === "record" || route.name === "review" ? byId(route.id) : null;
     switch (d.act) {
       case "closeDrawer": return closeDrawer();
+      case "ganttAll": ganttAll = !ganttAll; return render();
       case "cnew": closeMenu(); return openDrawer("cform:new");
       case "cedit": { const x = byId(d.id); if (x && canEdit(x)) openDrawer("cform:" + x.id); return; }
       case "csave": return saveCForm(drawerKey.slice(6));
@@ -2000,9 +2076,9 @@ ${ctx}`;
   $("closeTodo").addEventListener("click", () => openTodo(false));
   addEventListener("resize", closeMenu);
   document.addEventListener("mousemove", (e) => {
-    const r = e.target.closest?.(".bar-row"); const tip = $("tip");
+    const r = e.target.closest?.(".bar-row,.gt-dot"); const tip = $("tip");
     if (!r) { tip.hidden = true; return; }
-    const [k, v] = r.dataset.tip.split("|"); tip.innerHTML = `<b>${esc(k)}</b>${esc(v)}${r.dataset.report ? "<br>Click for report" : ""}`; tip.hidden = false;
+    const [k, v] = r.dataset.tip.split("|"); tip.innerHTML = `<b>${esc(k)}</b>${esc(v)}${r.dataset.report ? "<br>Click for report" : r.dataset.obd ? "<br>Click to open" : ""}`; tip.hidden = false;
     tip.style.left = Math.min(e.clientX + 14, innerWidth - 250) + "px"; tip.style.top = e.clientY + 14 + "px";
   });
 
