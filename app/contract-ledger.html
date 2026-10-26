@@ -276,6 +276,18 @@ button.st:hover { filter: brightness(.95); }
 .gt-tot { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--fg); padding-left: 8px; }
 .gt-tot .c { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
 .gt-more { margin-top: 8px; }
+.gt-row.done .gt-lbl .o, .gt-row.done .gt-lbl .x { color: var(--soft); text-decoration: line-through; }
+.gt-lbl.ck { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px; align-items: center; }
+.gt-lbl.ck input { width: 16px; height: 16px; margin: 0; accent-color: var(--ok); cursor: pointer; }
+.gt-dot.ok::after { background: var(--ok); }
+.gt-dot.ok::before { content: "✓"; position: absolute; inset: 0; z-index: 1; color: #fff; font-weight: 700; font-size: 10px; line-height: 24px; text-align: center; }
+.gt-dot.ok.edge { position: relative; margin: 0; }
+.gt-ongo { position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px; border-radius: 4px; background: repeating-linear-gradient(135deg, var(--gt-c) 0 4px, transparent 4px 8px); opacity: .45; }
+.gt-st { text-align: right; font-size: 12px; color: var(--muted); padding-left: 8px; }
+.gt-st b { color: var(--fg); font-weight: 600; } .gt-st .od { color: var(--red-ink); font-weight: 600; } .gt-st .ok { color: var(--ok); font-weight: 600; }
+.gt-card + .gt-card { margin-top: 0; }
+.gt.duty .gt-row { grid-template-columns: 230px 64px minmax(0, 1fr) 140px; }
+.gt.duty .gt-st { white-space: nowrap; }
 @media (max-width: 640px) { .gt-card { padding: 14px 12px 10px; } .gt-row { grid-template-columns: 150px 52px minmax(0, 1fr) 90px; } }
 
 .mini { list-style: none; margin: 0; padding: 0; }
@@ -1368,6 +1380,10 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
         const by = {}; for (const r of t.rows) { const g = (by[r.o.c.org] ||= { org: r.o.c.org, n: 0, fixed: 0, cond: 0, next: "" }); g.n++; g[r.o.conditional ? "cond" : "fixed"] += r.total; if (r.o.due && (!g.next || r.o.due < g.next)) g.next = r.o.due; }
         meta.sections.push({ title: "By counterparty", columns: ["Counterparty", "Items", "Fixed total", "Conditional total", "Next due"], rows: Object.values(by).sort((a, b) => b.fixed - a.fixed).map((g) => [g.org, g.n, g.fixed, g.cond, g.next ? fmtD(g.next) : "—"]), money: [false, false, true, true, false] });
         const nonMoney = allObligations(list).filter((o) => o.side === side && num(o.amount) === null && o.state !== "done" && (!o.due || o.state === "overdue" || (o.due >= f.from && o.due <= f.to)));
+        const dutyDates = (o) => { if (!parseD(o.due) || ["done", "disputed"].includes(o.status) || o.state === "overdue") return []; const st = STEP[o.recurrence], lim = obLimit(o), out = []; let d = o.due, n = 0; while (d && d <= f.to && n++ < 400) { if (d >= f.from) out.push(d); if (!st) break; d = addMonths(d, st); if (lim && d > lim) break; } return out; };
+        meta.duties = { side, from: f.from, to: f.to, rows: allObligations(list).filter((o) => o.side === side && num(o.amount) === null && (o.state !== "done" || !o.due || o.due >= addDays(f.from, -90) || (o.doneAt || "") >= addDays(todayISO, -90))).map((o) => ({
+          key: o.c.id + "|" + o.id, org: o.c.org, text: o.text, state: o.state, due: o.due, end: o.until || o.c.endDate || "", recurrence: o.recurrence, category: o.category, can: canEdit(o.c), label: markLabel(o), dates: dutyDates(o),
+          doneDates: (o.history || []).filter((h) => h.due && h.what !== "reopened" && h.due >= f.from && h.due <= f.to).map((h) => h.due) })).filter((r) => r.state === "ongoing" || r.state === "done" || r.state === "overdue" || r.state === "disputed" || r.dates.length || r.doneDates.length) };
         if (nonMoney.length) meta.sections.push({ title: "Other duties (no amount)", columns: ["Due", "Status", "Counterparty", S.one, "Type", "Source"], rows: nonMoney.map((o) => [o.due ? fmtD(o.due) : o.recurrence || "Ongoing", OB_ST[o.state], o.c.org, o.text, o.category, o.page ? "p. " + o.page : "—"]) });
         meta.notes.push(`Anything overdue, plus every payment due ${fmtD(f.from)} – ${fmtD(f.to)}. Recurring payments count once per occurrence. Conditional amounts are shown separately and never added to the fixed total.`);
         break;
@@ -1467,6 +1483,40 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       <div class="gt-scroll"><div class="gt" role="group" aria-label="${esc(S.label)} timeline">${head}${shown.map(line).join("")}${foot}</div></div>
       ${rows.length > LIMIT ? `<button class="btn sm gt-more" data-act="ganttAll">${ganttAll ? "Show fewer" : `Show all ${rows.length} items`}</button>` : ""}</section>`;
   }
+  function dutyGanttHtml(g) {
+    const S = SIDE[g.side], col = g.side === "mine" ? "var(--brand)" : "var(--teal)";
+    const t0 = parseD(g.from), t1 = parseD(g.to);
+    if (!t0 || !t1 || t1 <= t0) return "";
+    const title = g.side === "mine" ? "Other duties we must do" : "Other duties the other side must do";
+    if (!g.rows.length) return `<section class="card gt-card"><div class="gt-head"><div><h2>${title}</h2><p>No duties without an amount in this period.</p></div></div></section>`;
+    const span = t1 - t0, pct = (d) => Math.min(100, Math.max(0, ((parseD(d) - t0) / span) * 100));
+    const months = []; for (let m = new Date(t0.getFullYear(), t0.getMonth(), 1); m <= t1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) months.push(m);
+    const mStart = (m) => (m < t0 ? 0 : pct(iso(m))), mEnd = (m) => { const n = new Date(m.getFullYear(), m.getMonth() + 1, 1); return n > t1 ? 100 : pct(iso(n)); };
+    const grid = months.filter((m) => m > t0).map((m) => `<span class="gt-grid" style="left:${pct(iso(m)).toFixed(3)}%"></span>`).join("");
+    const todayL = todayISO >= g.from && todayISO <= g.to ? `<span class="gt-today" style="left:${pct(todayISO).toFixed(3)}%"></span>` : "";
+    const rank = (r) => (r.state === "overdue" || r.state === "disputed" ? 0 : r.state === "done" ? 3 : r.state === "ongoing" ? 2 : 1);
+    const rows = [...g.rows].sort((a, b) => rank(a) - rank(b) || String(a.dates[0] || a.due || "").localeCompare(String(b.dates[0] || b.due || "")) || a.org.localeCompare(b.org));
+    const tipTxt = (r) => `${esc(r.org)}: ${esc(r.text)}`;
+    const dot = (r, d) => `<button class="gt-dot" style="left:${pct(d).toFixed(3)}%" data-obd="${esc(r.key)}" data-tip="${esc(fmtD(d))}|${tipTxt(r)}" aria-label="${esc(fmtD(d))}: ${tipTxt(r)}"></button>`;
+    const okDot = (r, d, edge) => `<button class="gt-dot ok${edge ? " edge" : ""}" ${edge ? "" : `style="left:${pct(d).toFixed(3)}%"`} data-obd="${esc(r.key)}" data-tip="Done${d ? " · " + esc(fmtD(d)) : ""}|${tipTxt(r)}" aria-label="Done${d ? " for " + esc(fmtD(d)) : ""}: ${tipTxt(r)}"></button>`;
+    const odDot = (r) => `<button class="gt-dot od" data-obd="${esc(r.key)}" data-tip="${r.state === "disputed" ? "Disputed" : "Overdue"}${r.due ? " since " + esc(fmtD(r.due)) : ""}|${tipTxt(r)}" aria-label="Overdue: ${tipTxt(r)}"></button>`;
+    const status = (r) => r.state === "done" ? '<span class="ok">✓ Done</span>' : r.state === "overdue" ? '<span class="od">Overdue</span>' : r.state === "disputed" ? '<span class="od">Disputed</span>' : r.state === "ongoing" ? (parseD(r.end) ? `Ongoing<br>until ${esc(fmtD(r.end))}` : "Ongoing") : `<b>${esc(fmtD(r.dates[0] || r.due))}</b>${r.recurrence && r.recurrence !== "One-time" ? `<br>${esc(r.recurrence)}` : ""}`;
+    const line = (r) => {
+      const done = r.state === "done", edgeDone = done && (!r.due || r.due < g.from);
+      const bar = r.dates.length > 1 ? `<span class="gt-bar" style="left:${pct(r.dates[0]).toFixed(3)}%;width:${(pct(r.dates[r.dates.length - 1]) - pct(r.dates[0])).toFixed(3)}%;background:${col}"></span>` : "";
+      const track = r.state === "ongoing" ? (parseD(r.end) && r.end < g.from ? "" : `<span class="gt-ongo"${parseD(r.end) && r.end < g.to ? ` style="right:${(100 - pct(r.end)).toFixed(3)}%"` : ""}></span>`) : bar + r.dates.map((d) => dot(r, d)).join("");
+      const doneMarks = r.doneDates.map((d) => okDot(r, d)).join("") + (done && !edgeDone && !r.doneDates.includes(r.due) ? okDot(r, r.due) : "");
+      const ck = r.can ? `<input type="checkbox" data-obck="${esc(r.key)}" ${done ? "checked" : ""} title="${done ? "Reopen" : esc(r.label)}" aria-label="${done ? "Reopen" : esc(r.label)}: ${esc(r.text)}">` : "<span></span>";
+      return `<div class="gt-row${done ? " done" : ""}"><div class="gt-lbl ck">${ck}<span style="min-width:0"><span class="o" title="${esc(r.org)}">${esc(r.org)}</span><button class="x" data-obd="${esc(r.key)}" title="${esc(r.text)}">${esc(r.text)}</button></span></div>
+        <div class="gt-od">${r.state === "overdue" || r.state === "disputed" ? odDot(r) : edgeDone ? okDot(r, r.due, true) : ""}</div><div class="gt-tr">${grid}${todayL}${track}${doneMarks}</div><div class="gt-st">${status(r)}</div></div>`;
+    };
+    const labeled = months.filter((m) => mEnd(m) - mStart(m) >= 5), withYear = (m, i) => i === 0 || m.getMonth() === 0;
+    const head = `<div class="gt-row hd"><div class="gt-lbl">Tick when done</div><div class="gt-od" style="height:28px">Earlier</div><div class="gt-tr">${labeled.map((m, i) => `<span class="gt-mo${withYear(m, i) ? " y" : ""}" style="left:${mStart(m).toFixed(3)}%">${esc(m.toLocaleDateString(undefined, { month: "short" }) + (withYear(m, i) ? " " + String(m.getFullYear()).slice(2) : ""))}</span>`).join("")}</div><div class="gt-st">Next / status</div></div>`;
+    const open = rows.filter((r) => r.state !== "done").length, doneN = rows.length - open;
+    return `<section class="card gt-card" style="--gt-c:${col}"><div class="gt-head"><div><h2>${title}</h2><p>Duties without an amount (reports, notices, deliveries and similar), ${esc(fmtD(g.from))} – ${esc(fmtD(g.to))}. ${open} open ${open === 1 ? "duty" : "duties"}${doneN ? `, ${doneN} done` : ""}. Tick the box when one is done; click a date to open it.</p></div>
+      <div class="gt-legend"><span><i style="background:${col}"></i>Due date</span><span><i style="background:var(--ok)"></i>Done</span><span><i class="od"></i>Overdue</span><span><i style="background:repeating-linear-gradient(135deg, ${col} 0 3px, transparent 3px 6px);border-radius:2px"></i>Ongoing</span><span><i class="today"></i>Today</span></div></div>
+      <div class="gt-scroll"><div class="gt duty" role="group" aria-label="${esc(title)} timeline">${head}${rows.map(line).join("")}</div></div></section>`;
+  }
   function pageReport() {
     const [key, ...rargs] = String(route.id || "").split(":"); const cpArg = rargs.join(":");
     if (!canReport(key)) return `<div class="card"><div class="empty"><h3>You don't have access to this report</h3><button class="btn" data-go="reports">All reports</button></div></div>`;
@@ -1480,7 +1530,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     return `<div class="crumb"><button class="link" data-go="reports">Reports</button><span>›</span><span>${esc(r.title)}</span></div>
       <div class="page-head"><div><h1><span class="ico rp">R</span>${esc(r.title)}</h1><div class="rmeta"><span>Generated ${new Date(r.generatedAt).toLocaleString()}</span><span>${plural(r.contractCount, "contract")}</span>${r.unverified ? '<span class="warn">Includes unverified data</span>' : '<span>Verified data only</span>'}</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">${downloads ? '<button class="btn" data-act="rPdf">Export PDF</button><button class="btn" data-act="rXlsx">Export Excel</button><button class="btn" data-act="rCsv">Export CSV</button>' : ""}<button class="btn" data-act="rSave">Save report</button><button class="btn" data-act="rSchedule" title="Needs the email service in the production build">Schedule…</button><button class="btn ai" data-act="rAsk" ${sample ? "" : "disabled"}>✦ Explain</button></div></div>
-      ${r.gantt ? ganttHtml(r.gantt) : ""}<section class="card"><div class="pad">${filters}${r.notes.map((n) => `<p class="foot" style="margin:8px 0 0">${esc(n)}</p>`).join("")}</div></section>${secs}`;
+      ${r.gantt ? ganttHtml(r.gantt) : ""}${r.duties ? dutyGanttHtml(r.duties) : ""}<section class="card"><div class="pad">${filters}${r.notes.map((n) => `<p class="foot" style="margin:8px 0 0">${esc(n)}</p>`).join("")}</div></section>${secs}`;
   }
 
   // ---------- admin ----------
@@ -1732,16 +1782,17 @@ ${doc.scanned ? "The document pages are attached as images." : `<document_text>\
   function markOb(key, on) {
     const { o } = findOb(key); if (!o) return;
     const label = on ? markLabel(o).replace("Mark ", "") : "reopened";
+    let rolled = false;
     patchOb(key, (x) => {
       const h = [...(x.history || [])];
       if (on) {
         h.push({ due: x.due, at: new Date().toISOString(), what: label });
         const step = STEP[x.recurrence]; const nextD = step && x.due ? addMonths(x.due, step) : null; const lim = x.until || byId(key.split("|")[0])?.endDate;
-        if (nextD && (!lim || nextD <= lim)) { x.due = nextD; x.status = "open"; } else { x.status = "done"; x.doneAt = new Date().toISOString(); }
+        if (nextD && (!lim || nextD <= lim)) { x.due = nextD; x.status = "open"; rolled = true; } else { x.status = "done"; x.doneAt = new Date().toISOString(); }
       } else { x.status = "open"; x.doneAt = null; }
       x.history = h.slice(-24); return x;
     }, `${o.text}: ${on ? label : "reopened"}${on && STEP[o.recurrence] ? ` for ${fmtD(o.due)}` : ""}`);
-    toast(on ? (STEP[o.recurrence] ? `${label[0].toUpperCase() + label.slice(1)} — next one scheduled` : label[0].toUpperCase() + label.slice(1)) : "Reopened");
+    toast(on ? (rolled ? `${label[0].toUpperCase() + label.slice(1)} — next one scheduled` : label[0].toUpperCase() + label.slice(1)) : "Reopened");
   }
   async function addOb(c) {
     const text = $("nobText").value.trim(); if (!text) { $("nobText").focus(); return; }
