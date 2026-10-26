@@ -286,6 +286,8 @@ button.st:hover { filter: brightness(.95); }
 .gt-st { text-align: right; font-size: 12px; color: var(--muted); padding-left: 8px; }
 .gt-st b { color: var(--fg); font-weight: 600; } .gt-st .od { color: var(--red-ink); font-weight: 600; } .gt-st .ok { color: var(--ok); font-weight: 600; }
 .gt-card + .gt-card { margin-top: 0; }
+.area-tabs { padding: 0; overflow: hidden; }
+.area-tabs .subtabs { border-bottom: 0; }
 .gt.duty .gt-row { grid-template-columns: 230px 64px minmax(0, 1fr) 140px; }
 .gt.duty .gt-st { white-space: nowrap; }
 @media (max-width: 640px) { .gt.duty .gt-row { grid-template-columns: 170px 52px minmax(0, 1fr) 120px; } }
@@ -939,14 +941,14 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   function renderTabs() {
     const cur = { record: byId(route.id)?.area || "", review: byId(route.id)?.area || "", report: "reports", search: "" }[route.name] ?? route.name;
     const caret = (k) => `<button class="caret" data-menu="${k}" aria-label="${k} menu"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 9 7 7 7-7"/></svg></button>`;
-    const tabs = [["home", "Home", false], ["contracts", "Contracts", true], ["deliverables", "Deliverables & Milestones", false], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label, true]), ["reports", "Reports", true], ...(viewer().role === "admin" ? [["admin", "Admin", false]] : [])];
+    const tabs = [["home", "Home", false], ["contracts", "Contracts", true], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label, true]), ["reports", "Reports", true], ...(viewer().role === "admin" ? [["admin", "Admin", false]] : [])];
     $("tabs").innerHTML = tabs.map(([k, l, c]) => `<div class="tabwrap" data-tab="${k}" aria-current="${cur === k ? "page" : "false"}"><button class="tab" data-go="${k}">${l}</button>${c ? caret(k) : ""}</div>`).join("");
   }
   function render() {
     if (["record", "review"].includes(route.name) && !byId(route.id)) route = { name: "home" };
     if (AREA_KEYS.includes(route.name) && !canSeeArea(route.name)) route = { name: "home" };
     if (route.name === "admin" && viewer().role !== "admin") route = { name: "home" };
-    const pages = { home: pageHome, contracts: pageContracts, deliverables: pageDeliverables, obligations: pageObligations, record: pageRecord, review: pageReview, reports: pageReports, report: pageReport, admin: pageAdmin, search: pageSearch };
+    const pages = { home: pageHome, contracts: pageContracts, obligations: pageObligations, record: pageRecord, review: pageReview, reports: pageReports, report: pageReport, admin: pageAdmin, search: pageSearch };
     const fn = pages[route.name] || (AREA_KEYS.includes(route.name) ? () => pageArea(route.name) : pageHome);
     $("page").innerHTML = previewBanner() + bannerHtml() + fn();
     renderTabs(); renderChrome(); if (drawerKey && !drawerKey.startsWith("cform:")) renderDrawer();
@@ -1130,11 +1132,14 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   }
 
   // ---------- area list ----------
+  let areaTab = "contracts";
   function pageArea(area) {
-    const A = AREAS[area];
+    const A = AREAS[area], dmView = areaTab === "dm";
     const all = V().filter((c) => c.area === area);
-    const head = `<div class="page-head"><div><h1><span class="ico ${A.ico}">${A.letter}</span>${A.label} <span class="muted" style="font-weight:400;font-size:14px">${A.sub}</span></h1><span class="muted">${esc(A.desc)}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${downloads && all.length ? `<button class="btn" data-act="exportAreaXlsx">Export Excel</button><button class="btn" data-act="exportAreaCsv">Export CSV</button>` : ""}${canUpload(area) ? `<button class="btn primary" data-act="add" data-area="${area}">Upload</button>` : ""}</div></div>
-      <div class="askbar"><span aria-hidden="true" style="color:var(--ai)">✦</span><input id="areaAsk" data-area="${area}" placeholder="Ask about ${A.label} contracts, e.g. ${area === "suppliers" ? "Which supplier contracts auto-renew in the next 90 days?" : area === "hr" ? "Who has a notice period longer than 30 days?" : "How much do we receive in Q1 2027?"}"><button class="btn primary sm" data-act="areaAsk" data-area="${area}">Ask</button></div>`;
+    const subtabs = `<div class="card area-tabs"><div class="subtabs" role="tablist">${[["contracts", "Contracts"], ["dm", "Deliverables &amp; Milestones"]].map(([k, l]) => `<button role="tab" data-atab="${k}" aria-selected="${areaTab === k}">${l}</button>`).join("")}</div></div>`;
+    const head = `<div class="page-head"><div><h1><span class="ico ${A.ico}">${A.letter}</span>${A.label} <span class="muted" style="font-weight:400;font-size:14px">${A.sub}</span></h1><span class="muted">${esc(A.desc)}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">${downloads && all.length ? (dmView ? '<button class="btn" data-act="dmPdf">Export PDF</button><button class="btn" data-act="dmXlsx">Export Excel</button><button class="btn" data-act="dmCsv">Export CSV</button>' : `<button class="btn" data-act="exportAreaXlsx">Export Excel</button><button class="btn" data-act="exportAreaCsv">Export CSV</button>`) : ""}${canUpload(area) ? `<button class="btn primary" data-act="add" data-area="${area}">Upload</button>` : ""}</div></div>
+      <div class="askbar"><span aria-hidden="true" style="color:var(--ai)">✦</span><input id="areaAsk" data-area="${area}" placeholder="Ask about ${A.label} contracts, e.g. ${area === "suppliers" ? "Which supplier contracts auto-renew in the next 90 days?" : area === "hr" ? "Who has a notice period longer than 30 days?" : "How much do we receive in Q1 2027?"}"><button class="btn primary sm" data-act="areaAsk" data-area="${area}">Ask</button></div>` + subtabs;
+    if (dmView) return head + (all.length ? pageDeliverables(area) : emptyState(area === "hr" ? "No employment contracts yet." : undefined));
     if (!all.length) return head + emptyState(area === "hr" ? "No employment contracts yet." : undefined);
     const q = norm(listF.q);
     const rows = all.filter((c) => (!listF.st || status(c) === listF.st) && (!listF.rv || reviewState(c) === listF.rv) && (!q || norm([c.org, c.contractType, c.summary, JSON.stringify(Object.values(c.fields || {}).map((f) => f.v))].join(" ")).includes(q)));
@@ -1498,15 +1503,17 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     return dmData().map((g) => ({ title: g.title, columns: ["Next date", "Status", "Counterparty", "Tab", "Deliverable or milestone", "Type", "Repeats", "Owner", "Source"],
       rows: g.rows.map((r) => [r.dates[0] ? fmtD(r.dates[0]) : r.due ? fmtD(r.due) : "Ongoing", OB_ST[r.state], r.org, AREAS[r.o.c.area]?.label || "", r.text, r.category || "", r.recurrence && r.recurrence !== "One-time" ? r.recurrence : "", r.o.owner || "", r.o.page ? "p. " + r.o.page : "—"]) }));
   }
-  function pageDeliverables() {
-    const head = `<div class="page-head"><div><h1>Deliverables &amp; Milestones</h1><span class="muted">Contract duties that don't involve money: reports, notices, certificates, go-live dates and ongoing requirements. Tick each one when it's done.</span></div>
+  function pageDeliverables(area) {
+    dmF.area = area;
+    const head = "" && `<div class="page-head"><div><h1>Deliverables &amp; Milestones</h1><span class="muted">Contract duties that don't involve money: reports, notices, certificates, go-live dates and ongoing requirements. Tick each one when it's done.</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${downloads && V().length ? '<button class="btn" data-act="dmPdf">Export PDF</button><button class="btn" data-act="dmXlsx">Export Excel</button><button class="btn" data-act="dmCsv">Export CSV</button>' : ""}</div></div>`;
     if (!V().length) return head + emptyState();
-    const cps = [...new Set(V().filter((c) => !dmF.area || c.area === dmF.area).map((c) => c.org))].sort();
+    const cps = [...new Set(V().filter((c) => c.area === area).map((c) => c.org))].sort();
+    if (dmF.cp && !cps.includes(dmF.cp)) dmF.cp = "";
     const sel = (id, val, opts) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(val) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
-    const filters = `<section class="card"><div class="pad"><div class="formrow"><label>Show${sel("dm_party", dmF.party, [["both", "Both sides"], ["us", "What we must do"], ["other", "What the other side must do"]])}</label><label>Tab${sel("dm_area", dmF.area, [["", "All tabs"], ...AREA_KEYS.filter((a) => canSeeArea(a)).map((a) => [a, AREAS[a].label])])}</label><label>Counterparty${sel("dm_cp", dmF.cp, [["", "All"], ...cps.map((x) => [x, x])])}</label><label>Status${sel("dm_st", dmF.st, [["", "Open and done"], ["open", "Open only"], ["overdue", "Overdue"], ["ongoing", "Ongoing"], ["done", "Done"]])}</label><label>From<input type="date" id="dm_from" value="${esc(dmF.from)}"></label><label>To<input type="date" id="dm_to" value="${esc(dmF.to)}"></label></div></div></section>`;
+    const filters = `<section class="card"><div class="pad"><div class="formrow"><label>Show${sel("dm_party", dmF.party, [["both", "Both sides"], ["us", "What we must do"], ["other", "What the other side must do"]])}</label><label>Counterparty${sel("dm_cp", dmF.cp, [["", "All"], ...cps.map((x) => [x, x])])}</label><label>Status${sel("dm_st", dmF.st, [["", "Open and done"], ["open", "Open only"], ["overdue", "Overdue"], ["ongoing", "Ongoing"], ["done", "Done"]])}</label><label>From<input type="date" id="dm_from" value="${esc(dmF.from)}"></label><label>To<input type="date" id="dm_to" value="${esc(dmF.to)}"></label></div></div></section>`;
     const data = dmData();
-    const table = data.map((g) => `<section class="card rsec"><h3>${esc(g.title)}: list</h3>${g.rows.length ? `<div class="tbl-wrap"><table style="min-width:820px"><thead><tr><th>Next date</th><th>Status</th><th>Counterparty</th><th>Tab</th><th>Deliverable or milestone</th><th>Type</th><th>Repeats</th><th>Owner</th></tr></thead><tbody>${g.rows.map((r) => `<tr data-obd="${esc(r.key)}" tabindex="0"><td class="num">${r.dates[0] ? fmtD(r.dates[0]) : r.due ? fmtD(r.due) : "Ongoing"}</td><td>${esc(OB_ST[r.state])}</td><td>${esc(r.org)}</td><td>${areaPill(r.o.c.area)}</td><td>${esc(r.text)}</td><td>${esc(r.category || "")}</td><td>${esc(r.recurrence && r.recurrence !== "One-time" ? r.recurrence : "")}</td><td>${esc(r.o.owner || "")}</td></tr>`).join("")}</tbody></table></div>` : '<p class="muted" style="margin:0">Nothing matches these filters.</p>'}</section>`).join("");
+    const table = data.map((g) => `<section class="card rsec"><h3>${esc(g.title)}: list</h3>${g.rows.length ? `<div class="tbl-wrap"><table style="min-width:820px"><thead><tr><th>Next date</th><th>Status</th><th>${area === "hr" ? "Employee" : "Counterparty"}</th><th>Deliverable or milestone</th><th>Type</th><th>Repeats</th><th>Owner</th></tr></thead><tbody>${g.rows.map((r) => `<tr data-obd="${esc(r.key)}" tabindex="0"><td class="num">${r.dates[0] ? fmtD(r.dates[0]) : r.due ? fmtD(r.due) : "Ongoing"}</td><td>${esc(OB_ST[r.state])}</td><td>${esc(r.org)}</td><td>${esc(r.text)}</td><td>${esc(r.category || "")}</td><td>${esc(r.recurrence && r.recurrence !== "One-time" ? r.recurrence : "")}</td><td>${esc(r.o.owner || "")}</td></tr>`).join("")}</tbody></table></div>` : '<p class="muted" style="margin:0">Nothing matches these filters.</p>'}</section>`).join("");
     return head + data.map(dutyGanttHtml).join("") + filters + table;
   }
   function dutyGanttHtml(g) {
@@ -1581,7 +1588,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     if (kind === "obligations") { const all = allObligations(), n = (side, st) => all.filter((o) => o.side === side && (st === "open" ? o.state !== "done" : o.state === st)).length;
       return `<h4>Commitments</h4>${btn('data-obf="mine:overdue"', "Overdue", n("mine", "overdue"))}${btn('data-obf="mine:30"', "Next 30 days")}${btn('data-obf="mine:open"', "All open", n("mine", "open"))}<hr><h4>Contractual obligations</h4>${btn('data-obf="theirs:overdue"', "Overdue", n("theirs", "overdue"))}${btn('data-obf="theirs:30"', "Next 30 days")}${btn('data-obf="theirs:open"', "All open", n("theirs", "open"))}<hr>${btn('data-obf="both:calendar"', "Calendar view")}`; }
     if (AREA_KEYS.includes(kind)) { const l = V().filter((c) => c.area === kind).slice(0, 6);
-      return `<h4>${AREAS[kind].label}</h4>${l.map((c) => btn(`data-open="${esc(c.id)}"`, c.org)).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr>${btn(`data-go="${kind}"`, "All " + AREAS[kind].label + " contracts")}${canUpload(kind) ? btn(`data-act="add" data-area="${kind}"`, "+ Upload to " + AREAS[kind].label) : ""}`; }
+      return `<h4>${AREAS[kind].label}</h4>${l.map((c) => btn(`data-open="${esc(c.id)}"`, c.org)).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr>${btn(`data-go="${kind}"`, "All " + AREAS[kind].label + " contracts")}${btn(`data-go="${kind}" data-atabgo="dm"`, AREAS[kind].label + " deliverables & milestones")}${canUpload(kind) ? btn(`data-act="add" data-area="${kind}"`, "+ Upload to " + AREAS[kind].label) : ""}`; }
     if (kind === "contracts") { const l = V().slice(0, 6);
       return `<h4>Contracts</h4>${l.map((c) => btn(`data-open="${esc(c.id)}"`, c.org, AREAS[c.area]?.label || "")).join("") || '<p class="foot" style="padding:4px 14px">None yet</p>'}<hr>${btn('data-go="contracts"', "All contracts")}${AREA_KEYS.some((a) => canUpload(a)) ? btn('data-act="cnew"', "+ Add contract") : ""}`; }
     if (kind === "reports") return `<h4>Standard reports</h4>${REPORTS.filter(([k]) => canReport(k)).map(([k, t]) => btn(`data-report="${k}"`, t)).join("")}<hr>${btn('data-go="reports"', "All reports")}`;
@@ -2031,7 +2038,7 @@ ${ctx}`;
   // ---------- events ----------
   document.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-menu]") && !e.target.closest(".menu select")) closeMenu();
-    const t = e.target.closest("[data-menu],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
+    const t = e.target.closest("[data-menu],[data-atab],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
     if (!t) return;
     if (t.tagName === "A") e.preventDefault();
     const d = t.dataset;
@@ -2049,9 +2056,10 @@ ${ctx}`;
     if (d.fact) { const c = byId(route.id); if (c && canEdit(c)) await fieldAction(c, d.k, d.fact); return; }
     if (d.report) { const [k] = d.report.split(":"); if (!d.report.includes(":")) { rf = { ...defaultRF(), area: rf.area }; } else { rf = defaultRF(); } return go("report", d.report); }
     if (d.forecast) { const [f, to] = d.forecast.split("|"); rf = { ...defaultRF(), from: f, to }; return go("report", "forecast"); }
-    if (d.go) { if (AREA_KEYS.includes(d.go)) listF = { q: "", st: "", rv: "" }; return go(d.go); }
+    if (d.go) { if (AREA_KEYS.includes(d.go)) { listF = { q: "", st: "", rv: "" }; areaTab = d.atabgo || "contracts"; } return go(d.go); }
     if (d.open) { closeModal(); closeDrawer(); openTodo(false); return go("record", d.open); }
     if (d.rtab) { recTab = d.rtab; return render(); }
+    if (d.atab) { areaTab = d.atab; return render(); }
     if (d.ask) { const c = route.name === "record" ? byId(route.id) : null; if (c && scope.kind !== "contract") await setScope({ kind: "contract", id: c.id }); openAsst(true); return send(d.ask); }
     if (d.obview) { obF.view = d.obview; return render(); }
     if (d.calm) { obF.month = d.calm; return render(); }
@@ -2072,7 +2080,7 @@ ${ctx}`;
       case "cdel": { if (!isAdmin()) return; const z = document.getElementById("cdz_" + d.id); if (z) z.innerHTML = `<span class="confirm">Delete? <button class="btn danger sm" data-act="cdelYes" data-id="${esc(d.id)}">Delete</button><button class="btn sm" data-act="cdelNo">Keep</button></span>`; return; }
       case "cdelNo": return render();
       case "cdelYes": { const x = byId(d.id); if (!x || !isAdmin()) return; await removeContract(x.id); logEvent("Deleted contract", x.org); render(); return toast("Deleted"); }
-      case "dmPdf": case "dmXlsx": case "dmCsv": return exportSections("Deliverables and milestones", { filters: dmF, unverified: true }, dmExportSections(), d.act.slice(2).toLowerCase());
+      case "dmPdf": case "dmXlsx": case "dmCsv": return exportSections(`${AREAS[dmF.area]?.label || ""} deliverables and milestones`.trim(), { filters: dmF, unverified: true }, dmExportSections(), d.act.slice(2).toLowerCase());
       case "exportCtXlsx": return exportSections("Contracts", { filters: ctF, unverified: true }, ctExportSections(), "xlsx");
       case "exportCtCsv": return exportSections("Contracts", { filters: ctF, unverified: true }, ctExportSections(), "csv");
       case "add": return openModal({ kind: "new" }, d.area);
