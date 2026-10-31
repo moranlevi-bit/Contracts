@@ -384,6 +384,16 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
 .ubar button { border: 0; background: none; padding: 10px 12px; display: inline-flex; gap: 8px; align-items: center; font-weight: 600; color: var(--fg); border-top: 3px solid transparent; }
 .ubar button:hover { background: var(--sunken); }
 .ubar button[aria-pressed="true"] { border-top-color: var(--brand); background: var(--sunken); }
+.om.focus { box-shadow: 0 0 0 2px var(--brand); }
+.om-top, .om-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.om-msg { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--sunken); display: grid; gap: 4px; font-size: 14px; }
+.om-msg pre, .mp-msg pre { white-space: pre-wrap; font: inherit; margin: 6px 0 0; }
+.mailprev { border: 1px solid var(--line-strong); border-radius: 12px; overflow: hidden; background: #fff; color: #181818; font-size: 14px; }
+.mailprev .mp-h { background: #f3f3f3; padding: 10px 14px; display: grid; gap: 2px; font-size: 13px; border-bottom: 1px solid #ddd; }
+.mailprev .mp-b { padding: 14px; } .mailprev .mp-b p { margin: 0 0 10px; }
+.mailprev .mp-msg { border-left: 3px solid #0b5cab; background: #f7f9fc; padding: 10px 12px; margin: 0 0 12px; }
+.mailprev .foot { color: #666; font-size: 12px; }
+#ad_auto td input, #ad_auto td select { width: 100%; border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 8px; background: var(--surface); color: var(--fg); font: inherit; }
 .ubar .n { background: var(--red); color: #fff; font-size: 11px; border-radius: 8px; padding: 0 6px; }
 .dock { position: fixed; left: 12px; bottom: calc(46px + env(safe-area-inset-bottom, 0px)); z-index: 45; width: min(420px, calc(100% - 24px)); height: min(600px, calc(100% - 140px)); background: var(--surface); border-radius: 12px 12px 4px 4px; box-shadow: var(--shadow-lg); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
 .dock.todo { left: 150px; grid-template-rows: auto minmax(0, 1fr); }
@@ -690,6 +700,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
 <nav class="ubar" aria-label="Utilities">
   <button id="uAsst" aria-pressed="false"><span aria-hidden="true">✦</span>Ask the AI</button>
   <button id="uTodo" aria-pressed="false"><span aria-hidden="true">☑</span>To Do List <span class="n" id="todoN" hidden>0</span></button>
+  <button id="uOutbox" data-go="outbox"><span aria-hidden="true">✉</span>Outbox <span class="n" id="outN" hidden>0</span></button>
 </nav>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -780,7 +791,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   let contracts = [], store = null, ledgerDoc = null, auditCol = null, chatCol = null, fbCol = null;
   let sample = null, downloads = null, toolsOK = false, imagesLim = null, maxPrompt = 262144;
   let userName = "", realId = null;
-  let L = { myCompany: "", users: [], savedReports: [], settings: { noticeDays: [90, 60, 30], payDays: [7, 1] } };
+  let L = { myCompany: "", users: [], savedReports: [], settings: { noticeDays: [90, 60, 30], payDays: [7, 1] }, auto: null, outbox: [] };
   let auditLog = [], previewId = "";
   let route = { name: "home" };
   const state = { banner: "", briefing: "" };
@@ -957,7 +968,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     if (["record", "review"].includes(route.name) && !byId(route.id)) route = { name: "home" };
     if (AREA_KEYS.includes(route.name) && !canSeeArea(route.name)) route = { name: "home" };
     if (route.name === "admin" && viewer().role !== "admin") route = { name: "home" };
-    const pages = { home: pageHome, contracts: pageContracts, obligations: pageObligations, record: pageRecord, review: pageReview, reports: pageReports, report: pageReport, admin: pageAdmin, search: pageSearch };
+    const pages = { home: pageHome, outbox: pageOutbox, contracts: pageContracts, obligations: pageObligations, record: pageRecord, review: pageReview, reports: pageReports, report: pageReport, admin: pageAdmin, search: pageSearch };
     const fn = pages[route.name] || (AREA_KEYS.includes(route.name) ? () => pageArea(route.name) : pageHome);
     $("page").innerHTML = previewBanner() + bannerHtml() + fn();
     renderTabs(); renderChrome(); if (drawerKey && !drawerKey.startsWith("cform:")) renderDrawer();
@@ -1581,6 +1592,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const groups = [...new Set(u.map((x) => x.group).filter(Boolean))];
     return `<div class="page-head"><div><h1><span class="ico ad">A</span>Admin</h1><span class="muted">Users, roles, access and activity. Every change is recorded in the audit log.</span></div></div>
       <section class="card"><header><h2>Organization</h2></header><div class="pad formrow"><label>Your organization (which side is "us")<input id="ad_org" value="${esc(L.myCompany)}" style="min-width:280px"></label><label>Reminder days before renewal and notice dates<input id="ad_nd" value="${esc((L.settings?.noticeDays || [90, 60, 30]).join(", "))}"></label><label>Reminder days before payments<input id="ad_pd" value="${esc((L.settings?.payDays || [7, 1]).join(", "))}"></label><button class="btn primary sm" data-act="saveOrg">Save</button></div><p class="foot" style="margin:0 20px 14px">Reminders show in the app (bell and Reminders panel). Email delivery needs the server in the production build.</p></section>
+      ${autoAdminHtml()}
       <section class="card"><header><h2>Users and roles</h2><span class="foot">${u.length + 1} people</span></header><div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Group</th><th></th></tr></thead><tbody>
         <tr style="cursor:default"><td><b>${esc(me().name)}</b> (you)</td><td>—</td><td>Administrator</td><td>—</td><td></td></tr>
         ${u.map((x) => `<tr style="cursor:default"><td>${esc(x.name)}</td><td>${esc(x.email || "")}</td><td><select data-urole="${esc(x.id)}">${Object.entries(ROLES).map(([k, l]) => `<option value="${k}"${k === x.role ? " selected" : ""}>${l}</option>`).join("")}</select></td><td><input data-ugroup="${esc(x.id)}" value="${esc(x.group || "")}" style="width:120px;border:1px solid var(--line-strong);border-radius:6px;padding:4px 6px;background:var(--surface)"></td><td style="white-space:nowrap"><button class="btn sm" data-preview="${esc(x.id)}">Preview as</button> <button class="btn sm danger" data-udel="${esc(x.id)}">Remove</button></td></tr>`).join("")}
@@ -1589,6 +1601,133 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
       <section class="card"><header><h2>Role permissions</h2></header><div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>Capability</th>${Object.values(ROLES).map((r) => `<th>${r}</th>`).join("")}</tr></thead><tbody>${[["Manage users, roles and settings", "Yes", "No", "No", "No", "No"], ["See Customers and Suppliers tabs", "Yes", "Yes", "Yes", "No", "If granted"], ["See HR tab", "Yes", "No", "No", "Yes", "No"], ["Upload and edit contracts", "Yes", "Yes", "No", "HR tab only", "No"], ["Confirm or edit extracted fields", "Yes", "Yes", "View only", "HR tab only", "No"], ["Ask the AI", "Yes", "Yes", "Yes", "Yes", "Accessible contracts"], ["Run and export reports", "Yes", "Yes", "Yes", "HR reports", "If granted"], ["View audit log and access report", "Yes", "No", "No", "No", "No"]].map((r) => `<tr style="cursor:default">${r.map((x, i) => `<td>${i ? esc(x) : "<b>" + esc(x) + "</b>"}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
       <section class="card"><header><h2>Access review</h2><button class="btn sm" data-report="access">Open access report</button></header><div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>Contract</th><th>Tab</th><th>Restricted</th><th>Shared with</th></tr></thead><tbody>${contracts.map((c) => `<tr data-open="${esc(c.id)}"><td><a href="#" data-open="${esc(c.id)}">${esc(c.org)}</a></td><td>${areaPill(c.area)}</td><td>${c.restricted ? "🔒 Yes" : "No"}</td><td>${(c.grants || []).map((g) => { const x = L.users.find((y) => y.id === g.who); return `${esc(x ? x.name : g.who.replace("group:", "Group: "))} (${g.level}) <button class="btn sm danger" data-ungrantc="${esc(c.id)}|${esc(g.who)}" title="Remove access">×</button>`; }).join(", ") || '<span class="sub">—</span>'}</td></tr>`).join("")}</tbody></table></div></section>
       <section class="card"><header><h2>Audit log</h2><span class="foot">Last ${Math.min(auditLog.length, 100)} events</span></header>${auditLog.length ? `<div class="tbl-wrap"><table style="min-width:640px"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody>${auditLog.slice(0, 100).map((e) => `<tr style="cursor:default"><td class="num">${new Date(e.at).toLocaleString()}</td><td>${esc(e.who)}</td><td>${esc(e.action)}</td><td>${esc(e.target)}</td><td class="sub">${esc(e.detail)}</td></tr>`).join("")}</tbody></table></div>` : '<div class="pad"><p class="muted" style="margin:0">No events yet.</p></div>'}</section>`;
+  }
+
+  // ---------- automatic messages to counterparties, approved by the responsible administrator ----------
+  const APP_URL = "https://claude.ai/artifact/SYRtn3guQoLa9415cB7ZvZ";
+  const AUTO_KINDS = {
+    po: { label: "Purchase orders", hint: "Our payments to suppliers: a purchase order goes to the supplier before the payment date." },
+    payment: { label: "Payment reminders", hint: "Payments others owe us: a reminder goes to the customer before the due date." },
+    deliverable: { label: "Deliverable reminders", hint: "Reports, certificates and other duties the other side must deliver." },
+    notice: { label: "Notices we must send", hint: "Renewal and termination notices we owe. Off by default: check each one carefully." },
+  };
+  const autoCfg = () => ({ enabled: false, leadDays: 7, kinds: { po: true, payment: true, deliverable: true, notice: false }, myEmail: "", signature: "", ...(L.auto || {}) });
+  const people = () => [{ ...me(), email: autoCfg().myEmail }, ...L.users];
+  const personById = (id) => people().find((u) => u.id === id) || null;
+  function kindOf(o) {
+    const pay = num(o.amount) !== null && (o.category === "Payment" || num(o.amount) > 0);
+    if (o.side === "mine" && pay) return o.c.area === "suppliers" ? "po" : null;
+    if (o.side === "theirs" && pay) return "payment";
+    if (o.side === "theirs") return "deliverable";
+    if (o.side === "mine" && (o.category === "Notice" || /notice/i.test(o.text))) return "notice";
+    return null;
+  }
+  function draftFor(o, kind) {
+    const c = o.c, cfg = autoCfg(), us = L.myCompany || "our team", hi = `Hello ${c.contactName || c.org + " team"},`;
+    const amt = num(o.amount) !== null ? money(o.amount, c.currency) : "", when = o.due ? fmtD(o.due) : "";
+    const sign = `\n\nBest regards,\n${cfg.signature || us}`;
+    const ref = c.contractType ? ` under our ${c.contractType}` : "";
+    if (kind === "po") return { subject: `Purchase order: ${o.text}${when ? ` (${when})` : ""}`, body: `${hi}\n\nPlease accept this purchase order${ref}.\n\nItem: ${o.text}\nAmount: ${amt || "as per contract"}\nPayment date: ${when || "as per contract"}\n\nPlease confirm receipt and send your invoice referencing this order.${sign}` };
+    if (kind === "payment") return { subject: `Payment reminder: ${amt}${when ? ` due ${when}` : ""}`, body: `${hi}\n\nThis is a friendly reminder that the following payment${ref} is due${when ? ` on ${when}` : ""}:\n\n${o.text}\nAmount: ${amt}\n\nIf you have already paid, thank you, and please ignore this message.${sign}` };
+    if (kind === "deliverable") return { subject: `Reminder: ${o.text}${when ? ` due ${when}` : ""}`, body: `${hi}\n\nA friendly reminder that the following is due${ref}${when ? ` by ${when}` : ""}:\n\n${o.text}\n\nPlease let us know if you expect any delay.${sign}` };
+    return { subject: `Notice: ${o.text}`, body: `${hi}\n\nIn accordance with${ref ? ref.replace(" under", "") : " our agreement"}, please accept this notice:\n\n${o.text}\n\n[Please review this notice before approving.]${sign}` };
+  }
+  let queueBusy = false;
+  async function queueOutbox() {
+    // runs whenever the data changes: drafts a message for every enabled item due within the lead time
+    const cfg = autoCfg(); if (!cfg.enabled || queueBusy || !ledgerDoc && !L.auto) return;
+    const lim = addDays(todayISO, Number(cfg.leadDays) || 7), have = new Set(L.outbox.map((m) => m.key)), add = [];
+    for (const c of contracts) {
+      if (!c.contactEmail || !c.responsibleId) continue;
+      for (const o of obligationsOf(c)) {
+        if (["done", "disputed", "ongoing"].includes(o.state) || !o.due || o.due > lim) continue;
+        const kind = kindOf(o); if (!kind || !cfg.kinds[kind]) continue;
+        if (o.state === "overdue" && kind !== "payment") continue;
+        const key = `${c.id}|${o.id}|${o.due}`; if (have.has(key)) continue;
+        const d = draftFor(o, kind);
+        add.push({ id: uid("m"), key, cid: c.id, oid: o.id, due: o.due, kind, to: c.contactEmail, subject: d.subject, body: d.body, approverId: c.responsibleId, status: "awaiting", createdAt: new Date().toISOString() });
+      }
+    }
+    if (!add.length) return;
+    queueBusy = true; L.outbox = [...L.outbox, ...add].slice(-500);
+    try { await saveLedger(); add.forEach((m) => logEvent("Message drafted for approval", byId(m.cid)?.org || "", m.subject)); } finally { queueBusy = false; }
+    renderChrome(); if (route.name === "outbox") safeRender();
+  }
+  const canApprove = (m) => viewer().role === "admin" || viewer().id === m.approverId;
+  const myApprovals = () => (L.outbox || []).filter((m) => m.status === "awaiting" && canApprove(m) && byId(m.cid) && canSee(byId(m.cid)));
+  const mailto = (m) => `mailto:${encodeURIComponent(m.to)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+  function approvalEmailHtml(m) {
+    const c = byId(m.cid), who = personById(m.approverId), link = (act) => `${APP_URL}#outbox=${m.id}&do=${act}`;
+    const btn = (act, label, bg, fg) => `<a href="${link(act)}" target="_blank" rel="noopener" style="display:inline-block;padding:9px 18px;border-radius:8px;background:${bg};color:${fg};font-weight:600;text-decoration:none;margin-right:8px;border:1px solid ${bg === "#ffffff" ? "#c9c9c9" : bg}">${label}</a>`;
+    return `<div class="mailprev"><div class="mp-h"><div><b>To:</b> ${esc(who?.email || who?.name || "Responsible administrator")}</div><div><b>From:</b> Contract.ly</div><div><b>Subject:</b> Approve message to ${esc(c?.org || "")}: ${esc(m.subject)}</div></div>
+      <div class="mp-b"><p>Hello ${esc(who?.name || "")},</p><p>Contract.ly is ready to send this message to <b>${esc(c?.org || "")}</b> (${esc(m.to)}) for <b>${esc(m.due ? fmtD(m.due) : "")}</b>. Nothing is sent until you approve it.</p>
+      <div class="mp-msg"><div><b>To:</b> ${esc(m.to)}</div><div><b>Subject:</b> ${esc(m.subject)}</div><pre>${esc(m.body)}</pre></div>
+      <p>${btn("approve", "Approve and send", "#2e844a", "#ffffff")}${btn("deny", "Deny", "#ba0517", "#ffffff")}${btn("edit", "Edit", "#ffffff", "#0b5cab")}</p><p class="foot">You're receiving this because you're the responsible administrator for this contract.</p></div></div>${who?.email ? `<a class="btn sm" style="margin-top:8px" target="_blank" rel="noopener" href="${esc(approvalMailto(m))}">Email this approval request to ${esc(who.name)}</a>` : `<p class="foot" style="margin-top:8px">Add an email for ${esc(who?.name || "the approver")} in Admin to send this approval request.</p>`}`;
+  }
+  function approvalMailto(m) {
+    const c = byId(m.cid), who = personById(m.approverId), link = (act) => `${APP_URL}#outbox=${m.id}&do=${act}`;
+    const body = `Hello ${who?.name || ""},\n\nContract.ly is ready to send this message to ${c?.org || ""} (${m.to}) for ${m.due ? fmtD(m.due) : ""}. Nothing is sent until you approve it.\n\n----------\nTo: ${m.to}\nSubject: ${m.subject}\n\n${m.body}\n----------\n\nApprove and send: ${link("approve")}\nDeny: ${link("deny")}\nEdit: ${link("edit")}`;
+    return `mailto:${encodeURIComponent(who?.email || "")}?subject=${encodeURIComponent(`Approve message to ${c?.org || ""}: ${m.subject}`)}&body=${encodeURIComponent(body)}`;
+  }
+  let obF2 = "awaiting", obEdit = "", obPrev = "", obFocus = "";
+  const OUT_ST = { awaiting: "Waiting for approval", approved: "Approved — ready to send", sent: "Sent", denied: "Denied" };
+  function pageOutbox() {
+    const cfg = autoCfg(), all = (L.outbox || []).filter((m) => byId(m.cid) && canSee(byId(m.cid)));
+    const list = all.filter((m) => obF2 === "all" || m.status === obF2 || (obF2 === "approved" && m.status === "sent")).sort((a, b) => String(a.due).localeCompare(String(b.due)));
+    const count = (st) => all.filter((m) => m.status === st || (st === "approved" && m.status === "sent")).length;
+    const head = `<div class="page-head"><div><h1><span class="ico rp">✉</span>Outbox</h1><span class="muted">Purchase orders and reminders Contract.ly prepares from your contracts. Each one waits for the contract's responsible administrator to approve, deny or edit it.</span></div>${viewer().role === "admin" ? '<button class="btn" data-go="admin" data-adsec="auto">Automatic messages settings</button>' : ""}</div>`;
+    const off = !cfg.enabled ? `<div class="card"><div class="empty"><h3>Automatic messages are off</h3><p>An Administrator turns them on once in Admin → Automatic messages, and picks the contact and responsible administrator for each contract.</p>${viewer().role === "admin" ? '<button class="btn primary" data-go="admin" data-adsec="auto">Set up automatic messages</button>' : ""}</div></div>` : "";
+    const tabs = `<div class="card area-tabs"><div class="subtabs" role="tablist">${[["awaiting", "Waiting for approval"], ["approved", "Approved"], ["denied", "Denied"], ["all", "All"]].map(([k, l]) => `<button role="tab" data-obf2="${k}" aria-selected="${obF2 === k}">${l} <span class="muted">${k === "all" ? all.length : count(k)}</span></button>`).join("")}</div></div>`;
+    const card = (m) => {
+      const c = byId(m.cid), who = personById(m.approverId), mine = canApprove(m), editing = obEdit === m.id;
+      const acts = m.status === "awaiting" && mine ? `<button class="btn primary sm" data-om="${m.id}|approve">Approve and send</button><button class="btn sm danger" data-om="${m.id}|deny">Deny</button><button class="btn sm" data-om="${m.id}|edit">Edit</button>`
+        : m.status === "approved" ? `<a class="btn primary sm" href="${esc(mailto(m))}" target="_blank" rel="noopener" data-om-sent="${m.id}">Send from my email</a>${mine ? `<button class="btn sm" data-om="${m.id}|sent">Mark as sent</button>` : ""}`
+        : m.status === "denied" && mine ? `<button class="btn sm" data-om="${m.id}|reopen">Reconsider</button>` : "";
+      const body = editing ? `<div class="cform"><label>To<input id="om_to" type="email" value="${esc(m.to)}"></label><label>Subject<input id="om_sub" value="${esc(m.subject)}"></label><label>Message<textarea id="om_body" rows="10">${esc(m.body)}</textarea></label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" data-om="${m.id}|saveapprove">Save and approve</button><button class="btn sm" data-om="${m.id}|save">Save</button><button class="btn sm" data-om="${m.id}|cancel">Cancel</button></div></div>`
+        : `<div class="om-msg"><div><span class="muted">To</span> ${esc(m.to)}</div><div><span class="muted">Subject</span> <b>${esc(m.subject)}</b></div><pre>${esc(m.body)}</pre></div>`;
+      return `<section class="card om${obFocus === m.id ? " focus" : ""}" id="om_${m.id}"><div class="pad" style="display:grid;gap:10px">
+        <div class="om-top"><div><span class="pill none">${esc(AUTO_KINDS[m.kind]?.label.replace(/s$/, "") || m.kind)}</span> <button class="link" data-open="${esc(m.cid)}"><b>${esc(c.org)}</b></button> <span class="muted">· for ${esc(m.due ? fmtD(m.due) : "")}</span></div><span class="statuschip ${m.status === "awaiting" ? "ready" : m.status === "denied" ? "err" : "okk"}">${OUT_ST[m.status]}</span></div>
+        ${body}
+        <div class="om-foot"><span class="muted">Approver: <b>${esc(who?.name || "Not set")}</b>${who?.email ? ` (${esc(who.email)})` : ""}${m.decidedBy ? ` · ${esc(OUT_ST[m.status])} by ${esc(m.decidedBy)} ${new Date(m.decidedAt).toLocaleDateString()}` : ""}${m.edited ? " · edited" : ""}</span><div style="display:flex;gap:8px;flex-wrap:wrap">${acts}<button class="btn ghost sm" data-om="${m.id}|preview">${obPrev === m.id ? "Hide" : "Show"} approval email</button></div></div>
+        ${obPrev === m.id ? approvalEmailHtml(m) : ""}</div></section>`;
+    };
+    return head + off + (cfg.enabled || all.length ? tabs + (list.length ? list.map(card).join("") : `<div class="card"><div class="empty"><p>${obF2 === "awaiting" ? "Nothing is waiting for approval." : "No messages here."}</p></div></div>`) + `<p class="foot" style="margin:0 4px">Prototype: approval emails and the messages themselves are prepared here; "Send from my email" opens them in your email app. Sending automatically from Contract.ly needs the email service in the production build.</p>` : "");
+  }
+  async function outboxAct(id, act) {
+    const m = L.outbox.find((x) => x.id === id); if (!m) return;
+    if (act === "preview") { obPrev = obPrev === id ? "" : id; return render(); }
+    if (act === "edit") { obEdit = id; obFocus = id; return render(); }
+    if (act === "cancel") { obEdit = ""; return render(); }
+    if (!canApprove(m)) return toast("Only the responsible administrator or an Administrator can do this.");
+    const c = byId(m.cid), by = actor(), now = new Date().toISOString();
+    if (act === "save" || act === "saveapprove") {
+      const to = $("om_to").value.trim(), subject = $("om_sub").value.trim(), body = $("om_body").value;
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return toast("Enter a valid email address.");
+      if (!subject || !body.trim()) return toast("Subject and message can't be empty.");
+      Object.assign(m, { to, subject: subject.slice(0, 200), body: body.slice(0, 8000), edited: true }); obEdit = "";
+      if (act === "save") { await saveLedger(); logEvent("Outgoing message edited", c?.org || "", m.subject); render(); return toast("Saved"); }
+      act = "approve";
+    }
+    if (act === "approve") Object.assign(m, { status: "approved", decidedBy: by, decidedAt: now });
+    else if (act === "deny") Object.assign(m, { status: "denied", decidedBy: by, decidedAt: now });
+    else if (act === "sent") Object.assign(m, { status: "sent", sentAt: now });
+    else if (act === "reopen") Object.assign(m, { status: "awaiting", decidedBy: "", decidedAt: "" });
+    await saveLedger(); logEvent(`Outgoing message ${act === "approve" ? "approved" : act === "deny" ? "denied" : act === "sent" ? "sent" : "reopened"}`, c?.org || "", m.subject);
+    if (c) await saveContract(c.id, { ...stripId(c), activity: withAct(c, `Message to ${m.to} ${act === "approve" ? "approved" : act === "deny" ? "denied" : act === "sent" ? "sent" : "reopened"}: ${m.subject}`) });
+    render(); toast(act === "approve" ? "Approved. Use 'Send from my email' to send it." : act === "deny" ? "Denied. Nothing will be sent." : act === "sent" ? "Marked as sent" : "Back in the approval queue");
+  }
+  function autoAdminHtml() {
+    const cfg = autoCfg(), ppl = people();
+    const rows = contracts.filter((c) => canSee(c)).map((c) => `<tr style="cursor:default"><td><button class="link" data-open="${esc(c.id)}">${esc(c.org)}</button><div class="sub">${esc(AREAS[c.area]?.label || "")}</div></td><td><input data-cauto="${esc(c.id)}|contactName" value="${esc(c.contactName || "")}" placeholder="Contact name"></td><td><input type="email" data-cauto="${esc(c.id)}|contactEmail" value="${esc(c.contactEmail || "")}" placeholder="name@company.com"></td><td><select data-cauto="${esc(c.id)}|responsibleId"><option value="">Choose…</option>${ppl.map((u) => `<option value="${esc(u.id)}"${u.id === c.responsibleId ? " selected" : ""}>${esc(u.name)}${u.email ? "" : " (no email)"}</option>`).join("")}</select></td></tr>`).join("");
+    return `<section class="card" id="ad_auto"><header><h2>Automatic messages</h2><span class="foot">Set up once</span></header><div class="pad" style="display:grid;gap:14px">
+      <p class="muted" style="margin:0">Contract.ly prepares purchase orders and reminders from each contract's obligations. Before anything goes to a customer or supplier, the contract's responsible administrator gets an approval email showing the exact message, with Approve, Deny and Edit buttons.</p>
+      <label class="chk" style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="au_on" ${cfg.enabled ? "checked" : ""}> Turn on automatic messages</label>
+      <div class="formrow"><label>Prepare messages this many days before the due date<input id="au_lead" type="number" min="1" max="60" value="${esc(cfg.leadDays)}" style="width:90px"></label><label>Your email (for approval emails sent to you)<input id="au_me" type="email" value="${esc(cfg.myEmail)}" placeholder="you@company.com" style="min-width:240px"></label><label>Signature on outgoing messages<input id="au_sig" value="${esc(cfg.signature)}" placeholder="${esc(L.myCompany || "Your company")}" style="min-width:240px"></label></div>
+      <div style="display:grid;gap:6px">${Object.entries(AUTO_KINDS).map(([k, v]) => `<label class="chk" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" data-aukind="${k}" ${cfg.kinds[k] ? "checked" : ""} style="margin-top:3px"><span><b>${v.label}</b><br><span class="muted" style="font-size:13px">${v.hint}</span></span></label>`).join("")}</div>
+      <div><button class="btn primary" data-act="saveAuto">Save settings</button></div></div>
+      <header style="border-top:1px solid var(--line)"><h2 style="font-size:15px">Who to contact and who approves, per contract</h2><span class="foot">Saved as you type</span></header>
+      <div class="tbl-wrap"><table style="min-width:760px"><thead><tr><th>Contract</th><th>Contact name</th><th>Contact email</th><th>Responsible administrator</th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="muted">No contracts yet.</td></tr>'}</tbody></table></div>
+      <p class="foot" style="margin:0 20px 14px">Messages are prepared only for contracts with both a contact email and a responsible administrator. Add people and their emails in Users and roles.</p></section>`;
   }
 
   // ---------- header menus & chrome ----------
@@ -1632,6 +1771,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const rs = reminders();
     $("bellN").textContent = rs.length; $("bellN").hidden = !rs.length;
     $("todoN").textContent = rs.length; $("todoN").hidden = !rs.length;
+    const ob = myApprovals().length; $("outN").textContent = ob; $("outN").hidden = !ob; $("uOutbox").setAttribute("aria-pressed", String(route.name === "outbox"));
     $("todoList").innerHTML = rs.length ? rs.map((r) => r.o ? `<li><span class="sidetag ${r.o.side}" style="margin:2px 0 0">${r.o.side === "mine" ? "↗" : "↙"}</span><span class="t"><b>${esc(r.o.c.org)}</b> ${esc(r.o.text)}<span style="${r.urgent ? "color:var(--red);font-weight:700" : ""}">${esc(r.why)} · ${fmtD(r.o.due)}${num(r.o.amount) !== null ? " · " + money(r.o.amount) : ""}</span><button class="link" data-open="${esc(r.o.c.id)}">Open contract</button></span></li>` : `<li><span class="sidetag mine" style="margin:2px 0 0">Date</span><span class="t"><b>${esc(r.d.c.org)}</b> ${esc(r.d.label)}<span style="${r.urgent ? "color:var(--red);font-weight:700" : ""}">${esc(r.why)} · ${fmtD(r.d.date)}</span><button class="link" data-open="${esc(r.d.c.id)}">Open contract</button></span></li>`).join("") + '<li><span></span><span class="foot">Email reminders at your chosen intervals arrive with the production build.</span></li>' : '<li><span></span><span class="muted">No reminders right now.</span></li>';
   }
   function openTodo(open) { $("todo").hidden = !open; $("uTodo").setAttribute("aria-pressed", String(open)); if (open) openAsst(false); }
@@ -2150,7 +2290,7 @@ ${ctx}`;
   // ---------- events ----------
   document.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-menu]") && !e.target.closest(".menu select")) closeMenu();
-    const t = e.target.closest("[data-menu],[data-aact],[data-atab],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
+    const t = e.target.closest("[data-menu],[data-om],[data-obf2],[data-aact],[data-atab],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
     if (!t) return;
     if (t.tagName === "A") e.preventDefault();
     const d = t.dataset;
@@ -2168,10 +2308,13 @@ ${ctx}`;
     if (d.fact) { const c = byId(route.id); if (c && canEdit(c)) await fieldAction(c, d.k, d.fact); return; }
     if (d.report) { const [k] = d.report.split(":"); if (!d.report.includes(":")) { rf = { ...defaultRF(), area: rf.area }; } else { rf = defaultRF(); } return go("report", d.report); }
     if (d.forecast) { const [f, to] = d.forecast.split("|"); rf = { ...defaultRF(), from: f, to }; return go("report", "forecast"); }
+    if (d.adsec) { await go("admin"); setTimeout(() => document.getElementById("ad_" + d.adsec)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); return; }
     if (d.go) { if (AREA_KEYS.includes(d.go)) { listF = { q: "", st: "", rv: "" }; areaTab = d.atabgo || "contracts"; } return go(d.go); }
     if (d.open) { closeModal(); closeDrawer(); openTodo(false); return go("record", d.open); }
     if (d.rtab) { recTab = d.rtab; return render(); }
     if (d.atab) { areaTab = d.atab; return render(); }
+    if (d.om) { const [id, act] = d.om.split("|"); return outboxAct(id, act); }
+    if (d.obf2) { obF2 = d.obf2; return render(); }
     if (d.aact) { const [id, ok] = d.aact.split("|"); pendingActs[id]?.answer(ok === "1"); return; }
     if (d.ask) { const c = route.name === "record" ? byId(route.id) : null; if (c && scope.kind !== "contract") await setScope({ kind: "contract", id: c.id }); openAsst(true); return send(d.ask); }
     if (d.obview) { obF.view = d.obview; return render(); }
@@ -2221,6 +2364,12 @@ ${ctx}`;
       case "rSave": { if (!lastReport) return; const name = `${lastReport.title} — ${new Date().toLocaleDateString()}${rf.cp ? " — " + rf.cp : ""}`; L.savedReports = [...(L.savedReports || []), { name, key: lastReport.key, filters: { ...rf }, savedAt: new Date().toISOString() }].slice(-30); await saveLedger(); logEvent("Saved report", name); return toast("Report saved — find it under Reports"); }
       case "rSchedule": return toast("Scheduled email delivery needs the production server. Save the report for now and re-run it any time.");
       case "rAsk": { if (!lastReport) return; await setScope({ kind: "all" }); openAsst(true); return send(`Explain the "${lastReport.title}" for ${rf.from} to ${rf.to}${rf.cp ? " for " + rf.cp : ""}: what stands out and what should we act on?`); }
+      case "saveAuto": {
+        const cfg = autoCfg(), kinds = { ...cfg.kinds }; document.querySelectorAll("[data-aukind]").forEach((x) => { kinds[x.dataset.aukind] = x.checked; });
+        const myEmail = $("au_me").value.trim(); if (myEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(myEmail)) return toast("Enter a valid email address.");
+        L.auto = { enabled: $("au_on").checked, leadDays: Math.min(60, Math.max(1, Number($("au_lead").value) || 7)), kinds, myEmail, signature: $("au_sig").value.trim().slice(0, 200) };
+        await saveLedger(); logEvent("Automatic messages settings changed", "", L.auto.enabled ? "on" : "off"); toast("Saved"); await queueOutbox(); return render();
+      }
       case "saveOrg": { L.myCompany = $("ad_org").value.trim(); const parse = (s) => s.split(/[,\s]+/).map(Number).filter((n) => n > 0 && n < 400).sort((a, b) => b - a); L.settings = { noticeDays: parse($("ad_nd").value).length ? parse($("ad_nd").value) : [90, 60, 30], payDays: parse($("ad_pd").value).length ? parse($("ad_pd").value) : [7, 1] }; await saveLedger(); logEvent("Settings changed", "Organization", L.myCompany); render(); return toast("Saved"); }
       case "addUser": { const name = $("nu_name").value.trim(); if (!name) { $("nu_name").focus(); return; } const u = { id: uid("u"), name, email: $("nu_email").value.trim(), role: $("nu_role").value, group: $("nu_group").value.trim() }; L.users = [...L.users, u]; await saveLedger(); logEvent("Added user", name, ROLES[u.role]); return render(); }
     }
@@ -2232,6 +2381,9 @@ ${ctx}`;
     if (t.dataset?.urole) { const u = L.users.find((x) => x.id === t.dataset.urole); if (u) { const old = u.role; u.role = t.value; await saveLedger(); logEvent("Role changed", u.name, `${ROLES[old]} → ${ROLES[u.role]}`); render(); } return; }
     if (t.dataset?.ugroup) { const u = L.users.find((x) => x.id === t.dataset.ugroup); if (u) { u.group = t.value.trim(); await saveLedger(); logEvent("Group changed", u.name, u.group); } return; }
     if (id === "restrictChk") { const c = byId(route.id); if (c && canManage(c)) { await saveContract(c.id, { ...stripId(c), restricted: t.checked, activity: withAct(c, t.checked ? "Restricted to named people" : "Restriction removed") }); logEvent("Sharing changed: " + (t.checked ? "restricted" : "unrestricted"), c.org); } return; }
+    if (t.dataset?.cauto) { const [cid, f] = t.dataset.cauto.split("|"); const c = byId(cid); if (!c || viewer().role !== "admin") return; const v = t.value.trim();
+      if (f === "contactEmail" && v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { toast("Enter a valid email address."); return; }
+      await saveContract(c.id, { ...stripId(c), [f]: v.slice(0, 200), activity: withAct(c, `${f === "responsibleId" ? "Responsible administrator" : f === "contactEmail" ? "Contact email" : "Contact name"} set`) }); queueOutbox(); return; }
     if (id === "moveArea") { const c = byId(route.id); if (c && canEdit(c) && t.value !== c.area) { const from = c.area; await saveContract(c.id, mirror({ ...stripId(c), area: t.value, activity: withAct(c, `Moved from ${AREAS[from].label} to ${AREAS[t.value].label}`) })); logEvent("Moved contract", c.org, `${AREAS[from].label} → ${AREAS[t.value].label}`); toast("Moved. Review the fields for the new tab."); } return; }
     const ofMap = { of_side: "side", of_st: "st", of_area: "area", of_cp: "cp", of_cat: "cat", of_owner: "owner", of_from: "from", of_to: "to" };
     if (ofMap[id]) { obF[ofMap[id]] = t.value; return render(); }
@@ -2300,18 +2452,27 @@ ${ctx}`;
     if (db && realId) {
       ledgerDoc = db.doc("data/users/" + realId + "/promisely");
       store = ledgerDoc.collection("contracts"); auditCol = ledgerDoc.collection("audit"); chatCol = ledgerDoc.collection("chats"); fbCol = ledgerDoc.collection("feedback");
-      ledgerDoc.onSnapshot((snap) => { const d = (snap.exists && snap.data()) || {}; L = { myCompany: d.myCompany || "", users: Array.isArray(d.users) ? d.users : [], savedReports: Array.isArray(d.savedReports) ? d.savedReports : [], settings: d.settings || { noticeDays: [90, 60, 30], payDays: [7, 1] } }; safeRender(); }, () => {});
+      ledgerDoc.onSnapshot((snap) => { const d = (snap.exists && snap.data()) || {}; L = { myCompany: d.myCompany || "", users: Array.isArray(d.users) ? d.users : [], savedReports: Array.isArray(d.savedReports) ? d.savedReports : [], settings: d.settings || { noticeDays: [90, 60, 30], payDays: [7, 1] }, auto: d.auto || null, outbox: Array.isArray(d.outbox) ? d.outbox : [] }; queueOutbox(); safeRender(); }, () => {});
       auditCol.orderBy("at", "desc").limit(300).onSnapshot((snap) => { auditLog = snap.docs.map((x) => x.data()); if (route.name === "admin" || route.id?.startsWith?.("access")) safeRender(); }, () => {});
-      store.onSnapshot((snap) => { contracts = snap.docs.map((x) => ({ id: x.id, ...x.data() })); safeRender(); updateAsstContext(); },
+      store.onSnapshot((snap) => { contracts = snap.docs.map((x) => ({ id: x.id, ...x.data() })); safeRender(); updateAsstContext(); queueOutbox(); openDeepLink(); },
         (e) => { state.banner = "Your contracts couldn't be loaded (" + (e?.code || "error") + "). Reload the page to try again."; render(); });
       setScope({ kind: "all" });
     } else if (!state.banner) state.banner = "Sign in to claude.ai to save your contracts. Until then, anything you add disappears when you close the page.";
     render(); updateAsstContext();
   })();
+  let deepDone = false;
+  function openDeepLink() {
+    // approval-email buttons link to APP_URL#outbox=<id>&do=approve|deny|edit
+    if (deepDone) return; const h = new URLSearchParams(String(location.hash || "").replace(/^#/, "")); const id = h.get("outbox"); if (!id) { deepDone = true; return; }
+    const m = (L.outbox || []).find((x) => x.id === id); if (!m) return;
+    deepDone = true; obF2 = "all"; obFocus = id; go("outbox");
+    const act = h.get("do"); if (act === "edit") outboxAct(id, "edit"); else if (act === "approve" || act === "deny") toast(`Review the message, then click ${act === "approve" ? "Approve and send" : "Deny"}.`);
+    setTimeout(() => document.getElementById("om_" + id)?.scrollIntoView({ block: "center" }), 80);
+  }
   function safeRender() {
     const a = document.activeElement;
     if (a && ["of_q", "lf_q", "ct_q", "prompt", "nobText", "areaAsk", "gq", "nu_name", "nu_email", "nu_group", "ad_org", "ad_nd", "ad_pd"].includes(a.id)) { renderChrome(); renderTabs(); return; }
-    if (a && (a.matches?.("[data-fin]") || a.matches?.("[data-obnote]") || a.matches?.("[data-ugroup]"))) { renderChrome(); return; }
+    if (a && (a.matches?.("[data-fin]") || a.matches?.("[data-obnote]") || a.matches?.("[data-ugroup]") || a.matches?.("[data-cauto]") || a.matches?.("#om_body,#om_sub,#om_to,#au_me,#au_sig,#au_lead"))) { renderChrome(); return; }
     render();
   }
 })();
