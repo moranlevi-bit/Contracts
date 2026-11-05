@@ -30,7 +30,9 @@ Search `in:inbox has:attachment -label:Contractly/Filed -label:Contractly/Done`.
 
 1. `get_message` with `RAW`, save the base64url text to a file, decode it (Python `email` module) and save each PDF,
    Word or image attachment.
-2. Read the text (`pdftotext -layout`, or `python-docx`; for scans describe that the file needs the app's upload instead).
+2. Read the text (`pdftotext -layout`, or `python-docx`). If a PDF has little or no text (a scan) or the attachment is a photo,
+   open the file with the Read tool, which shows the pages as images, and read them that way. Keep `[[Page n]]` markers in
+   `sourceText` so citations have page numbers.
 3. Decide the tab: `customers` (the other party pays us), `suppliers` (we pay the other party), `hr` (employment).
 4. Build a contract record exactly like the app does: `area`, `org` (other party), `counterparty` (our company from the
    ledger), `contractType`, `currency`, `summary`, `startDate`, `endDate`, `autoRenew`, `renewalNoticeDays`, `annualValue`,
@@ -41,7 +43,10 @@ Search `in:inbox has:attachment -label:Contractly/Filed -label:Contractly/Done`.
    `example: false`, `activity: [{at, text: "Received by email from <sender> and filed under <tab>", ai: true, by: "Email intake"}]`,
    `contactName` and `contactEmail` (only if written in the contract), `responsibleId: "me"`, and a `commPlan`
    (`{at, by: "AI", rows: [{oid, send, kind: po|payment|deliverable|notice|other, daysBefore, subject, body, reason}]}`).
-   Never invent values: use null when the contract doesn't say.
+   Fill every field the app has for that tab (the field lists are `FIELDS` in `app/contract-ledger.html`: customers,
+   suppliers and hr each have their own) and both sides' obligations with dates, amounts and recurrence.
+   Never invent values: use null when the contract doesn't say. Everything stays "unverified" until a person confirms it
+   in the app's Review screen.
 5. Save it with `ArtifactData set` into the contracts collection (new doc id: 20 lowercase letters/digits).
 6. Label the email `Contractly/Filed` and reply to the sender: what was filed, the tab, the counterparty, how many
    obligations, and that the terms are waiting for review in the app.
