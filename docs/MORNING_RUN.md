@@ -1,6 +1,6 @@
-# Contract.ly morning run
+# Contract.ly scheduled run (hourly)
 
-The daily scheduled task follows these steps. It works only through the Gmail connector (signed in as the system mailbox) and
+The scheduled task (every hour) follows these steps. It works only through the Gmail connector (signed in as the system mailbox) and
 the `ArtifactData` tool, so no one has to log in to the app. Do the steps in order and keep a short log of what you did.
 
 ## Fixed facts
@@ -88,5 +88,5 @@ merge, never overwrite someone else's changes).
 
 ## Step 4: digest
 
-If anything happened, send morankochal@gmail.com one short summary email ("Contract.ly this morning: 1 contract filed,
+If anything happened, send morankochal@gmail.com one short summary email ("Contract.ly update: 1 contract filed,
 2 messages waiting for your approval, 1 sent"). If nothing happened, send nothing.
