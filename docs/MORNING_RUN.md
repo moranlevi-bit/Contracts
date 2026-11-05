@@ -24,6 +24,14 @@ the `ArtifactData` tool, so no one has to log in to the app. Do the steps in ord
 - At most 20 outgoing customer emails per run. If more are due, send the first 20 and mention it in the digest.
 - Never delete data. Never change contracts beyond what a step below says.
 
+## Step 0: stop early when there's nothing to do (keeps quiet hours cheap)
+
+Run these two Gmail searches first (IDs only):
+`in:inbox has:attachment -label:Contractly/Filed -label:Contractly/Done` and
+`in:inbox subject:(APPROVE OR DENY OR EDIT) -label:Contractly/Done`.
+If both are empty AND the current hour (America/New_York) is not 8 AM, stop right away with the summary "Nothing new."
+Steps 3 and 4 (preparing new messages, digest) only need to run once a day, in the 8 AM run, or when Step 1 filed a contract.
+
 ## Step 1: new contracts sent by email
 
 Search `in:inbox has:attachment -label:Contractly/Filed -label:Contractly/Done`. For each message from an accepted sender:
