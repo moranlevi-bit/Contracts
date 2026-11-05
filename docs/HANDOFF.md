@@ -51,8 +51,12 @@ The user wants Contract.ly to work by email with **no one logging in**:
 
 **Prototype plan agreed with the user (Gmail + a scheduled Claude task):**
 
-- The user is connecting **Gmail** at https://claude.ai/customize/connectors and will give the address to use
-  (plan: plus-addressing such as `name+contractly@gmail.com` as the "system address").
+- **Addresses (decided):** system address **info.contractly@gmail.com** (Contract.ly sends from it and receives contracts and
+  approval replies at it); the user / responsible administrator is **morankochal@gmail.com**.
+- The Gmail connector should be signed in as info.contractly@gmail.com. Check which account it uses before building.
+- Tested 2026-11-05 (connector then signed in as the user's own Gmail): sending works; Approve/Deny/Edit as `mailto:` reply
+  buttons work (use outlined buttons with coloured text, not white text on a coloured background: Gmail dropped the
+  backgrounds). A reply "APPROVE #TEST2" was received and found by search. Reading PDF attachments is still untested.
 - First, test what the Gmail connector can do in this session: search and read messages, read attachments (PDF),
   send vs. only create drafts. Report the result to the user before building.
 - Then create a scheduled task (hourly or daily, connector: Gmail) that:
