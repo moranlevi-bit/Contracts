@@ -386,6 +386,10 @@ tfoot td { font-weight: 700; background: var(--sunken); border-bottom: 0; }
 .ubar button[aria-pressed="true"] { border-top-color: var(--brand); background: var(--sunken); }
 .cp-tbl input:not([type=checkbox]), .cp-tbl select, .cp-tbl textarea { width: 100%; border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 8px; background: var(--surface); color: var(--fg); font: inherit; }
 .cp-tbl td { vertical-align: top; }
+.emp { border-top: 1px solid var(--line); padding: 10px 0 2px; margin-top: 10px; display: grid; gap: 8px; }
+.emp-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.emp-top .label { margin: 0; }
+.hrask { border: 1px solid var(--amber, #f2a03a); background: var(--amber-pill, #fef0cd); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; font-size: 14px; }
 .om.focus { box-shadow: 0 0 0 2px var(--brand); }
 .om-top, .om-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
 .om-msg { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--sunken); display: grid; gap: 4px; font-size: 14px; }
@@ -793,7 +797,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   let contracts = [], store = null, ledgerDoc = null, auditCol = null, chatCol = null, fbCol = null;
   let sample = null, downloads = null, toolsOK = false, imagesLim = null, maxPrompt = 262144;
   let userName = "", realId = null;
-  let L = { myCompany: "", users: [], savedReports: [], settings: { noticeDays: [90, 60, 30], payDays: [7, 1] }, auto: null, outbox: [] };
+  let L = { myCompany: "", users: [], savedReports: [], settings: { noticeDays: [90, 60, 30], payDays: [7, 1] }, auto: null, outbox: [], hrAsks: [] };
   let auditLog = [], previewId = "";
   let route = { name: "home" };
   const state = { banner: "", briefing: "" };
@@ -973,7 +977,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const pages = { home: pageHome, outbox: pageOutbox, contracts: pageContracts, obligations: pageObligations, record: pageRecord, review: pageReview, reports: pageReports, report: pageReport, admin: pageAdmin, search: pageSearch };
     const fn = pages[route.name] || (AREA_KEYS.includes(route.name) ? () => pageArea(route.name) : pageHome);
     $("page").innerHTML = previewBanner() + bannerHtml() + fn();
-    renderTabs(); renderChrome(); if (drawerKey && !drawerKey.startsWith("cform:")) renderDrawer();
+    renderTabs(); renderChrome(); if (drawerKey && !drawerKey.startsWith("cform:") && !drawerKey.startsWith("emp:")) renderDrawer();
     if (route.name === "review" && reviewHL) setTimeout(() => document.getElementById("hl")?.scrollIntoView({ block: "center", behavior: "smooth" }), 30);
   }
   const bannerHtml = () => (state.banner ? `<div class="banner">${esc(state.banner)}</div>` : "");
@@ -1018,6 +1022,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
   function closeDrawer() { drawerKey = ""; $("drawer").hidden = true; if ($("modal").hidden) $("scrim").hidden = true; }
   function renderDrawer() {
     if (drawerKey.startsWith("cform:")) return renderCForm(drawerKey.slice(6));
+    if (drawerKey.startsWith("emp:")) return renderEmpForm(drawerKey.slice(4));
     const { c, o: raw } = findOb(drawerKey); if (!c || !raw) { closeDrawer(); return; }
     const o = { ...raw, c, state: obState(raw) }, can = canEdit(c), S = SIDE[o.side];
     const fact = (k, v) => v ? `<div><div class="dlbl">${k}</div><div>${v}</div></div>` : "";
@@ -1170,8 +1175,8 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const nd = (c) => { const d = deadlinesOf(c).filter((x) => x.date >= todayISO)[0]; return d ? `${fmtD(d.date)}<div class="sub">${esc(d.label)}</div>` : "—"; };
     let headRow, bodyRows;
     if (area === "hr") {
-      headRow = "<th>Worker</th><th>Role</th><th>Start</th><th>Salary</th><th>Notice period</th><th>Next review</th><th>Review state</th>";
-      bodyRows = rows.map((c) => `<tr data-open="${esc(c.id)}" tabindex="0"><td><a href="#" data-open="${esc(c.id)}">${esc(c.org)}</a>${c.restricted ? ' <span class="lock" title="Restricted">🔒</span>' : ""}</td><td>${fcell(c, "role")}</td><td>${fcell(c, "startDate")}</td><td>${fcell(c, "salaryAmount")}</td><td>${fcell(c, "noticePeriod")}</td><td>${fcell(c, "reviewDates")}</td><td>${rvPill(c)}</td></tr>`).join("");
+      headRow = "<th>Worker</th><th>Employment</th><th>Role</th><th>Start</th><th>Salary</th><th>Notice period</th><th>Next review</th><th>Review state</th>";
+      bodyRows = rows.map((c) => `<tr data-open="${esc(c.id)}" tabindex="0"><td><a href="#" data-open="${esc(c.id)}">${esc(c.org)}</a>${c.restricted ? ' <span class="lock" title="Restricted">🔒</span>' : ""}</td><td>${empPill(c)}</td><td>${fcell(c, "role")}</td><td>${fcell(c, "startDate")}</td><td>${fcell(c, "salaryAmount")}</td><td>${fcell(c, "noticePeriod")}</td><td>${fcell(c, "reviewDates")}</td><td>${rvPill(c)}</td></tr>`).join("");
     } else {
       const inbound = area === "customers";
       headRow = `<th>Counterparty</th><th>Status</th><th>Review state</th><th>Term</th><th class="r">${inbound ? "Year-1 value" : "Annual cost"}</th><th>${inbound ? "Next money in" : "Next payment out"}</th><th>Next deadline</th><th>AI risk</th>`;
@@ -1266,6 +1271,85 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     return toast("Contract added. Attach the signed document from the contract page when you have it.");
   }
 
+  // ---------- HR: employment status (Active / On leave / On notice / Ended) ----------
+  const EMP = { active: { label: "Active", cls: "okk" }, leave: { label: "On leave", cls: "ready" }, notice: { label: "On notice", cls: "ready" }, ended: { label: "Ended", cls: "err" } };
+  const empOf = (c) => EMP[c.empStatus] ? c.empStatus : "active";
+  const empPill = (c) => `<span class="statuschip ${EMP[empOf(c)].cls}">${EMP[empOf(c)].label}</span>`;
+  const hrManagerDefault = () => L.users.find((u) => u.role === "hr")?.id || "me";
+  function empPanel(c) {
+    const st = empOf(c), edit = canEdit(c), mgr = personById(c.managerId), hrm = personById(c.hrManagerId || hrManagerDefault());
+    const when = st === "leave" ? `${c.statusFrom ? "from " + fmtD(c.statusFrom) : ""}${c.statusTo ? " until " + fmtD(c.statusTo) : ""}` : st === "notice" ? (c.lastDay ? "last working day " + fmtD(c.lastDay) : "") : st === "ended" ? (c.endedOn ? "ended " + fmtD(c.endedOn) : "") + (c.endReason ? " · " + c.endReason : "") : "";
+    const asks = (L.hrAsks || []).filter((a) => a.cid === c.id && a.status === "open");
+    const canAnswer = (a) => ["admin", "hr"].includes(viewer().role) || [c.managerId, c.hrManagerId || hrManagerDefault()].includes(viewer().id);
+    const askHtml = asks.map((a) => `<div class="hrask"><b>${a.kind === "expiring" ? `This contract ends on ${esc(fmtD(a.date))}. Does it continue?` : `${esc(EMP[a.kind === "ending" && c.empStatus === "notice" ? "notice" : "ended"].label)} on ${esc(fmtD(a.date))}: what happens to payments after that date?`}</b><span class="muted">Asked ${a.emailedAt ? "by email " : ""}to ${esc([mgr?.name, hrm?.name].filter(Boolean).join(" and ") || "the HR manager")}${a.emailedAt ? " on " + new Date(a.emailedAt).toLocaleDateString() : ""}. Waiting for an answer.</span>${canAnswer(a) ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${a.kind === "expiring" ? `<label class="foot" style="display:flex;gap:6px;align-items:center">New end date <input type="date" id="hrd_${a.id}" style="border:1px solid var(--line-strong);border-radius:6px;padding:4px 6px;background:var(--surface);color:var(--fg)"> (leave empty if open-ended)</label><button class="btn sm primary" data-hra="${a.id}|continue">Continue</button><button class="btn sm danger" data-hra="${a.id}|end">End on ${esc(fmtD(a.date))}</button>` : `<button class="btn sm primary" data-hra="${a.id}|stop">Stop payments after ${esc(fmtD(a.date))}</button><button class="btn sm" data-hra="${a.id}|keep">Keep payments</button>`}</div>` : ""}</div>`).join("");
+    return `<div class="emp"><div class="emp-top"><span class="label">Employment status</span>${empPill(c)}${when ? `<span class="muted">${esc(when)}</span>` : ""}<span class="muted">Manager: <b>${esc(mgr?.name || "not set")}</b> · HR manager: <b>${esc(hrm?.name || "not set")}</b></span>${edit ? `<button class="btn sm" data-act="empEdit" data-id="${esc(c.id)}">Change status</button>` : ""}</div>${askHtml}</div>`;
+  }
+  function renderEmpForm(id, draft) {
+    const c = byId(id); if (!c || !canEdit(c)) { closeDrawer(); return; }
+    const v = draft || { st: empOf(c), from: c.statusFrom || "", to: c.statusTo || "", lastDay: c.lastDay || "", endedOn: c.endedOn || "", reason: c.endReason || "", mgr: c.managerId || "", hrm: c.hrManagerId || hrManagerDefault() };
+    const ppl = people(), opt = (sel) => `<option value="">Not set</option>${ppl.map((u) => `<option value="${esc(u.id)}"${u.id === sel ? " selected" : ""}>${esc(u.name)}${u.email ? "" : " (no email)"}</option>`).join("")}`;
+    $("drawer").innerHTML = `<header><div><h2>Employment status</h2><span class="muted" style="font-size:13px">${esc(c.org)}</span></div><button class="btn ghost sm" data-act="closeDrawer" aria-label="Close">✕</button></header>
+      <div class="dbody"><div class="cform">
+        <label>Status<select id="em_st">${Object.entries(EMP).map(([k, x]) => `<option value="${k}"${k === v.st ? " selected" : ""}>${x.label}</option>`).join("")}</select></label>
+        ${v.st === "leave" ? `<div class="two"><label>Leave starts<input id="em_from" type="date" value="${esc(v.from)}"></label><label>Expected return<input id="em_to" type="date" value="${esc(v.to)}"></label></div>` : ""}
+        ${v.st === "notice" ? `<label>Last working day *<input id="em_last" type="date" value="${esc(v.lastDay)}"></label>` : ""}
+        ${v.st === "ended" ? `<label>End date *<input id="em_end" type="date" value="${esc(v.endedOn)}"></label>` : ""}
+        ${v.st === "notice" || v.st === "ended" ? `<label>Reason<select id="em_reason">${["", "Resigned", "Dismissed", "End of fixed term", "Mutual agreement", "Retired", "Other"].map((r) => `<option${r === v.reason ? " selected" : ""}>${r}</option>`).join("")}</select></label>` : ""}
+        <label>Employee's manager<select id="em_mgr">${opt(v.mgr)}</select></label>
+        <label>HR manager<select id="em_hrm">${opt(v.hrm)}</select></label>
+        ${v.st === "notice" || v.st === "ended" ? '<p class="foot" style="margin:0">Saving emails the manager and the HR manager to decide what happens to payments after that date. Nothing is changed until one of them answers.</p>' : ""}
+      </div></div>
+      <footer><button class="btn primary" data-act="empSave">Save</button><button class="btn" data-act="closeDrawer">Cancel</button></footer>`;
+  }
+  const empRead = () => ({ st: $("em_st").value, from: $("em_from")?.value || "", to: $("em_to")?.value || "", lastDay: $("em_last")?.value || "", endedOn: $("em_end")?.value || "", reason: $("em_reason")?.value || "", mgr: $("em_mgr").value, hrm: $("em_hrm").value });
+  async function saveEmp(id) {
+    const c = byId(id); if (!c || !canEdit(c)) return toast("You don't have permission to do that.");
+    const v = empRead();
+    if (v.st === "notice" && !parseD(v.lastDay)) return toast("Enter the last working day.");
+    if (v.st === "ended" && !parseD(v.endedOn)) return toast("Enter the end date.");
+    const prev = empOf(c), now = new Date().toISOString(), date = v.st === "notice" ? v.lastDay : v.st === "ended" ? v.endedOn : "";
+    const patch = { empStatus: v.st, statusFrom: v.st === "leave" ? v.from : "", statusTo: v.st === "leave" ? v.to : "", lastDay: v.st === "notice" ? v.lastDay : "", endedOn: v.st === "ended" ? v.endedOn : "", endReason: ["notice", "ended"].includes(v.st) ? v.reason : "", managerId: v.mgr, hrManagerId: v.hrm,
+      statusHistory: [...(c.statusHistory || []), { at: now, by: actor(), status: v.st, date }].slice(-30) };
+    const text = `Employment status: ${EMP[prev].label} → ${EMP[v.st].label}${date ? " (" + fmtD(date) + ")" : ""}${patch.endReason ? ", " + patch.endReason : ""}`;
+    await saveContract(c.id, { ...stripId(c), ...patch, activity: withAct(c, text) });
+    logEvent("Employment status changed", c.org, text);
+    if ((v.st === "notice" || v.st === "ended") && date && !(L.hrAsks || []).some((a) => a.cid === c.id && a.kind === "ending" && a.date === date && a.status === "open")) {
+      L.hrAsks = [...(L.hrAsks || []).map((a) => (a.cid === c.id && a.status === "open" ? { ...a, status: "superseded" } : a)), { id: uid("h"), cid: c.id, kind: "ending", date, status: "open", createdAt: now }].slice(-300);
+      await saveLedger();
+    }
+    closeDrawer(); render(); toast(v.st === "notice" || v.st === "ended" ? "Saved. The manager and HR manager will be asked about payments." : "Saved");
+  }
+  async function queueHrAsks() {
+    // fixed-term employee contracts ending within 30 days and still active: ask whether they continue
+    if (!ledgerDoc && !L.hrAsks) return;
+    const lim = addDays(todayISO, 30), add = [];
+    for (const c of contracts) {
+      if (c.area !== "hr" || empOf(c) !== "active" || !parseD(c.endDate) || c.endDate < todayISO || c.endDate > lim) continue;
+      if ((L.hrAsks || []).some((a) => a.cid === c.id && a.kind === "expiring" && a.date === c.endDate)) continue;
+      add.push({ id: uid("h"), cid: c.id, kind: "expiring", date: c.endDate, status: "open", createdAt: new Date().toISOString() });
+    }
+    if (!add.length) return;
+    L.hrAsks = [...(L.hrAsks || []), ...add].slice(-300); await saveLedger(); if (route.name === "record") safeRender();
+  }
+  async function answerHr(id, ans, newEnd) {
+    const a = (L.hrAsks || []).find((x) => x.id === id); const c = a && byId(a.cid); if (!a || !c || a.status !== "open") return;
+    const now = new Date().toISOString(), by = actor(); let text;
+    if (ans === "stop") {
+      const obs = (c.obligations || []).map((o) => (o.side === "mine" && STEP[o.recurrence] && (!o.until || o.until > a.date) ? { ...o, until: a.date } : o));
+      text = `Payments after ${fmtD(a.date)} stopped (answer: ${by})`;
+      await saveContract(c.id, { ...stripId(c), obligations: obs, activity: withAct(c, text) });
+    } else if (ans === "keep") { text = `Payments after ${fmtD(a.date)} kept (answer: ${by})`; await saveContract(c.id, { ...stripId(c), activity: withAct(c, text) }); }
+    else if (ans === "end") { text = `Contract ends on ${fmtD(a.date)} (answer: ${by})`; await saveContract(c.id, { ...stripId(c), empStatus: "ended", endedOn: a.date, endReason: "End of fixed term", activity: withAct(c, text) }); }
+    else if (ans === "continue") {
+      const d = newEnd ?? ($("hrd_" + id)?.value || "");
+      if (d && (!parseD(d) || d <= a.date)) return toast("The new end date must be after " + fmtD(a.date) + ".");
+      text = d ? `Contract continues until ${fmtD(d)} (answer: ${by})` : `Contract continues with no end date (answer: ${by})`;
+      await saveContract(c.id, { ...stripId(c), endDate: d || null, fields: { ...(c.fields || {}), term: { ...(c.fields?.term || {}), v: d ? "Until " + d : "Open-ended", st: "verified", hist: [...(c.fields?.term?.hist || []), { at: now, by, what: "Changed after end-of-term question", v: d || "Open-ended" }] } }, activity: withAct(c, text) });
+    } else return;
+    L.hrAsks = L.hrAsks.map((x) => (x.id === id ? { ...x, status: "answered", answer: ans, answeredBy: by, answeredAt: now } : x)); await saveLedger();
+    logEvent("HR question answered", c.org, text); render(); toast(text.replace(/ \(answer:.*\)$/, ""));
+  }
+
   // ---------- record ----------
   function pageRecord() {
     const c = byId(route.id), si = STAGES.indexOf(status(c)), edit = canEdit(c), mng = canManage(c);
@@ -1304,6 +1388,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     return `<div class="crumb"><button class="link" data-go="${c.area}">${AREAS[c.area].label}</button><span>›</span><span>${esc(c.org)}</span></div>
       <section class="card hl"><div class="hl-top"><div><span class="label">${areaPill(c.area)} ${rvPill(c)} ${c.restricted ? '<span class="lock">🔒 Restricted</span>' : ""}${c.example ? ' <span class="pill example">Example</span>' : ""}</span><h1>${esc(c.org || "Untitled")}</h1><span class="muted">${esc(c.contractType || "")}${L.myCompany ? " · your side: " + esc(L.myCompany) : ""}</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">${edit && rs !== "verified" ? `<button class="btn primary" data-review="${esc(c.id)}">Review fields</button>` : edit ? `<button class="btn" data-review="${esc(c.id)}">Review fields</button>` : ""}${edit ? '<button class="btn" data-act="attach">Attach document</button>' : ""}${edit ? `<select id="moveArea" class="btn" aria-label="Move to tab" style="padding:6px 10px">${AREA_KEYS.map((a) => `<option value="${a}"${a === c.area ? " selected" : ""}>Tab: ${AREAS[a].label}</option>`).join("")}</select>` : ""}${edit ? `<button class="btn" data-act="cedit" data-id="${esc(c.id)}">Edit details</button>` : ""}${isAdmin() ? '<span id="delZone"><button class="btn danger" data-act="del">Delete</button></span>' : ""}</div></div>
+        ${c.area === "hr" ? empPanel(c) : ""}
         <div class="hl-fields"><div><span class="label">Contractual obligations, 12 months</span><span class="v" style="color:var(--teal-ink)"><button class="link" data-report="entitlements:${esc(c.org)}" style="font-size:15px">${money(mIn.fixed)}</button>${mIn.conditional ? ` <span class="foot">+${money(mIn.conditional)} cond.</span>` : ""}</span></div><div><span class="label">Commitments, 12 months</span><span class="v"><button class="link" data-report="commitments:${esc(c.org)}" style="font-size:15px">${money(mOut.fixed)}</button>${mOut.conditional ? ` <span class="foot">+${money(mOut.conditional)} cond.</span>` : ""}</span></div><div><span class="label">${c.area === "hr" ? "Annual salary" : c.area === "suppliers" ? "Annual cost" : "Year-1 value"}</span><span class="v">${money(c.annualValue, c.currency)} ${fst(c, c.area === "hr" ? "salaryAmount" : "annualValue") !== "verified" ? vbadge(fst(c, c.area === "hr" ? "salaryAmount" : "annualValue")) : ""}</span></div><div><span class="label">Term</span><span class="v">${fmtD(c.startDate)} – ${c.endDate ? fmtD(c.endDate) : esc(fv(c, "term") || "open-ended")}</span></div><div><span class="label">Verification</span><span class="v">${k.v}/${k.total} fields</span><div class="prog"><i style="width:${k.total ? (k.v / k.total) * 100 : 0}%"></i></div></div></div>
         ${path}</section>
       <div class="rec-grid"><section class="card"><div class="subtabs" role="tablist">${tabs.map(([kk, l]) => `<button role="tab" data-rtab="${kk}" aria-selected="${recTab === kk}">${l}</button>`).join("")}</div>${body}</section>${side}</div>`;
@@ -2093,7 +2178,7 @@ ${doc.scanned ? "The document pages are attached as images." : `<document_text>\
   const SAMPLE_ERRORS = { not_granted: "AI access wasn't allowed. Allow it from this page's permissions menu.", rate_limited: "Too many AI requests right now. Wait a minute and try again.", prompt_too_large: "That's too much text for one AI request.", refused: "The AI declined this request.", invalid_json: "The AI's answer couldn't be read. Try again.", session_expired: "Your session expired. Reload the page and sign in.", sampling_disabled: "AI features are turned off for your account.", upstream_error: "The AI service had a problem. Try again.", images_unavailable: "Image reading isn't available in this view.", image_rejected: "One of the page images couldn't be read." };
   const errCopy = (e) => SAMPLE_ERRORS[e?.code] || e?.message || "Something went wrong. Try again.";
   function recordForAI(c) {
-    return { contractId: c.id, counterparty: c.org, tab: AREAS[c.area].label, contractType: c.contractType, status: status(c), reviewState: RV_LABEL[reviewState(c)],
+    return { contractId: c.id, counterparty: c.org, tab: AREAS[c.area].label, contractType: c.contractType, status: status(c), ...(c.area === "hr" ? { employmentStatus: EMP[empOf(c)].label, lastWorkingDay: c.lastDay || null, endedOn: c.endedOn || null, endReason: c.endReason || null } : {}), reviewState: RV_LABEL[reviewState(c)],
       fields: Object.fromEntries(fieldsOf(c).map((d) => { const f = c.fields?.[d.k] || {}; return [d.l, f.v === null || f.v === undefined ? "NOT FOUND" : { value: f.v, verified: f.st === "verified", page: f.page, quote: (f.src || "").slice(0, 160) }]; })),
       obligations: obligationsOf(c).map((o) => ({ obligationId: o.id, responsible: o.side === "mine" ? "us" : "other party", text: o.text, due: o.due, recurrence: o.recurrence, amount: o.amount, conditional: o.conditional, condition: o.condition, status: OB_ST[o.state], page: o.page, quote: (o.src || "").slice(0, 120) })),
       deadlines: deadlinesOf(c).map(({ date, label }) => ({ date, label })) };
@@ -2384,7 +2469,7 @@ ${ctx}`;
   // ---------- events ----------
   document.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-menu]") && !e.target.closest(".menu select")) closeMenu();
-    const t = e.target.closest("[data-menu],[data-om],[data-obf2],[data-aact],[data-atab],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
+    const t = e.target.closest("[data-menu],[data-hra],[data-om],[data-obf2],[data-aact],[data-atab],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
     if (!t) return;
     if (t.tagName === "A") e.preventDefault();
     const d = t.dataset;
@@ -2407,6 +2492,7 @@ ${ctx}`;
     if (d.open) { closeModal(); closeDrawer(); openTodo(false); return go("record", d.open); }
     if (d.rtab) { recTab = d.rtab; return render(); }
     if (d.atab) { areaTab = d.atab; return render(); }
+    if (d.hra) { const [id, ans] = d.hra.split("|"); return answerHr(id, ans); }
     if (d.om) { const [id, act] = d.om.split("|"); return outboxAct(id, act); }
     if (d.obf2) { obF2 = d.obf2; return render(); }
     if (d.aact) { const [id, ok] = d.aact.split("|"); pendingActs[id]?.answer(ok === "1"); return; }
@@ -2428,6 +2514,8 @@ ${ctx}`;
       case "cnew": closeMenu(); return openDrawer("cform:new");
       case "cedit": { const x = byId(d.id); if (x && canEdit(x)) openDrawer("cform:" + x.id); return; }
       case "csave": return saveCForm(drawerKey.slice(6));
+      case "empEdit": { const x = byId(d.id); if (x && canEdit(x)) openDrawer("emp:" + x.id); return; }
+      case "empSave": return saveEmp(drawerKey.slice(4));
       case "cdel": { if (!isAdmin()) return; const z = document.getElementById("cdz_" + d.id); if (z) z.innerHTML = `<span class="confirm">Delete? <button class="btn danger sm" data-act="cdelYes" data-id="${esc(d.id)}">Delete</button><button class="btn sm" data-act="cdelNo">Keep</button></span>`; return; }
       case "cdelNo": return render();
       case "cdelYes": { const x = byId(d.id); if (!x || !isAdmin()) return; await removeContract(x.id); logEvent("Deleted contract", x.org); render(); return toast("Deleted"); }
@@ -2489,6 +2577,7 @@ ${ctx}`;
     const dmMap = { dm_party: "party", dm_area: "area", dm_cp: "cp", dm_st: "st", dm_from: "from", dm_to: "to" };
     if (dmMap[id]) { dmF[dmMap[id]] = t.value; if (id === "dm_area") dmF.cp = ""; return render(); }
     if (id === "ct_area") { ctF.area = t.value; return render(); } if (id === "ct_st") { ctF.st = t.value; return render(); }
+    if (id === "em_st") { const v = empRead(); return renderEmpForm(drawerKey.slice(4), v); }
     if (id === "cf_area") { const v = cfRead(); return renderCForm(drawerKey.slice(6), v); }
     if (id === "lf_st") { listF.st = t.value; return render(); } if (id === "lf_rv") { listF.rv = t.value; return render(); }
     const rfMap = { rf_area: "area", rf_cp: "cp", rf_from: "from", rf_to: "to", rf_status: "status", rf_party: "party" };
@@ -2551,9 +2640,9 @@ ${ctx}`;
     if (db && realId) {
       ledgerDoc = db.doc("data/users/" + realId + "/promisely");
       store = ledgerDoc.collection("contracts"); auditCol = ledgerDoc.collection("audit"); chatCol = ledgerDoc.collection("chats"); fbCol = ledgerDoc.collection("feedback");
-      ledgerDoc.onSnapshot((snap) => { const d = (snap.exists && snap.data()) || {}; L = { myCompany: d.myCompany || "", users: Array.isArray(d.users) ? d.users : [], savedReports: Array.isArray(d.savedReports) ? d.savedReports : [], settings: d.settings || { noticeDays: [90, 60, 30], payDays: [7, 1] }, auto: d.auto || null, outbox: Array.isArray(d.outbox) ? d.outbox : [] }; queueOutbox(); safeRender(); }, () => {});
+      ledgerDoc.onSnapshot((snap) => { const d = (snap.exists && snap.data()) || {}; L = { myCompany: d.myCompany || "", users: Array.isArray(d.users) ? d.users : [], savedReports: Array.isArray(d.savedReports) ? d.savedReports : [], settings: d.settings || { noticeDays: [90, 60, 30], payDays: [7, 1] }, auto: d.auto || null, outbox: Array.isArray(d.outbox) ? d.outbox : [], hrAsks: Array.isArray(d.hrAsks) ? d.hrAsks : [] }; queueOutbox(); queueHrAsks(); safeRender(); }, () => {});
       auditCol.orderBy("at", "desc").limit(300).onSnapshot((snap) => { auditLog = snap.docs.map((x) => x.data()); if (route.name === "admin" || route.id?.startsWith?.("access")) safeRender(); }, () => {});
-      store.onSnapshot((snap) => { contracts = snap.docs.map((x) => ({ id: x.id, ...x.data() })); safeRender(); updateAsstContext(); queueOutbox(); openDeepLink(); },
+      store.onSnapshot((snap) => { contracts = snap.docs.map((x) => ({ id: x.id, ...x.data() })); safeRender(); updateAsstContext(); queueOutbox(); queueHrAsks(); openDeepLink(); },
         (e) => { state.banner = "Your contracts couldn't be loaded (" + (e?.code || "error") + "). Reload the page to try again."; render(); });
       setScope({ kind: "all" });
     } else if (!state.banner) state.banner = "Sign in to claude.ai to save your contracts. Until then, anything you add disappears when you close the page.";

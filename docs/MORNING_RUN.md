@@ -28,8 +28,9 @@ the `ArtifactData` tool, so no one has to log in to the app. Do the steps in ord
 
 Run these three Gmail searches first (IDs only):
 `in:inbox has:attachment -label:Contractly/Filed -label:Contractly/Done`,
-`in:inbox subject:(APPROVE OR DENY OR EDIT) -label:Contractly/Done` and
-`in:inbox -has:attachment -subject:(APPROVE OR DENY OR EDIT) -from:info.contractly@gmail.com -label:Contractly/Done -label:Contractly/Answered` (questions).
+`in:inbox subject:(APPROVE OR DENY OR EDIT OR STOP OR KEEP OR CONTINUE OR END) -label:Contractly/Done` and
+`in:inbox -has:attachment -subject:(APPROVE OR DENY OR EDIT OR STOP OR KEEP OR CONTINUE OR END) -from:info.contractly@gmail.com -label:Contractly/Done -label:Contractly/Answered` (questions).
+Also don't stop if the ledger's `hrAsks` has an `open` item without `emailedAt` (see Step 2c).
 If all three are empty AND the current hour (America/New_York) is not 8 AM, stop right away with the summary "Nothing new."
 Steps 3 and 4 (preparing new messages, digest) only need to run once a day, in the 8 AM run, or when Step 1 filed a contract.
 
@@ -79,7 +80,7 @@ Then add an activity line to the contract (`Message to <to> sent/denied (approve
 
 Anyone known to Contract.ly can email a question (no attachment) to info.contractly@gmail.com: a status ("what's
 overdue?"), something specific about one contract, a comparison across contracts, money totals, dates, anything.
-Search `in:inbox -has:attachment -subject:(APPROVE OR DENY OR EDIT) -from:info.contractly@gmail.com
+Search `in:inbox -has:attachment -subject:(APPROVE OR DENY OR EDIT OR STOP OR KEEP OR CONTINUE OR END) -from:info.contractly@gmail.com
 -label:Contractly/Done -label:Contractly/Answered`. For each message:
 
 1. **Who is asking.** morankochal@gmail.com is the owner (Administrator). Otherwise find the sender's email in the
@@ -103,6 +104,35 @@ Search `in:inbox -has:attachment -subject:(APPROVE OR DENY OR EDIT) -from:info.c
 5. Reply in the same thread (`reply`) from info.contractly@gmail.com, label the question `Contractly/Answered`, and add
    an audit entry with `ArtifactData set` in `data/users/me/promisely/audit` (`{at, who: <sender>, action: "Answered email
    question", target: <counterparties mentioned>, detail: <the question, first 200 characters>}`).
+
+## Step 2c: HR employment questions (employee contracts)
+
+Employee (HR) contracts have `empStatus` (active / leave / notice / ended), `lastDay`, `endedOn`, `endReason`,
+`managerId` and `hrManagerId` (default: the first ledger user with role `hr`). The ledger's `hrAsks[]` holds questions
+`{id, cid, kind: "ending" | "expiring", date, status: "open" | "answered" | "superseded", emailedAt}`.
+
+1. **Create missing questions:** for every HR contract that is `active` (or has no `empStatus`) whose `endDate` is within
+   the next 30 days, add `{id: "h" + random, cid, kind: "expiring", date: endDate, status: "open", createdAt}` unless one
+   already exists for that contract and date.
+2. **Email open questions** that have no `emailedAt` to the employee's manager AND the HR manager (emails from the
+   ledger's `users`; `me` = morankochal@gmail.com; skip people without an email; if neither has one, email
+   morankochal@gmail.com):
+   - `ending` (set to On notice or Ended in the app): "<employee> is <On notice / Ended> on <date> (<reason>). What should
+     happen to salary and other payments after that date?" Outlined `mailto:info.contractly@gmail.com` buttons:
+     **Stop payments after <date>** (subject `STOP #<id>`) and **Keep payments** (`KEEP #<id>`).
+   - `expiring`: "<employee>'s contract ends on <date>. Does it continue?" Buttons: **Continue** (subject
+     `CONTINUE #<id>`, body "New end date (YYYY-MM-DD), or leave empty if open-ended:") and **End on <date>** (`END #<id>`).
+   Add the plain-text line "You can also just reply with STOP / KEEP / CONTINUE / END #<id>". Set `emailedAt`.
+3. **Apply replies** (subject `STOP`, `KEEP`, `CONTINUE` or `END` with `#<id>`) only from that contract's manager, HR
+   manager, or morankochal@gmail.com, and only while the question is `open` (otherwise reply that it was already answered):
+   - STOP: on that contract, set `until: <date>` on our recurring obligations (`side: "mine"` with a Monthly, Quarterly
+     or Annual recurrence) whose `until` is empty or later.
+   - KEEP: change nothing.
+   - END: set `empStatus: "ended"`, `endedOn: <date>`, `endReason: "End of fixed term"`.
+   - CONTINUE: read a YYYY-MM-DD date from the reply; set `endDate` to it (null if none), and the `term` field to
+     "Until <date>" / "Open-ended" (verified).
+   Mark the question `answered` (`answer`, `answeredBy`, `answeredAt`), add a contract activity line, label the reply
+   `Contractly/Done`, and confirm in the thread to everyone who was asked.
 
 ## Step 3: prepare new messages and ask for approval
 
