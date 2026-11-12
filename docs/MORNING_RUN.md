@@ -57,9 +57,17 @@ Search `in:inbox has:attachment -label:Contractly/Filed -label:Contractly/Done`.
    suppliers and hr each have their own) and both sides' obligations with dates, amounts and recurrence.
    Never invent values: use null when the contract doesn't say. Everything stays "unverified" until a person confirms it
    in the app's Review screen.
+   **Invoices and bills** (electricity, rent, services, purchases, or an invoice we issued) are handled the same way:
+   tab `suppliers` if we must pay it, `customers` if we issued it to a customer; `docKind: "invoice"`; `contractType`
+   "Invoice: <what it is for>"; `org` = the company that sent it (or the customer billed); ONE payment obligation with
+   the total due, the due date (invoice date + stated terms if no due date) and the invoice number in its text
+   (`side: "mine"` for bills we pay, `"theirs"` for invoices we issued, `recurrence: "One-time"`).
+   If a contract or invoice record for the same counterparty already exists in that tab, do NOT create a new record:
+   add the payment obligation to it, add `{id, name, kind: "invoice", addedAt}` to its `documents`, and an activity line
+   ("Invoice <file> added: <amount> due <date>"), saved with `ArtifactData update` pinned to its version.
 5. Save it with `ArtifactData set` into the contracts collection (new doc id: 20 lowercase letters/digits).
-6. Label the email `Contractly/Filed` and reply to the sender: what was filed, the tab, the counterparty, how many
-   obligations, and that the terms are waiting for review in the app.
+6. Label the email `Contractly/Filed` and reply to the sender: what was filed (contract or invoice), the tab, the
+   counterparty, how many obligations (for an invoice: amount and due date), and that it is waiting for review in the app.
 
 ## Step 2: replies from administrators
 
