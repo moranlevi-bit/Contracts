@@ -1107,7 +1107,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     const areaCard = (a) => {
       const list = V().filter((c) => c.area === a), cm = periodTotals("mine", { area: a }), en = periodTotals("theirs", { area: a });
       const od = cm.overdueN + en.overdueN;
-      return ringCard({ title: AREAS[a].label, sub: `${plural(list.length, "contract")} · ${AREAS[a].sub.toLowerCase()}`, center: String(list.length), centerLabel: list.length === 1 ? "Contract" : "Contracts", report: `data-go="${a}"`,
+      return ringCard({ title: AREAS[a].label, sub: `${plural(list.length, "contract")} · ${AREAS[a].sub.toLowerCase()}`, center: compact(cm.fixed + en.fixed), centerLabel: "Total, 12 months", report: `data-go="${a}"`,
         segs: [{ v: cm.fixed, color: "blue", text: `${compact(cm.fixed)} Commitments`, attr: `data-report="commitments:12m:${a}"` }, { v: en.fixed, color: "teal", text: `${compact(en.fixed)} Contractual obligations`, attr: `data-report="entitlements:12m:${a}"` }, ...(od ? [{ v: 0, color: "red", text: `${od} Overdue`, attr: `data-obf="both:overdue:${a}"` }] : [])],
         foot: `<button class="btn outline" data-go="${a}">View ${AREAS[a].label}</button>` });
     };
