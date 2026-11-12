@@ -286,6 +286,10 @@ button.st:hover { filter: brightness(.95); }
 .gt-st { text-align: right; font-size: 12px; color: var(--muted); padding-left: 8px; }
 .gt-st b { color: var(--fg); font-weight: 600; } .gt-st .od { color: var(--red-ink); font-weight: 600; } .gt-st .ok { color: var(--ok); font-weight: 600; }
 .gt-card + .gt-card { margin-top: 0; }
+.gt-ms { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; transform: rotate(45deg); background: var(--amber); border-radius: 2px; box-shadow: 0 0 0 2px var(--surface); z-index: 2; cursor: default; }
+.gt-ms.past { background: var(--soft); }
+.gt-od .gt-ms { position: relative; left: auto; margin: 0; }
+.gt-legend i.ms { transform: rotate(45deg); border-radius: 2px; background: var(--amber); width: 9px; height: 9px; }
 .area-tabs { padding: 0; overflow: hidden; }
 .area-tabs .subtabs { border-bottom: 0; }
 .gt.duty .gt-row { grid-template-columns: 230px 64px minmax(0, 1fr) 140px; }
@@ -1350,6 +1354,51 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
     logEvent("HR question answered", c.org, text); render(); toast(text.replace(/ \(answer:.*\)$/, ""));
   }
 
+  // ---------- one contract's timeline (payments, deliverables and key dates) ----------
+  let recRange = "12m";
+  function contractGanttHtml(c) {
+    const term = parseD(c.startDate) && parseD(c.endDate) && c.endDate > todayISO;
+    const from = recRange === "term" && term ? (c.startDate < todayISO ? c.startDate : todayISO) : todayISO;
+    const to = recRange === "term" && term ? c.endDate : addMonths(todayISO, 12);
+    const t0 = parseD(from), t1 = parseD(to); if (!t0 || !t1 || t1 <= t0) return "";
+    const span = t1 - t0, pct = (d) => Math.min(100, Math.max(0, ((parseD(d) - t0) / span) * 100)), inR = (d) => d >= from && d <= to;
+    const months = []; for (let m = new Date(t0.getFullYear(), t0.getMonth(), 1); m <= t1; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) months.push(m);
+    const mStart = (m) => (m < t0 ? 0 : pct(iso(m))), mEnd = (m) => { const n = new Date(m.getFullYear(), m.getMonth() + 1, 1); return n > t1 ? 100 : pct(iso(n)); };
+    const grid = months.filter((m) => m > t0).map((m) => `<span class="gt-grid" style="left:${pct(iso(m)).toFixed(3)}%"></span>`).join("");
+    const todayL = inR(todayISO) ? `<span class="gt-today" style="left:${pct(todayISO).toFixed(3)}%"></span>` : "";
+    const can = canEdit(c), them = c.org, us = L.myCompany || "We";
+    // key dates as milestones (diamonds)
+    const ms = [...(parseD(c.startDate) ? [{ date: c.startDate, label: "Contract starts" }] : []), ...deadlinesOf(c)].filter((d) => parseD(d.date)).sort((a, b) => a.date.localeCompare(b.date));
+    const msRows = ms.filter((d) => inR(d.date) || (d.date < from && d.label !== "Contract starts" && daysTo(d.date) > -30)).map((d) => {
+      const past = d.date < todayISO;
+      return `<div class="gt-row"><div class="gt-lbl"><span class="o">◆ ${esc(d.label)}</span><span class="x" style="cursor:default">Key date</span></div><div class="gt-od">${d.date < from ? `<span class="gt-ms past" title="${esc(fmtD(d.date))}"></span>` : ""}</div><div class="gt-tr">${grid}${todayL}${inR(d.date) ? `<span class="gt-ms${past ? " past" : ""}" style="left:${pct(d.date).toFixed(3)}%" data-tip="${esc(fmtD(d.date))}|${esc(d.label)}" tabindex="0"></span>` : ""}</div><div class="gt-st"><b>${esc(fmtD(d.date))}</b><br>${past ? "passed" : daysTo(d.date) === 0 ? "today" : "in " + daysTo(d.date) + " days"}</div></div>`;
+    }).join("");
+    // obligations, both sides
+    const dates = (o) => { if (!parseD(o.due) || ["done", "disputed"].includes(o.status) || o.state === "overdue") return []; const st = STEP[o.recurrence], lim = obLimit(o), out = []; let d = o.due, n = 0; while (d && d <= to && n++ < 400) { if (d >= from) out.push(d); if (!st) break; d = addMonths(d, st); if (lim && d > lim) break; } return out; };
+    const rank = (o) => (o.state === "overdue" || o.state === "disputed" ? 0 : o.state === "done" ? 3 : o.state === "ongoing" ? 2 : 1);
+    const obs = obligationsOf(c).map((o) => ({ o, key: c.id + "|" + o.id, ds: dates(o), done: (o.history || []).filter((h) => h.due && h.what !== "reopened" && inR(h.due)).map((h) => h.due), end: o.until || c.endDate || "" }))
+      .filter((r) => r.ds.length || r.done.length || ["overdue", "disputed", "ongoing"].includes(r.o.state) || (r.o.state === "done" && (!r.o.due || inR(r.o.due))))
+      .sort((a, b) => rank(a.o) - rank(b.o) || String(a.ds[0] || a.o.due || "").localeCompare(String(b.ds[0] || b.o.due || "")));
+    const obRows = obs.map(({ o, key, ds, done, end }) => {
+      const col = o.side === "mine" ? "var(--brand)" : "var(--teal)", amt = num(o.amount) !== null ? money(o.amount, c.currency) : "", isDone = o.state === "done";
+      const tip = (d) => `${esc(fmtD(d))}|${amt ? esc(amt) + " · " : ""}${esc(o.text)}`;
+      const bar = ds.length > 1 ? `<span class="gt-bar" style="left:${pct(ds[0]).toFixed(3)}%;width:${(pct(ds[ds.length - 1]) - pct(ds[0])).toFixed(3)}%;background:${col}"></span>` : "";
+      const track = o.state === "ongoing" ? (parseD(end) && end < from ? "" : `<span class="gt-ongo"${parseD(end) && end < to ? ` style="right:${(100 - pct(end)).toFixed(3)}%"` : ""}></span>`) : bar + ds.map((d) => `<button class="gt-dot${o.conditional ? " cond" : ""}" style="left:${pct(d).toFixed(3)}%" data-obd="${esc(key)}" data-tip="${tip(d)}" aria-label="${esc(fmtD(d))}: ${esc(o.text)}"></button>`).join("");
+      const okMarks = done.map((d) => `<button class="gt-dot ok" style="left:${pct(d).toFixed(3)}%" data-obd="${esc(key)}" data-tip="Done · ${esc(fmtD(d))}|${esc(o.text)}"></button>`).join("");
+      const early = o.state === "overdue" || o.state === "disputed" ? `<button class="gt-dot od" data-obd="${esc(key)}" data-tip="${o.state === "disputed" ? "Disputed" : "Overdue"}${o.due ? " since " + esc(fmtD(o.due)) : ""}|${amt ? esc(amt) + " · " : ""}${esc(o.text)}"></button>` : "";
+      const st = isDone ? '<span class="ok">✓ Done</span>' : o.state === "overdue" ? '<span class="od">Overdue</span>' : o.state === "disputed" ? '<span class="od">Disputed</span>' : o.state === "ongoing" ? "Ongoing" : `<b>${esc(fmtD(ds[0] || o.due))}</b>${amt ? "<br>" + esc(amt) : o.recurrence && o.recurrence !== "One-time" ? "<br>" + esc(o.recurrence) : ""}`;
+      const ck = can ? `<input type="checkbox" data-obck="${esc(key)}" ${isDone ? "checked" : ""} title="${isDone ? "Reopen" : esc(markLabel(o))}" aria-label="${isDone ? "Reopen" : esc(markLabel(o))}: ${esc(o.text)}">` : "<span></span>";
+      return `<div class="gt-row${isDone ? " done" : ""}" style="--gt-c:${col}"><div class="gt-lbl ck">${ck}<span style="min-width:0"><span class="o"><span class="sidetag ${o.side}" style="margin-right:4px;padding:0 6px">${o.side === "mine" ? "↗" : "↙"}</span>${esc(o.side === "mine" ? us : them)}</span><button class="x" data-obd="${esc(key)}" title="${esc(o.text)}">${esc(o.text)}</button></span></div><div class="gt-od">${early}</div><div class="gt-tr">${grid}${todayL}${track}${okMarks}</div><div class="gt-st">${st}</div></div>`;
+    }).join("");
+    const labeled = months.filter((m) => mEnd(m) - mStart(m) >= 5), withYear = (m, i) => i === 0 || m.getMonth() === 0;
+    const head = `<div class="gt-row hd"><div class="gt-lbl">Item</div><div class="gt-od" style="height:28px">Earlier</div><div class="gt-tr">${labeled.map((m, i) => `<span class="gt-mo${withYear(m, i) ? " y" : ""}" style="left:${mStart(m).toFixed(3)}%">${esc(m.toLocaleDateString(undefined, { month: "short" }) + (withYear(m, i) ? " " + String(m.getFullYear()).slice(2) : ""))}</span>`).join("")}</div><div class="gt-st">Next / status</div></div>`;
+    const body = msRows + obRows;
+    return `<section class="card gt-card"><div class="gt-head"><div><h2>Contract timeline</h2><p>Payments, deliverables and key dates for ${esc(c.org)}, ${esc(fmtD(from))} – ${esc(fmtD(to))}.${can ? " Tick an item when it's done; click a date to open it." : " Click a date to open it."}</p></div>
+      <div style="display:grid;gap:8px;justify-items:end"><div class="seg" role="group" aria-label="Period"><button data-ctr="12m" aria-pressed="${recRange === "12m" || !term}">Next 12 months</button>${term ? `<button data-ctr="term" aria-pressed="${recRange === "term"}">Whole term</button>` : ""}</div>
+      <div class="gt-legend"><span><i style="background:var(--brand)"></i>${esc(us)} must</span><span><i style="background:var(--teal)"></i>${esc(them)} must</span><span><i class="ms"></i>Key date</span><span><i style="background:var(--ok)"></i>Done</span><span><i class="od"></i>Overdue</span><span><i class="today"></i>Today</span></div></div></div>
+      ${body ? `<div class="gt-scroll"><div class="gt duty" role="group" aria-label="Contract timeline">${head}${body}</div></div>` : '<p class="muted" style="margin:0">Nothing dated in this period.</p>'}</section>`;
+  }
+
   // ---------- record ----------
   function pageRecord() {
     const c = byId(route.id), si = STAGES.indexOf(status(c)), edit = canEdit(c), mng = canManage(c);
@@ -1391,6 +1440,7 @@ div.obcol h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; color: var(--
         ${c.area === "hr" ? empPanel(c) : ""}
         <div class="hl-fields"><div><span class="label">Contractual obligations, 12 months</span><span class="v" style="color:var(--teal-ink)"><button class="link" data-report="entitlements:${esc(c.org)}" style="font-size:15px">${money(mIn.fixed)}</button>${mIn.conditional ? ` <span class="foot">+${money(mIn.conditional)} cond.</span>` : ""}</span></div><div><span class="label">Commitments, 12 months</span><span class="v"><button class="link" data-report="commitments:${esc(c.org)}" style="font-size:15px">${money(mOut.fixed)}</button>${mOut.conditional ? ` <span class="foot">+${money(mOut.conditional)} cond.</span>` : ""}</span></div><div><span class="label">${c.area === "hr" ? "Annual salary" : c.area === "suppliers" ? "Annual cost" : "Year-1 value"}</span><span class="v">${money(c.annualValue, c.currency)} ${fst(c, c.area === "hr" ? "salaryAmount" : "annualValue") !== "verified" ? vbadge(fst(c, c.area === "hr" ? "salaryAmount" : "annualValue")) : ""}</span></div><div><span class="label">Term</span><span class="v">${fmtD(c.startDate)} – ${c.endDate ? fmtD(c.endDate) : esc(fv(c, "term") || "open-ended")}</span></div><div><span class="label">Verification</span><span class="v">${k.v}/${k.total} fields</span><div class="prog"><i style="width:${k.total ? (k.v / k.total) * 100 : 0}%"></i></div></div></div>
         ${path}</section>
+      ${contractGanttHtml(c)}
       <div class="rec-grid"><section class="card"><div class="subtabs" role="tablist">${tabs.map(([kk, l]) => `<button role="tab" data-rtab="${kk}" aria-selected="${recTab === kk}">${l}</button>`).join("")}</div>${body}</section>${side}</div>`;
   }
 
@@ -2469,7 +2519,7 @@ ${ctx}`;
   // ---------- events ----------
   document.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-menu]") && !e.target.closest(".menu select")) closeMenu();
-    const t = e.target.closest("[data-menu],[data-hra],[data-om],[data-obf2],[data-aact],[data-atab],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
+    const t = e.target.closest("[data-menu],[data-ctr],[data-hra],[data-om],[data-obf2],[data-aact],[data-atab],[data-obf],[data-obd],[data-obmark],[data-obdispute],[data-obnotesave],[data-obdel],[data-src],[data-hl],[data-review],[data-fact],[data-report],[data-go],[data-open],[data-act],[data-rtab],[data-ask],[data-obview],[data-calm],[data-forecast],[data-preview],[data-udel],[data-ungrant],[data-ungrantc],[data-runsaved],[data-delsaved],[data-fb]");
     if (!t) return;
     if (t.tagName === "A") e.preventDefault();
     const d = t.dataset;
@@ -2492,6 +2542,7 @@ ${ctx}`;
     if (d.open) { closeModal(); closeDrawer(); openTodo(false); return go("record", d.open); }
     if (d.rtab) { recTab = d.rtab; return render(); }
     if (d.atab) { areaTab = d.atab; return render(); }
+    if (d.ctr) { recRange = d.ctr; return render(); }
     if (d.hra) { const [id, ans] = d.hra.split("|"); return answerHr(id, ans); }
     if (d.om) { const [id, act] = d.om.split("|"); return outboxAct(id, act); }
     if (d.obf2) { obF2 = d.obf2; return render(); }
@@ -2619,7 +2670,7 @@ ${ctx}`;
   $("closeTodo").addEventListener("click", () => openTodo(false));
   addEventListener("resize", closeMenu);
   document.addEventListener("mousemove", (e) => {
-    const r = e.target.closest?.(".bar-row,.gt-dot"); const tip = $("tip");
+    const r = e.target.closest?.(".bar-row,.gt-dot,.gt-ms[data-tip]"); const tip = $("tip");
     if (!r) { tip.hidden = true; return; }
     const [k, v] = r.dataset.tip.split("|"); tip.innerHTML = `<b>${esc(k)}</b>${esc(v)}${r.dataset.report ? "<br>Click for report" : r.dataset.obd ? "<br>Click to open" : ""}`; tip.hidden = false;
     tip.style.left = Math.min(e.clientX + 14, innerWidth - 250) + "px"; tip.style.top = e.clientY + 14 + "px";
