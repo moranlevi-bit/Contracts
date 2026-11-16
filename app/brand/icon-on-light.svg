@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512" role="img" aria-label="contract.ly">
+  <!-- Icon for LIGHT backgrounds (white, light grey). The lime dot becomes dark so it stays visible. -->
+  <defs>
+    <linearGradient id="ring" gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="0" y2="52">
+      <stop offset="0" stop-color="#6B4DFF"/>
+      <stop offset="1" stop-color="#FF5C93"/>
+    </linearGradient>
+  </defs>
+  <path d="M46.1 17.9A20 20 0 1 0 46.1 46.1" fill="none" stroke="url(#ring)" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="49.5" cy="32" r="5.5" fill="#2B2650"/>
+</svg>
